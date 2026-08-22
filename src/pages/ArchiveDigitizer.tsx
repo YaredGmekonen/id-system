@@ -254,7 +254,7 @@ export default function ArchiveDigitizer() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Top Header */}
         <header
-          className="px-8 pt-6 pb-4 border-b flex flex-col gap-3 flex-shrink-0"
+          className="pl-12 sm:px-8 pt-5 pb-4 border-b flex flex-col gap-3 flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex items-center justify-between">
@@ -262,27 +262,27 @@ export default function ArchiveDigitizer() {
               <p className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#84a92c]">
                 SILICONLABS TECH PLC / ARCHIVE DIGITIZER
               </p>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-lg sm:text-2xl font-extrabold tracking-tight mt-1" style={{ color: 'var(--text-primary)' }}>
                 Physical Archive & Registry Digitizer
               </h1>
             </div>
             {step !== 'mode' && (
               <button
                 onClick={handleReset}
-                className="px-3 py-1.5 rounded-xl border text-xs font-semibold hover:opacity-80 transition-opacity cursor-pointer"
+                className="px-3 py-1.5 rounded-xl border text-xs font-semibold hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0"
                 style={{
                   backgroundColor: 'var(--bg-elevated)',
                   borderColor: 'var(--border-primary)',
                   color: 'var(--text-primary)',
                 }}
               >
-                Reset & Start Over
+                Reset
               </button>
             )}
           </div>
 
           {/* Stepper Bar */}
-          <div className="flex items-center gap-2 text-xs font-medium pt-1">
+          <div className="flex items-center gap-2 text-xs font-medium pt-1 overflow-x-auto pb-1">
             {(['mode', 'upload', 'match', 'done'] as Step[]).map((s, idx) => {
               const stepList: Step[] = ['mode', 'upload', 'match', 'done'];
               const stepLabels = ['1. Choose Mode', '2. Upload Source', '3. Review & Match', '4. Complete'];
@@ -311,7 +311,7 @@ export default function ArchiveDigitizer() {
 
         {/* ===== STEP 0: MODE SELECTION ===== */}
         {step === 'mode' && (
-          <div className="px-8 py-6 space-y-6">
+          <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-6">
             <h2 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
               Choose Ingestion Mode
             </h2>
@@ -345,7 +345,7 @@ export default function ArchiveDigitizer() {
 
             <button
               onClick={() => setStep('upload')}
-              className="btn-primary px-6 py-2.5 text-xs font-bold flex items-center gap-2 cursor-pointer"
+              className="btn-primary px-8 py-3 text-xs font-bold flex items-center gap-2 shadow-lg cursor-pointer"
             >
               <span>Continue with {MODES.find(m => m.mode === uploadMode)?.title}</span>
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -357,7 +357,7 @@ export default function ArchiveDigitizer() {
 
         {/* ===== STEP 1: UPLOAD ===== */}
         {step === 'upload' && (
-          <div className="px-8 py-6 space-y-6">
+          <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Upload Page Photo (image-only and image-excel) */}
               {(uploadMode === 'image-only' || uploadMode === 'image-excel') && (
@@ -577,7 +577,7 @@ export default function ArchiveDigitizer() {
 
         {/* ===== STEP 2: REVIEW & MATCH ===== */}
         {step === 'match' && (
-          <div className="px-8 py-6 space-y-4">
+          <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4">
             <div
               className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}

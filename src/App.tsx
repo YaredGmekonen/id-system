@@ -8,6 +8,7 @@ import DataCollector from './pages/DataCollector';
 import ArchiveDigitizer from './pages/ArchiveDigitizer';
 import SystemSettings from './pages/SystemSettings';
 import PaperPrintStudio from './pages/PaperPrintStudio';
+import IDVerify from './pages/IDVerify';
 import LoadingSpinner from './components/shared/LoadingSpinner';
 import { seedDatabase } from './db/seed';
 import { AuthProvider } from './context/AuthContext';
@@ -47,6 +48,8 @@ export default function App() {
             <Route path="/digitizer" element={<ArchiveDigitizer />} />
             <Route path="/settings" element={<SystemSettings />} />
             <Route path="/print" element={<PaperPrintStudio />} />
+            <Route path="/verify/:id" element={<IDVerify />} />
+            <Route path="/verify" element={<IDVerify />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

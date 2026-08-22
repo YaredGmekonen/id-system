@@ -115,6 +115,7 @@ export default function IDCardStudio() {
   const [rosterOpen, setRosterOpen] = useState(true);
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
   const [paperModalOpen, setPaperModalOpen] = useState(false);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'roster' | 'preview' | 'templates'>('preview');
 
   // Live canvas render for custom templates
   const [customPreviewUrl, setCustomPreviewUrl] = useState<string>('');
@@ -323,13 +324,46 @@ export default function IDCardStudio() {
           </div>
         </header>
 
+        {/* Mobile Navigation Tabs (visible only on mobile & tablets < lg) */}
+        <div
+          className="flex lg:hidden items-center justify-around border-b px-2 py-1.5 flex-shrink-0 gap-1.5 z-20 shadow-xs"
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+        >
+          <button
+            onClick={() => setMobileActiveTab('roster')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'roster' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📁 Roster ({selectedIds.size > 0 ? selectedIds.size : filteredRoster.length})
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('preview')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'preview' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🪪 Live Card
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('templates')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'templates' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🎨 Templates & Styles
+          </button>
+        </div>
+
         {/* ================= 3-COLUMN WORKSPACE ================= */}
         <div className="flex-1 flex overflow-hidden">
           
           {/* COLUMN 1: FOLDER BATCHES & PERSONNEL ROSTER */}
-          {rosterOpen && (
+          {(rosterOpen || mobileActiveTab === 'roster') && (
             <aside
-              className="w-72 md:w-80 border-r flex flex-col p-3.5 space-y-3 flex-shrink-0 overflow-hidden z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-r flex flex-col p-3.5 space-y-3 flex-shrink-0 overflow-y-auto z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'roster' ? 'flex' : 'hidden lg:flex'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
             {/* Folder / Excel Source Classification Selector */}
@@ -459,7 +493,9 @@ export default function IDCardStudio() {
 
           {/* COLUMN 2: CENTER LIVE CANVAS MOCKUP */}
           <main
-            className="flex-1 flex flex-col items-center justify-center overflow-auto p-6 relative select-none"
+            className={`flex-1 flex-col items-center justify-center overflow-auto p-4 sm:p-6 relative select-none ${
+              mobileActiveTab === 'preview' ? 'flex' : 'hidden lg:flex'
+            }`}
             style={{ backgroundColor: 'var(--bg-root)' }}
           >
             {/* Top Toolbar Info */}
@@ -580,9 +616,11 @@ export default function IDCardStudio() {
           </main>
 
           {/* COLUMN 3: TEMPLATES & DESIGNER SYNC */}
-          {templatePanelOpen && (
+          {(templatePanelOpen || mobileActiveTab === 'templates') && (
             <aside
-              className="w-72 md:w-80 border-l p-4 space-y-4 overflow-y-auto flex-shrink-0 text-xs z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-l p-4 space-y-4 overflow-y-auto flex-shrink-0 text-xs z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'templates' ? 'block' : 'hidden lg:block'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
             {/* 1. Custom Designer Templates */}

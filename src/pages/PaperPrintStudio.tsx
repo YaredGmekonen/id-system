@@ -53,9 +53,10 @@ export default function PaperPrintStudio() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  // Responsive workspace sidebar toggles
+  // Responsive workspace sidebar toggles & mobile tabs
   const [rosterSidebarOpen, setRosterSidebarOpen] = useState(true);
   const [controlsSidebarOpen, setControlsSidebarOpen] = useState(true);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'roster' | 'artboard' | 'inspector'>('artboard');
 
   // Custom Grid Generator state
   const [gridRows, setGridRows] = useState(4);
@@ -658,13 +659,46 @@ export default function PaperPrintStudio() {
           </div>
         </header>
 
+        {/* Mobile Navigation Tabs (visible only on mobile & tablets < lg) */}
+        <div
+          className="flex lg:hidden items-center justify-around border-b px-2 py-1.5 flex-shrink-0 gap-1.5 z-20 shadow-xs"
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+        >
+          <button
+            onClick={() => setMobileActiveTab('roster')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'roster' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📁 Roster ({selectedIds.size > 0 ? selectedIds.size : filteredPeople.length})
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('artboard')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'artboard' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📄 Artboard ({cardSlots.length})
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('inspector')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'inspector' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            ⚙️ Inspector
+          </button>
+        </div>
+
         {/* ================= 3-COLUMN WORKSPACE ================= */}
         <div className="flex-1 flex overflow-hidden relative">
           
-          {/* COLUMN 1: BATCH ROSTER & PERSONNEL (COLLAPSIBLE) */}
-          {rosterSidebarOpen && (
+          {/* COLUMN 1: BATCH ROSTER & PERSONNEL (COLLAPSIBLE / RESPONSIVE) */}
+          {(rosterSidebarOpen || mobileActiveTab === 'roster') && (
             <aside
-              className="w-72 md:w-80 border-r flex flex-col p-3.5 space-y-3 flex-shrink-0 overflow-hidden text-xs z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-r flex flex-col p-3.5 space-y-3 flex-shrink-0 overflow-y-auto text-xs z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'roster' ? 'flex' : 'hidden lg:flex'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <div>
@@ -755,7 +789,9 @@ export default function PaperPrintStudio() {
 
           {/* COLUMN 2: CENTER PHYSICAL PAPER SHEET ARTBOARD */}
           <main
-            className="flex-1 flex flex-col items-center justify-center overflow-auto p-4 md:p-8 relative select-none"
+            className={`flex-1 flex-col items-center justify-center overflow-auto p-4 md:p-8 relative select-none ${
+              mobileActiveTab === 'artboard' ? 'flex' : 'hidden lg:flex'
+            }`}
             style={{ backgroundColor: 'var(--bg-root)' }}
             onMouseMove={handleSheetMouseMove}
             onMouseUp={handleSheetMouseUp}
@@ -946,10 +982,12 @@ export default function PaperPrintStudio() {
             </div>
           </main>
 
-          {/* COLUMN 3: IMPOSITION & SHEET INSPECTOR (COLLAPSIBLE) */}
-          {controlsSidebarOpen && (
+          {/* COLUMN 3: IMPOSITION & SHEET INSPECTOR (COLLAPSIBLE / RESPONSIVE) */}
+          {(controlsSidebarOpen || mobileActiveTab === 'inspector') && (
             <aside
-              className="w-72 md:w-80 border-l p-4 space-y-4 overflow-y-auto flex-shrink-0 text-xs z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-l p-4 space-y-4 overflow-y-auto flex-shrink-0 text-xs z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'inspector' ? 'block' : 'hidden lg:block'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               {/* Selected Slot Inspector (if active) */}

@@ -29,6 +29,7 @@ export default function Designer() {
   const [dimensionPreset, setDimensionPreset] = useState<string>('cr80-landscape');
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+  const [mobileActiveTab, setMobileActiveTab] = useState<'tools' | 'canvas' | 'properties'>('canvas');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimeoutRef = useRef<number | null>(null);
 
@@ -594,12 +595,45 @@ export default function Designer() {
           </div>
         </header>
 
+        {/* Mobile Navigation Tabs (visible only on mobile & tablets < lg) */}
+        <div
+          className="flex lg:hidden items-center justify-around border-b px-2 py-1.5 flex-shrink-0 gap-1.5 z-20 shadow-xs"
+          style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+        >
+          <button
+            onClick={() => setMobileActiveTab('tools')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'tools' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🛠️ Tools & Templates
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('canvas')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'canvas' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🎨 Vector Canvas
+          </button>
+          <button
+            onClick={() => setMobileActiveTab('properties')}
+            className={`flex-1 py-2 px-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              mobileActiveTab === 'properties' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            ⚙️ Properties
+          </button>
+        </div>
+
         {/* Studio Workspace */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Toolbar */}
-          {leftSidebarOpen && (
+          {(leftSidebarOpen || mobileActiveTab === 'tools') && (
             <aside
-              className="w-72 md:w-80 border-r overflow-y-auto p-4 space-y-5 flex-shrink-0 text-xs z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-r overflow-y-auto p-4 space-y-5 flex-shrink-0 text-xs z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'tools' ? 'block' : 'hidden lg:block'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <Toolbar
@@ -673,13 +707,15 @@ export default function Designer() {
 
           {/* Canvas Center */}
           <main
-            className="flex-1 flex flex-col items-center justify-center overflow-auto p-6 relative"
+            className={`flex-1 flex-col items-center justify-center overflow-auto p-4 sm:p-6 relative ${
+              mobileActiveTab === 'canvas' ? 'flex' : 'hidden lg:flex'
+            }`}
             style={{ backgroundColor: 'var(--bg-root)' }}
           >
             {/* Top Toolbar Info */}
-            <div className="absolute top-3 left-6 right-6 flex items-center justify-between text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
-              <span>Canvas: {activeSide.toUpperCase()} FACE • {cardWidth}×{cardHeight}px ({Math.round((cardWidth / 300) * 25.4)}×{Math.round((cardHeight / 300) * 25.4)}mm at 300 DPI)</span>
-              <span>{selectedIds.length > 1 ? `${selectedIds.length} elements selected` : 'Drag elements or drop desktop images directly'}</span>
+            <div className="absolute top-3 left-6 right-6 flex items-center justify-between text-[11px] font-mono flex-wrap gap-1" style={{ color: 'var(--text-muted)' }}>
+              <span>Canvas: {activeSide.toUpperCase()} FACE • {cardWidth}×{cardHeight}px ({Math.round((cardWidth / 300) * 25.4)}×{Math.round((cardHeight / 300) * 25.4)}mm)</span>
+              <span className="hidden sm:inline">{selectedIds.length > 1 ? `${selectedIds.length} elements selected` : 'Drag elements or drop desktop images directly'}</span>
             </div>
 
             <CardCanvas
@@ -704,9 +740,11 @@ export default function Designer() {
           </main>
 
           {/* Right Property & Layer Panel */}
-          {rightSidebarOpen && (
+          {(rightSidebarOpen || mobileActiveTab === 'properties') && (
             <aside
-              className="w-72 md:w-80 border-l overflow-y-auto p-4 space-y-5 flex-shrink-0 text-xs z-10 shadow-lg md:shadow-none"
+              className={`w-full lg:w-80 border-l overflow-y-auto p-4 space-y-5 flex-shrink-0 text-xs z-10 shadow-lg lg:shadow-none ${
+                mobileActiveTab === 'properties' ? 'block' : 'hidden lg:block'
+              }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <PropertyPanel

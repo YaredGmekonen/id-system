@@ -36,8 +36,11 @@ function replacePlaceholders(text: string, person: Person): string {
   const parts = (person.fullName || '').trim().split(/\s+/);
   const firstName = parts[0] || '';
   const lastName = parts.slice(1).join(' ') || '';
+  const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://id-system-theta.vercel.app';
+  const verifyUrl = `${origin}/verify/${person.idNumber || person.id || 'ID-2026-081'}`;
 
   return text
+    .replace(/\{\{verify_url\}\}/gi, verifyUrl)
     .replace(/\{\{full_name\}\}/gi, person.fullName || '')
     .replace(/\{\{name\}\}/gi, person.fullName || '')
     .replace(/\{\{first_name\}\}/gi, firstName)
@@ -255,7 +258,9 @@ async function _renderStudioCardInner(
         }
       } else if (el.type === 'qr' || el.type === 'qrCode') {
         try {
-          const payload = el.qrPayload ? replacePlaceholders(el.qrPayload, person) : person.idNumber || 'ID-PLATFORM';
+          const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://id-system-theta.vercel.app';
+          const defaultVerifyUrl = `${origin}/verify/${person.idNumber || person.id || 'ID-2026-081'}`;
+          const payload = el.qrPayload ? replacePlaceholders(el.qrPayload, person) : defaultVerifyUrl;
           const qrUrl = await generateQrDataUrl(payload, Math.round(elW));
           const qrImg = await loadImage(qrUrl);
           ctx.drawImage(qrImg, elX, elY, elW, elH);

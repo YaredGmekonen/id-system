@@ -191,9 +191,11 @@ async function renderElement(
 
     case 'qr':
     case 'qrCode': {
+      const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://id-system-theta.vercel.app';
+      const defaultVerify = `${origin}/verify/${person.idNumber || person.id || 'ID-2026-081'}`;
       const qrPayload = el.qrPayload
         ? hydrateText(el.qrPayload, person)
-        : (person.idNumber || 'ID-PLATFORM-000');
+        : defaultVerify;
       const qrDataUrl = await generateQrDataUrl(qrPayload, Math.round(el.width || 120));
       try {
         const img = await loadImage(qrDataUrl);
@@ -292,8 +294,11 @@ function hydrateText(text: string, person: Person): string {
   const parts = (person.fullName || '').trim().split(/\s+/);
   const firstName = parts[0] || '';
   const lastName = parts.slice(1).join(' ') || '';
+  const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'https://id-system-theta.vercel.app';
+  const verifyUrl = `${origin}/verify/${person.idNumber || person.id || 'ID-2026-081'}`;
 
   return text
+    .replace(/\{\{verify_url\}\}/gi, verifyUrl)
     .replace(/\{\{full_name\}\}/g, person.fullName || '')
     .replace(/\{\{name\}\}/g, person.fullName || '')
     .replace(/\{\{first_name\}\}/g, firstName)
@@ -307,7 +312,7 @@ function hydrateText(text: string, person: Person): string {
     .replace(/\{\{blood_group\}\}/g, person.bloodGroup || 'O+')
     .replace(/\{\{joined_date\}\}/g, person.joinedDate || '')
     .replace(/\{\{status\}\}/g, person.status || 'Active')
-    .replace(/\{\{qr_code\}\}/g, person.idNumber || '');
+    .replace(/\{\{qr_code\}\}/g, verifyUrl);
 }
 
 /**

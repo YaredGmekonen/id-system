@@ -78,27 +78,27 @@ export default function DataCollector() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header
-          className="px-8 pt-5 pb-4 border-b flex-shrink-0"
+          className="px-4 sm:px-8 pt-4 pb-3 border-b flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-mono tracking-widest uppercase font-bold text-[#84a92c]">
                 ID PLATFORM / DATA COLLECTOR & ENROLLMENT
               </p>
-              <h1 className="text-lg font-extrabold tracking-tight mt-0.5" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight mt-0.5" style={{ color: 'var(--text-primary)' }}>
                 Data Collector & Biometric Onboarding
               </h1>
             </div>
 
             {/* Mode Switcher */}
             <div
-              className="flex items-center p-1 rounded-xl border"
+              className="flex items-center p-1 rounded-xl border w-full sm:w-auto justify-center"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               <button
                 onClick={() => setCollectorMode('manual')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   collectorMode === 'manual' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{ color: collectorMode === 'manual' ? '#ffffff' : 'var(--text-secondary)' }}
@@ -111,7 +111,7 @@ export default function DataCollector() {
 
               <button
                 onClick={() => setCollectorMode('scanner')}
-                className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   collectorMode === 'scanner' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{ color: collectorMode === 'scanner' ? '#ffffff' : 'var(--text-secondary)' }}
@@ -127,7 +127,7 @@ export default function DataCollector() {
 
         {/* ====== BATCH FOLDER MANAGER BAR ====== */}
         <div
-          className="px-8 py-3 border-b flex-shrink-0"
+          className="px-4 sm:px-8 py-3 border-b flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex items-center gap-3 flex-wrap">
@@ -269,7 +269,7 @@ export default function DataCollector() {
         </div>
 
         {/* Content Body */}
-        <div className="px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Main Action Area (7 cols) */}
           <div
             className="lg:col-span-7 p-6 rounded-2xl border shadow-xs"

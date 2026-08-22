@@ -206,7 +206,7 @@ export default function OverviewDashboard() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* ================= TOP HEADER ================= */}
         <header
-          className="h-16 px-8 border-b flex items-center justify-between z-20 flex-shrink-0"
+          className="px-4 sm:px-8 py-3.5 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 z-20 flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div>
@@ -215,7 +215,7 @@ export default function OverviewDashboard() {
                 SILICONLABS TECH PLC / {role.toUpperCase()} COMMAND CONSOLE
               </span>
             </div>
-            <h1 className="text-base font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-sm sm:text-base font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               {role === 'designer'
                 ? 'Card Designer Workflow & Production Queues'
                 : role === 'collector'
@@ -224,11 +224,11 @@ export default function OverviewDashboard() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
             {/* Launch Dedicated A4/A3 Print Studio Page */}
             <button
               onClick={() => navigate('/print')}
-              className="btn-primary py-2 px-4 text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+              className="btn-primary py-2 px-4 text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer w-full sm:w-auto justify-center"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24-1.077-.47-2.18-.72-3.329m0 0L3.6 10.5M6 10.5l-2.4 2.4m14.4-2.4l2.4 2.4m-2.4-2.4l2.4-2.4M6.72 13.829L12 18l5.28-4.171M6.72 13.829c.14.628.32 1.256.54 1.871" />
@@ -240,10 +240,10 @@ export default function OverviewDashboard() {
         </header>
 
         {/* ================= ROLE-TAILORED KPI STATS ================= */}
-        <div className="px-8 pt-6 pb-2">
+        <div className="px-4 sm:px-8 pt-4 pb-2">
           {/* 1. ADMIN / GUEST KPI METRICS */}
           {(role === 'admin' || role === 'guest') && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
               <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
                 <div className="flex items-center justify-between text-xs">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#84a92c]/10 text-[#84a92c]">

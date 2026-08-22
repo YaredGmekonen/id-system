@@ -154,6 +154,7 @@ export const DATA_FIELDS = [
   { key: '{{status}}', label: 'Status' },
   { key: '{{photo}}', label: 'Photo Frame' },
   { key: '{{qr_code}}', label: 'Dynamic QR Code' },
+  { key: '{{verify_url}}', label: 'Online Verification URL' },
   { key: '{{barcode}}', label: 'Code 128 Barcode' },
 ] as const;
 
