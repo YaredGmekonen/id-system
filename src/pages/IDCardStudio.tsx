@@ -114,6 +114,7 @@ export default function IDCardStudio() {
   // Responsive sidebar toggles
   const [rosterOpen, setRosterOpen] = useState(true);
   const [templatePanelOpen, setTemplatePanelOpen] = useState(true);
+  const [paperModalOpen, setPaperModalOpen] = useState(false);
 
   // Live canvas render for custom templates
   const [customPreviewUrl, setCustomPreviewUrl] = useState<string>('');
