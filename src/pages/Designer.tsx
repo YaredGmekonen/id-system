@@ -516,19 +516,19 @@ export default function Designer() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Header */}
         <header
-          className="h-16 px-8 border-b flex items-center justify-between z-20 flex-shrink-0"
+          className="min-h-16 py-2 px-4 md:px-8 border-b flex items-center justify-between z-20 flex-shrink-0 flex-wrap gap-2"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
-          <div>
-            <h1 className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          <div className="truncate min-w-0">
+            <h1 className="text-sm font-bold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
               Canvas Vector Designer (Canva / Photoshop Pro)
             </h1>
-            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[11px] truncate hidden sm:block" style={{ color: 'var(--text-muted)' }}>
               Create rich vector templates with dynamic data bindings, real QR matrices, and custom branding.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Card Dimension Presets & Custom Dimensions */}
             <div className="flex items-center gap-1.5 border p-1 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
               <span className="text-[10px] font-mono font-bold px-1.5 text-slate-500 uppercase">Card Size:</span>

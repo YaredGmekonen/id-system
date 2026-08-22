@@ -200,10 +200,10 @@ export default function PaperPrintStudio() {
     const totalSheetsRequired = Math.max(1, Math.ceil(peopleList.length / capacityPerSheet));
     const generatedPages: CardSlot[][] = [];
 
-    const startX = 14;
-    const startY = 15;
-    const gapX = 10;
-    const gapY = 8;
+    const gapX = 8;
+    const gapY = 6;
+    const startX = Math.max(6, Math.round((paperWidthMm - (2 * cardW + gapX)) / 2));
+    const startY = Math.max(8, Math.round((paperHeightMm - (4 * cardH + 3 * gapY)) / 2));
 
     for (let pageIdx = 0; pageIdx < totalSheetsRequired; pageIdx++) {
       const pagePeople = peopleList.slice(pageIdx * capacityPerSheet, (pageIdx + 1) * capacityPerSheet);
@@ -213,7 +213,7 @@ export default function PaperPrintStudio() {
         // 4 rows, 2 columns per sheet (Col 1 = Front, Col 2 = Back)
         for (let r = 0; r < 4; r++) {
           const person = pagePeople[r];
-          if (!person && pageIdx > 0 && r >= pagePeople.length) break; // Don't add blank rows on trailing pages if not desired
+          if (!person && pageIdx > 0 && r >= pagePeople.length) break; // Don't add blank rows on trailing pages
 
           const pId = person ? person.id : peopleList[r % peopleList.length]?.id;
           const y = startY + r * (cardH + gapY);
@@ -1268,7 +1268,7 @@ export default function PaperPrintStudio() {
                 <div className="w-px h-3 bg-slate-600 mx-1" />
 
                 <button
-                  onClick={() => setZoomScale(z => Math.max(0.4, Math.round((z - 0.1) * 100) / 100))}
+                  onClick={() => setZoomScale(z => Math.max(0.35, Math.round((z - 0.1) * 100) / 100))}
                   className="px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer text-xs font-bold"
                   title="Zoom Out"
                 >
@@ -1283,26 +1283,31 @@ export default function PaperPrintStudio() {
                   +
                 </button>
                 <button
-                  onClick={() => setZoomScale(0.85)}
-                  className="px-1.5 py-0.5 rounded hover:bg-white/10 cursor-pointer text-[10px]"
-                  title="Reset Zoom"
+                  onClick={() => {
+                    const availW = typeof window !== 'undefined' ? Math.min(window.innerWidth - 80, 800) : 700;
+                    const fit = availW / (paperWidthMm * 3.6);
+                    setZoomScale(Math.max(0.35, Math.min(1.1, Math.round(fit * 100) / 100)));
+                  }}
+                  className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 cursor-pointer text-[10px] font-bold text-[#9fe870]"
+                  title="Auto-Fit Sheet to Viewport"
                 >
                   Fit
                 </button>
               </div>
             </div>
 
-            {/* Physical Paper Sheet Canvas Container */}
-            <div
-              ref={paperSheetRef}
-              className="relative bg-white shadow-2xl transition-all duration-150 border border-slate-400 my-auto cursor-crosshair"
-              style={{
-                width: `${sheetWidthPx}px`,
-                height: `${sheetHeightPx}px`,
-                boxShadow: '0 25px 60px -15px rgba(0,0,0,0.6)',
-              }}
-              onMouseDown={handleSheetMouseDown}
-            >
+            {/* Physical Paper Sheet Canvas Container with ample bottom clearance */}
+            <div className="w-full flex items-center justify-center pb-32">
+              <div
+                ref={paperSheetRef}
+                className="relative bg-white shadow-2xl transition-all duration-150 border border-slate-400 my-4 cursor-crosshair flex-shrink-0"
+                style={{
+                  width: `${sheetWidthPx}px`,
+                  height: `${sheetHeightPx}px`,
+                  boxShadow: '0 25px 60px -15px rgba(0,0,0,0.6)',
+                }}
+                onMouseDown={handleSheetMouseDown}
+              >
               {/* Subtle mm Grid Paper Background */}
               <div
                 className="absolute inset-0 pointer-events-none opacity-10"
@@ -1450,11 +1455,12 @@ export default function PaperPrintStudio() {
                   </div>
                 );
               })}
+              </div>
             </div>
 
             {/* Floating Toast Notification */}
             {toastMessage && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-slate-950/90 text-white font-medium text-xs shadow-2xl border border-[#84a92c] flex items-center gap-2 animate-fade-in backdrop-blur-md">
+              <div className="fixed bottom-16 lg:bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-slate-950/90 text-white font-medium text-xs shadow-2xl border border-[#84a92c] flex items-center gap-2 animate-fade-in backdrop-blur-md">
                 <span>{toastMessage}</span>
               </div>
             )}
@@ -1765,6 +1771,59 @@ export default function PaperPrintStudio() {
               </div>
             </aside>
           )}
+        </div>
+
+        {/* Mobile Bottom Navigation Bar (<1024px) */}
+        <div
+          className="flex lg:hidden fixed bottom-0 left-0 right-0 h-14 border-t z-50 items-center justify-around px-2 backdrop-blur-md"
+          style={{ backgroundColor: 'rgba(11, 19, 27, 0.95)', borderColor: 'var(--border-primary)' }}
+        >
+          <button
+            onClick={() => setMobileActiveTab('roster')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 rounded-xl transition-all cursor-pointer ${
+              mobileActiveTab === 'roster' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+            <span className="text-[9px] font-bold font-mono">Roster</span>
+          </button>
+
+          <button
+            onClick={() => setMobileActiveTab('artboard')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 rounded-xl transition-all cursor-pointer ${
+              mobileActiveTab === 'artboard' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            <span className="text-[9px] font-bold font-mono">Sheet ({cardSlots.length})</span>
+          </button>
+
+          <button
+            onClick={() => setMobileActiveTab('inspector')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 rounded-xl transition-all cursor-pointer ${
+              mobileActiveTab === 'inspector' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            </svg>
+            <span className="text-[9px] font-bold font-mono">Settings</span>
+          </button>
+
+          <button
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 rounded-xl text-[#9fe870] font-bold cursor-pointer"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span className="text-[9px] font-bold font-mono">Export PDF</span>
+          </button>
         </div>
       </div>
     </div>

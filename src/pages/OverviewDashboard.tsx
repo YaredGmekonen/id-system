@@ -506,10 +506,10 @@ export default function OverviewDashboard() {
 
         {/* ================= VIEW 1: ROSTER VIEW ================= */}
         {viewMode === 'roster' && (
-          <div className="px-8 py-4 space-y-4">
+          <div className="px-4 md:px-8 py-4 space-y-4">
             {/* Filter / Search Bar */}
             <div
-              className="p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs"
+              className="p-3 md:p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <div className="relative w-full sm:w-80">
@@ -521,7 +521,7 @@ export default function OverviewDashboard() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search personnel, ID, department..."
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c] transition-colors"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c] transition-colors truncate"
                   style={{
                     backgroundColor: 'var(--bg-elevated)',
                     borderColor: 'var(--border-primary)',
@@ -531,12 +531,12 @@ export default function OverviewDashboard() {
               </div>
 
               {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                 {(['All', 'Unfulfilled', 'Processing', 'Fulfilled', 'Refunded', 'On Hold'] as FilterStatus[]).map(status => (
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-shrink-0 ${
                       filterStatus === status ? 'bg-[#198754] text-white shadow-xs' : 'border hover:opacity-80'
                     }`}
                     style={{
@@ -551,9 +551,61 @@ export default function OverviewDashboard() {
               </div>
             </div>
 
-            {/* Records Table with Select All */}
+            {/* Mobile Card List (visible on screens < sm) */}
+            <div className="block sm:hidden space-y-2.5">
+              {filteredPeople.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl border" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-muted)' }}>
+                  <p className="font-semibold text-xs">No records found</p>
+                </div>
+              ) : (
+                filteredPeople.map(p => {
+                  const isChecked = p.id ? selectedIds.has(p.id) : false;
+                  return (
+                    <div
+                      key={p.id}
+                      className="p-3 rounded-2xl border flex items-center justify-between gap-3 shadow-xs"
+                      style={{
+                        backgroundColor: isChecked ? 'rgba(132, 169, 44, 0.08)' : 'var(--bg-surface)',
+                        borderColor: isChecked ? '#84a92c' : 'var(--border-primary)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => p.id && toggleSelectPerson(p.id)}
+                          className="w-4 h-4 rounded accent-[#84a92c] cursor-pointer flex-shrink-0"
+                        />
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-900 border flex items-center justify-center font-bold text-xs" style={{ borderColor: 'var(--border-primary)', color: '#84a92c' }}>
+                          {p.photoDataUrl ? (
+                            <img src={p.photoDataUrl} alt={p.fullName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{p.fullName.substring(0, 2).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{p.fullName}</p>
+                          <p className="text-[10px] font-mono text-slate-400 truncate">ID: {p.idNumber} • {p.role || 'Staff'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => handleInspect(p)}
+                          className="btn-primary py-1.5 px-3 text-[11px] font-bold cursor-pointer"
+                        >
+                          Inspect
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop / Tablet Records Table */}
             <div
-              className="rounded-2xl border overflow-hidden shadow-xs"
+              className="hidden sm:block rounded-2xl border overflow-hidden shadow-xs"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <div className="overflow-x-auto">
