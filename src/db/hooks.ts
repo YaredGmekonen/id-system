@@ -129,7 +129,7 @@ export async function addTemplate(template: Omit<CardTemplate, 'id'>): Promise<n
 }
 
 export async function updateTemplate(id: number, changes: Partial<CardTemplate>): Promise<void> {
-  await db.templates.update(id, { ...changes, updatedAt: new Date() });
+  await (db.templates as any).update(id, { ...changes, updatedAt: new Date() });
 }
 
 export async function deleteTemplate(id: number): Promise<void> {
@@ -146,4 +146,29 @@ export async function updateArchiveTemplate(id: number, changes: Partial<Archive
 
 export async function deleteArchiveTemplate(id: number): Promise<void> {
   await db.archiveTemplates.delete(id);
+}
+
+// ===== WORKERS & USER ACCOUNTS MUTATIONS =====
+export async function addWorker(worker: Omit<Worker, 'id'>): Promise<number> {
+  return (await db.workers.add(worker)) as number;
+}
+
+export async function updateWorker(id: number, changes: Partial<Worker>): Promise<void> {
+  await db.workers.update(id, changes);
+}
+
+export async function deleteWorker(id: number): Promise<void> {
+  await db.workers.delete(id);
+}
+
+export async function addUserAccount(user: Omit<UserAccount, 'id'>): Promise<number> {
+  return (await db.users.add(user)) as number;
+}
+
+export async function updateUserAccount(id: number, changes: Partial<UserAccount>): Promise<void> {
+  await db.users.update(id, changes);
+}
+
+export async function deleteUserAccount(id: number): Promise<void> {
+  await db.users.delete(id);
 }

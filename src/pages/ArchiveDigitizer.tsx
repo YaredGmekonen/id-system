@@ -179,8 +179,8 @@ export default function ArchiveDigitizer() {
         matchedRecordToPerson(m, 'Archive Digitizer', { folderName: folder, sourceFileName: excelFileName || 'Physical Book Scan' })
       );
 
-      const count = await bulkAddPeople(persons);
-      setSavedCount(count);
+      await bulkAddPeople(persons);
+      setSavedCount(persons.length);
       setStep('done');
     } catch {
       alert('Error saving records to database.');

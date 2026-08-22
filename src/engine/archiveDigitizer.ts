@@ -18,7 +18,7 @@ export interface ExcelStudent {
 
 export interface MatchedRecord {
   slotIndex: number;
-  photoUrl: string;
+  photoUrl?: string;
   student: ExcelStudent;
   confirmed: boolean;
   skipped: boolean;

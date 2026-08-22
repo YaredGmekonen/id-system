@@ -111,7 +111,7 @@ export async function executeRealBatchGeneration(
 
     // Package 8-up A4 Print Sheet PDF for this batch (Front sides)
     const frontCards = renderedCards.filter(c => c.filename.includes('_FRONT'));
-    const printSheetData = frontCards.map(c => ({ name: c.name, png: c.pngDataUrl }));
+    const printSheetData = frontCards.map(c => ({ name: c.name, side: 'front' as const, png: c.pngDataUrl }));
     const pdfBytes = await generatePrintSheet(printSheetData);
     downloadPdf(pdfBytes, `Print_Sheet_A4_${batchLabel}.pdf`);
 
