@@ -256,6 +256,69 @@ async function renderElement(
       }
       break;
     }
+
+    case 'star': {
+      const starNode = new Konva.Star({
+        x: el.x + (el.width || 60) / 2,
+        y: el.y + (el.height || 60) / 2,
+        numPoints: el.starPoints || 5,
+        innerRadius: el.innerRadius || ((el.width || 60) * 0.22),
+        outerRadius: (el.width || 60) / 2,
+        fill: el.fill || '#F59E0B',
+        stroke: el.stroke,
+        strokeWidth: el.strokeWidth,
+        opacity: el.opacity ?? 1,
+      });
+      layer.add(starNode);
+      break;
+    }
+
+    case 'polygon':
+    case 'badgeShield': {
+      const polyNode = new Konva.RegularPolygon({
+        x: el.x + (el.width || 60) / 2,
+        y: el.y + (el.height || 60) / 2,
+        sides: el.sides || 6,
+        radius: (el.width || 60) / 2,
+        fill: el.fill || '#3B82F6',
+        stroke: el.stroke,
+        strokeWidth: el.strokeWidth,
+        opacity: el.opacity ?? 1,
+      });
+      layer.add(polyNode);
+      break;
+    }
+
+    case 'pill': {
+      const pillGroup = new Konva.Group({ x: el.x, y: el.y });
+      const rect = new Konva.Rect({
+        width: el.width || 120,
+        height: el.height || 30,
+        cornerRadius: (el.height || 30) / 2,
+        fill: el.fill || '#10B981',
+      });
+      pillGroup.add(rect);
+      if (el.text) {
+        const text = new Konva.Text({
+          text: el.text,
+          width: el.width || 120,
+          y: (el.height || 30) / 2 - 6,
+          align: 'center',
+          fontSize: el.fontSize || 11,
+          fontFamily: 'Inter',
+          fontStyle: 'bold',
+          fill: '#FFFFFF',
+        });
+        pillGroup.add(text);
+      }
+      layer.add(pillGroup);
+      break;
+    }
+
+    default: {
+      // Fallback for custom badges
+      break;
+    }
   }
 }
 

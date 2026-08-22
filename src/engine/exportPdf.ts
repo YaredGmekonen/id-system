@@ -191,7 +191,7 @@ export async function generatePrintSheet(
  * customizable crop marks, guidelines, and metadata headers.
  */
 export async function generateCustomPaperPdf(
-  cards: PlacedPaperCard[],
+  cardsOrPages: PlacedPaperCard[] | PlacedPaperCard[][],
   config: PaperSheetConfig
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
@@ -203,79 +203,91 @@ export async function generateCustomPaperPdf(
   const paperWidthPt = paperWidthMm * MM_TO_PT;
   const paperHeightPt = paperHeightMm * MM_TO_PT;
 
-  const page = pdfDoc.addPage([paperWidthPt, paperHeightPt]);
+  // Normalize input to array of pages
+  const pages: PlacedPaperCard[][] =
+    cardsOrPages.length > 0 && Array.isArray(cardsOrPages[0])
+      ? (cardsOrPages as PlacedPaperCard[][])
+      : [cardsOrPages as PlacedPaperCard[]];
 
-  // Optional Sheet Metadata Header
-  if (config.showMetadata !== false) {
-    page.drawText(`SiliconLabs Production Print Sheet • ${config.paperName} (${Math.round(paperWidthMm)}x${Math.round(paperHeightMm)}mm)`, {
-      x: 10 * MM_TO_PT,
-      y: paperHeightPt - (8 * MM_TO_PT),
-      size: 7,
-      color: rgb(0.4, 0.45, 0.5),
-    });
-    page.drawText(`300 DPI Imposition Engine • Cards: ${cards.length} • Generated: ${new Date().toLocaleDateString()}`, {
-      x: paperWidthPt - (75 * MM_TO_PT),
-      y: paperHeightPt - (8 * MM_TO_PT),
-      size: 7,
-      color: rgb(0.5, 0.55, 0.6),
-    });
-  }
+  const totalPages = pages.length;
 
-  // Optional Center Fold Guideline
-  if (config.showCenterGuide) {
-    const centerX = paperWidthPt / 2;
-    page.drawLine({
-      start: { x: centerX, y: 10 * MM_TO_PT },
-      end: { x: centerX, y: paperHeightPt - (10 * MM_TO_PT) },
-      thickness: 0.5,
-      color: rgb(0.85, 0.88, 0.92),
-    });
-  }
+  for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+    const pageCards = pages[pageIdx] || [];
+    const page = pdfDoc.addPage([paperWidthPt, paperHeightPt]);
+    const pageNum = pageIdx + 1;
 
-  // Draw each placed card
-  for (const card of cards) {
-    if (!card.png) continue;
-
-    const xPt = card.xMm * MM_TO_PT;
-    const widthPt = card.widthMm * MM_TO_PT;
-    const heightPt = card.heightMm * MM_TO_PT;
-    // Invert Y coordinate for PDF coordinate space (origin at bottom-left)
-    const yPt = paperHeightPt - (card.yMm * MM_TO_PT) - heightPt;
-
-    try {
-      const pngImage = await embedImageDataUrl(pdfDoc, card.png);
-      page.drawImage(pngImage, {
-        x: xPt,
-        y: yPt,
-        width: widthPt,
-        height: heightPt,
-        rotate: degrees(card.rotationDeg || 0),
+    // Optional Sheet Metadata Header
+    if (config.showMetadata !== false) {
+      page.drawText(`SiliconLabs Production Print Sheet • ${config.paperName} (${Math.round(paperWidthMm)}x${Math.round(paperHeightMm)}mm) • Page ${pageNum} of ${totalPages}`, {
+        x: 10 * MM_TO_PT,
+        y: paperHeightPt - (8 * MM_TO_PT),
+        size: 7,
+        color: rgb(0.4, 0.45, 0.5),
       });
+      page.drawText(`300 DPI Imposition Engine • Cards on Sheet: ${pageCards.length} • ${new Date().toLocaleDateString()}`, {
+        x: paperWidthPt - (78 * MM_TO_PT),
+        y: paperHeightPt - (8 * MM_TO_PT),
+        size: 7,
+        color: rgb(0.5, 0.55, 0.6),
+      });
+    }
 
-      // Draw Corner Crop Marks
-      if (config.showCropMarks !== false) {
-        const markLenPt = 3 * MM_TO_PT;
-        const markColor = rgb(0.7, 0.75, 0.8);
-        const strokeW = 0.5;
+    // Optional Center Fold Guideline
+    if (config.showCenterGuide) {
+      const centerX = paperWidthPt / 2;
+      page.drawLine({
+        start: { x: centerX, y: 10 * MM_TO_PT },
+        end: { x: centerX, y: paperHeightPt - (10 * MM_TO_PT) },
+        thickness: 0.5,
+        color: rgb(0.85, 0.88, 0.92),
+      });
+    }
 
-        // Top-left
-        page.drawLine({ start: { x: xPt - markLenPt, y: yPt + heightPt }, end: { x: xPt, y: yPt + heightPt }, thickness: strokeW, color: markColor });
-        page.drawLine({ start: { x: xPt, y: yPt + heightPt }, end: { x: xPt, y: yPt + heightPt + markLenPt }, thickness: strokeW, color: markColor });
+    // Draw each placed card on this page
+    for (const card of pageCards) {
+      if (!card.png) continue;
 
-        // Top-right
-        page.drawLine({ start: { x: xPt + widthPt, y: yPt + heightPt }, end: { x: xPt + widthPt + markLenPt, y: yPt + heightPt }, thickness: strokeW, color: markColor });
-        page.drawLine({ start: { x: xPt + widthPt, y: yPt + heightPt }, end: { x: xPt + widthPt, y: yPt + heightPt + markLenPt }, thickness: strokeW, color: markColor });
+      const xPt = card.xMm * MM_TO_PT;
+      const widthPt = card.widthMm * MM_TO_PT;
+      const heightPt = card.heightMm * MM_TO_PT;
+      // Invert Y coordinate for PDF coordinate space (origin at bottom-left)
+      const yPt = paperHeightPt - (card.yMm * MM_TO_PT) - heightPt;
 
-        // Bottom-left
-        page.drawLine({ start: { x: xPt - markLenPt, y: yPt }, end: { x: xPt, y: yPt }, thickness: strokeW, color: markColor });
-        page.drawLine({ start: { x: xPt, y: yPt }, end: { x: xPt, y: yPt - markLenPt }, thickness: strokeW, color: markColor });
+      try {
+        const pngImage = await embedImageDataUrl(pdfDoc, card.png);
+        page.drawImage(pngImage, {
+          x: xPt,
+          y: yPt,
+          width: widthPt,
+          height: heightPt,
+          rotate: degrees(card.rotationDeg || 0),
+        });
 
-        // Bottom-right
-        page.drawLine({ start: { x: xPt + widthPt, y: yPt }, end: { x: xPt + widthPt + markLenPt, y: yPt }, thickness: strokeW, color: markColor });
-        page.drawLine({ start: { x: xPt + widthPt, y: yPt }, end: { x: xPt + widthPt, y: yPt - markLenPt }, thickness: strokeW, color: markColor });
+        // Draw Corner Crop Marks
+        if (config.showCropMarks !== false) {
+          const markLenPt = 3 * MM_TO_PT;
+          const markColor = rgb(0.7, 0.75, 0.8);
+          const strokeW = 0.5;
+
+          // Top-left
+          page.drawLine({ start: { x: xPt - markLenPt, y: yPt + heightPt }, end: { x: xPt, y: yPt + heightPt }, thickness: strokeW, color: markColor });
+          page.drawLine({ start: { x: xPt, y: yPt + heightPt }, end: { x: xPt, y: yPt + heightPt + markLenPt }, thickness: strokeW, color: markColor });
+
+          // Top-right
+          page.drawLine({ start: { x: xPt + widthPt, y: yPt + heightPt }, end: { x: xPt + widthPt + markLenPt, y: yPt + heightPt }, thickness: strokeW, color: markColor });
+          page.drawLine({ start: { x: xPt + widthPt, y: yPt + heightPt }, end: { x: xPt + widthPt, y: yPt + heightPt + markLenPt }, thickness: strokeW, color: markColor });
+
+          // Bottom-left
+          page.drawLine({ start: { x: xPt - markLenPt, y: yPt }, end: { x: xPt, y: yPt }, thickness: strokeW, color: markColor });
+          page.drawLine({ start: { x: xPt, y: yPt }, end: { x: xPt, y: yPt - markLenPt }, thickness: strokeW, color: markColor });
+
+          // Bottom-right
+          page.drawLine({ start: { x: xPt + widthPt, y: yPt }, end: { x: xPt + widthPt + markLenPt, y: yPt }, thickness: strokeW, color: markColor });
+          page.drawLine({ start: { x: xPt + widthPt, y: yPt }, end: { x: xPt + widthPt, y: yPt - markLenPt }, thickness: strokeW, color: markColor });
+        }
+      } catch (err) {
+        console.error(`[generateCustomPaperPdf] Failed to embed card "${card.name}" (id=${card.id}) on page ${pageNum}:`, err);
       }
-    } catch (err) {
-      console.error(`[generateCustomPaperPdf] Failed to embed card "${card.name}" (id=${card.id}):`, err);
     }
   }
 

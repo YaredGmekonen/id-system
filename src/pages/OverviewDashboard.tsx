@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Modal from '../components/shared/Modal';
 import { generateSingleCardPdf, downloadPdf } from '../engine/exportPdf';
+import { renderStudioCard, type StudioCardOptions } from '../engine/renderStudioCard';
 import { usePeople, useWorkers, useTemplates, deletePeople, updatePerson, useBatchFolders, addBatchFolder, updateBatchFolder, deleteBatchFolder } from '../db/hooks';
 import type { Person, BatchFolder } from '../db/database';
 import { useTheme } from '../context/ThemeContext';
@@ -26,7 +27,35 @@ export default function OverviewDashboard() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('All');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [inspectModalOpen, setInspectModalOpen] = useState(false);
+  const [inspectFace, setInspectFace] = useState<'front' | 'back'>('front');
+  const [inspectCardUrl, setInspectCardUrl] = useState<string>('');
   const [isPrinting, setIsPrinting] = useState(false);
+
+  // Render live 300 DPI preview for inspect modal
+  useEffect(() => {
+    let isCancelled = false;
+    if (inspectModalOpen && selectedPerson) {
+      const render = async () => {
+        try {
+          const url = await renderStudioCard(selectedPerson, inspectFace, {
+            orientation: 'horizontal',
+            backgroundColor: '#FFFFFF',
+            fontFamily: 'Inter',
+            headerColor: '#0b131b',
+            accentColor: '#10b981',
+            badgeColor: '#1e3a8a',
+          });
+          if (!isCancelled) setInspectCardUrl(url);
+        } catch {
+          // Handled internally
+        }
+      };
+      render();
+    } else {
+      setInspectCardUrl('');
+    }
+    return () => { isCancelled = true; };
+  }, [inspectModalOpen, selectedPerson, inspectFace]);
 
   // Multi-Select Batch Actions State
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -806,52 +835,110 @@ export default function OverviewDashboard() {
           isOpen={inspectModalOpen}
           onClose={() => setInspectModalOpen(false)}
           title={`Personnel Credential: ${selectedPerson.fullName}`}
-          size="md"
+          size="lg"
         >
           <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
-            <div className="p-4 rounded-2xl bg-white border border-slate-300 shadow-lg text-slate-900 space-y-3">
-              <div className="p-3 bg-[#0b131b] rounded-xl text-white flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-xs">SILICONLABS CREDENTIAL</p>
-                  <p className="text-[9px] font-mono text-[#9fe870]">CR80 STANDARD</p>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-emerald-400">300 DPI</span>
+            
+            {/* Front / Back Side Switcher */}
+            <div className="flex items-center justify-between">
+              <div className="flex rounded-xl overflow-hidden border p-1" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+                <button
+                  onClick={() => setInspectFace('front')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    inspectFace === 'front' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
+                  }`}
+                  style={{ color: inspectFace === 'front' ? '#ffffff' : 'var(--text-secondary)' }}
+                >
+                  Front Face
+                </button>
+                <button
+                  onClick={() => setInspectFace('back')}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    inspectFace === 'back' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
+                  }`}
+                  style={{ color: inspectFace === 'back' ? '#ffffff' : 'var(--text-secondary)' }}
+                >
+                  Back Face
+                </button>
               </div>
 
-              <div className="flex items-center gap-4 py-2">
-                <div className="w-20 h-24 rounded-xl bg-slate-100 border-2 border-emerald-500 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {selectedPerson.photoDataUrl ? (
-                    <img src={selectedPerson.photoDataUrl} alt={selectedPerson.fullName} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="font-black text-xl text-slate-600">
-                      {selectedPerson.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-1 min-w-0 flex-1">
-                  <h3 className="text-base font-black text-slate-900 truncate">{selectedPerson.fullName}</h3>
-                  <p className="text-xs font-bold text-emerald-600">{selectedPerson.role}</p>
-                  <p className="text-xs text-slate-600 font-mono">ID: {selectedPerson.idNumber}</p>
-                  <p className="text-xs text-slate-600">Folder: {selectedPerson.folderName || 'Default'}</p>
-                </div>
-              </div>
-
-              <div className="p-2.5 bg-emerald-700 text-white rounded-xl flex items-center justify-between text-xs font-mono font-bold">
-                <span>OFFICIAL CREDENTIAL</span>
-                <span>||||||||||||||||</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] bg-[#84a92c]/20 text-[#84a92c] px-2 py-1 rounded-lg font-bold">
+                  300 DPI Vector Engine
+                </span>
+                <span className="font-mono text-[10px] px-2 py-1 rounded-lg border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+                  ID: {selectedPerson.idNumber}
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            {/* Live Rendered Card Image */}
+            <div className="flex items-center justify-center p-4 rounded-2xl bg-black/40 border border-white/10 shadow-inner">
+              {inspectCardUrl ? (
+                <div className="relative group max-w-md w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
+                  <img src={inspectCardUrl} alt={`${selectedPerson.fullName} ${inspectFace}`} className="w-full h-auto object-contain rounded-2xl" />
+                </div>
+              ) : (
+                <div className="w-full h-48 flex items-center justify-center text-slate-400">
+                  <span>Rendering live 300 DPI credential…</span>
+                </div>
+              )}
+            </div>
+
+            {/* Person Detail Summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+              <div>
+                <span className="text-[10px] text-slate-500 font-mono block">Full Name</span>
+                <span className="font-bold text-xs truncate block">{selectedPerson.fullName}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 font-mono block">Department</span>
+                <span className="font-bold text-xs truncate block">{selectedPerson.department || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 font-mono block">Role / Title</span>
+                <span className="font-bold text-xs truncate block">{selectedPerson.role || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 font-mono block">Batch Folder</span>
+                <span className="font-bold text-xs truncate block">{selectedPerson.folderName || 'Default Batch'}</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
               <button
                 onClick={() => {
                   setInspectModalOpen(false);
-                  navigate('/studio');
+                  handlePrintSingle(selectedPerson);
                 }}
-                className="btn-primary py-2 px-4 text-xs font-bold"
+                className="btn-secondary py-2 px-3 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
-                Open in ID Studio
+                <span>📄 Download 300 DPI PDF</span>
               </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setInspectModalOpen(false);
+                    navigate(`/print?personId=${selectedPerson.id}`);
+                  }}
+                  className="py-2 px-3 rounded-xl border text-xs font-bold hover:border-[#84a92c] transition-colors cursor-pointer"
+                  style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                >
+                  Open in Paper Print Studio
+                </button>
+
+                <button
+                  onClick={() => {
+                    setInspectModalOpen(false);
+                    navigate(`/studio?personId=${selectedPerson.id}`);
+                  }}
+                  className="btn-primary py-2 px-4 text-xs font-bold cursor-pointer"
+                >
+                  Open in ID Studio ➔
+                </button>
+              </div>
             </div>
           </div>
         </Modal>

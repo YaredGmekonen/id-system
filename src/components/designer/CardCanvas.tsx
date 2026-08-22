@@ -1,11 +1,9 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Stage, Layer, Rect, Text, Image, Circle, Transformer, Group, Line } from 'react-konva';
+import { Stage, Layer, Rect, Text, Image, Circle, Transformer, Group, Line, Star, RegularPolygon, Arrow, Path } from 'react-konva';
 import type Konva from 'konva';
 import useImage from 'use-image';
 import { CARD } from '../../design-tokens';
 import type { CanvasElement } from '../../db/database';
-
-import { Arrow } from 'react-konva';
 
 interface CardCanvasProps {
   elements: CanvasElement[];
@@ -13,6 +11,7 @@ interface CardCanvasProps {
   selectedId: string | null;
   selectedIds?: string[];
   onSelect: (id: string | null, multi?: boolean) => void;
+  onSelectMultiple?: (ids: string[]) => void;
   onElementUpdate: (id: string, changes: Partial<CanvasElement>) => void;
   onAddDroppedImage?: (element: CanvasElement) => void;
   scale?: number;
@@ -177,6 +176,7 @@ function CanvasLineOrArrow({ element, isSelected, onSelect, onChange }: {
       points={pts}
       stroke={strokeColor}
       strokeWidth={strokeW}
+      dash={element.dashPattern}
       opacity={element.opacity ?? 1}
       rotation={element.rotation || 0}
       draggable={!element.locked}
@@ -187,7 +187,7 @@ function CanvasLineOrArrow({ element, isSelected, onSelect, onChange }: {
   );
 }
 
-// Real Scannable QR Code Component (generates actual QR, cached)
+// Real Scannable QR Code Component
 function CanvasQRCode({ element, isSelected, onSelect, onChange }: {
   element: CanvasElement;
   isSelected: boolean;
@@ -198,7 +198,6 @@ function CanvasQRCode({ element, isSelected, onSelect, onChange }: {
   const payload = element.qrPayload || 'PREVIEW-QR';
   const [qrImage, setQrImage] = React.useState<HTMLImageElement | null>(null);
 
-  // Only regenerate when payload or size changes — NOT on position/rotation
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -264,7 +263,7 @@ function CanvasQRCode({ element, isSelected, onSelect, onChange }: {
   );
 }
 
-// Real Code 128 Barcode Component (generates actual barcode, cached)
+// Real Code 128 Barcode Component
 function CanvasRealBarcode({ element, isSelected, onSelect, onChange }: {
   element: CanvasElement;
   isSelected: boolean;
@@ -276,7 +275,6 @@ function CanvasRealBarcode({ element, isSelected, onSelect, onChange }: {
   const payload = element.dataField || 'PREVIEW-BC';
   const [barcodeImage, setBarcodeImage] = React.useState<HTMLImageElement | null>(null);
 
-  // Only regenerate when payload or dimensions change — NOT on position/rotation
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -343,12 +341,203 @@ function CanvasRealBarcode({ element, isSelected, onSelect, onChange }: {
   );
 }
 
+// EMV Gold Smart Chip Component
+function CanvasSmartChip({ element, isSelected, onSelect, onChange }: {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (e?: any) => void;
+  onChange: (changes: Partial<CanvasElement>) => void;
+}) {
+  const w = element.width || 70;
+  const h = element.height || 55;
+
+  return (
+    <Group
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      draggable={!element.locked}
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+    >
+      <Rect
+        width={w}
+        height={h}
+        cornerRadius={6}
+        fill="#F59E0B"
+        stroke={isSelected ? '#84a92c' : '#92400E'}
+        strokeWidth={isSelected ? 2.5 : 1.5}
+      />
+      {/* Circuit lines */}
+      <Line points={[0, h * 0.35, w * 0.35, h * 0.35, w * 0.35, h * 0.65, 0, h * 0.65]} stroke="#78350F" strokeWidth={1} />
+      <Line points={[w, h * 0.35, w * 0.65, h * 0.35, w * 0.65, h * 0.65, w, h * 0.65]} stroke="#78350F" strokeWidth={1} />
+      <Line points={[w * 0.5, 0, w * 0.5, h * 0.35]} stroke="#78350F" strokeWidth={1} />
+      <Line points={[w * 0.5, h * 0.65, w * 0.5, h]} stroke="#78350F" strokeWidth={1} />
+    </Group>
+  );
+}
+
+// Holographic Strip Component
+function CanvasHologram({ element, isSelected, onSelect, onChange }: {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (e?: any) => void;
+  onChange: (changes: Partial<CanvasElement>) => void;
+}) {
+  const w = element.width || 45;
+  const h = element.height || CARD.HEIGHT_PX;
+
+  return (
+    <Group
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      draggable={!element.locked}
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+    >
+      <Rect
+        width={w}
+        height={h}
+        fill="#E0E7FF"
+        stroke={isSelected ? '#84a92c' : '#94A3B8'}
+        strokeWidth={isSelected ? 2 : 1}
+        opacity={0.85}
+      />
+      <Text
+        text="SECURE"
+        x={0}
+        y={h / 2 - 6}
+        width={w}
+        align="center"
+        fontSize={8}
+        fontFamily="Inter"
+        fontStyle="bold"
+        fill="#475569"
+      />
+    </Group>
+  );
+}
+
+// Official Stamp Component
+function CanvasStamp({ element, isSelected, onSelect, onChange }: {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (e?: any) => void;
+  onChange: (changes: Partial<CanvasElement>) => void;
+}) {
+  const rad = (element.width || 80) / 2;
+  const strokeColor = element.stroke || '#DC2626';
+
+  return (
+    <Group
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      draggable={!element.locked}
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+    >
+      <Circle radius={rad} x={rad} y={rad} stroke={isSelected ? '#84a92c' : strokeColor} strokeWidth={2.5} />
+      <Circle radius={rad - 5} x={rad} y={rad} stroke={isSelected ? '#84a92c' : strokeColor} strokeWidth={1} />
+      <Text
+        text="★ VERIFIED ★"
+        x={0}
+        y={rad - 12}
+        width={rad * 2}
+        align="center"
+        fontSize={8}
+        fontFamily="Inter"
+        fontStyle="bold"
+        fill={strokeColor}
+      />
+      <Text
+        text="OFFICIAL"
+        x={0}
+        y={rad + 2}
+        width={rad * 2}
+        align="center"
+        fontSize={7}
+        fontFamily="Inter"
+        fill={strokeColor}
+      />
+    </Group>
+  );
+}
+
+// Contactless RFID Waves Component
+function CanvasRfidWaves({ element, isSelected, onSelect, onChange }: {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (e?: any) => void;
+  onChange: (changes: Partial<CanvasElement>) => void;
+}) {
+  const w = element.width || 45;
+  const h = element.height || 45;
+  const strokeColor = isSelected ? '#84a92c' : (element.stroke || '#2563EB');
+
+  return (
+    <Group
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      draggable={!element.locked}
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+    >
+      <Line points={[w * 0.3, h * 0.2, w * 0.5, h * 0.5, w * 0.3, h * 0.8]} stroke={strokeColor} strokeWidth={2} lineCap="round" lineJoin="round" />
+      <Line points={[w * 0.5, h * 0.1, w * 0.75, h * 0.5, w * 0.5, h * 0.9]} stroke={strokeColor} strokeWidth={2} lineCap="round" lineJoin="round" />
+      <Line points={[w * 0.7, 0, w * 0.95, h * 0.5, w * 0.7, h]} stroke={strokeColor} strokeWidth={2} lineCap="round" lineJoin="round" />
+    </Group>
+  );
+}
+
+// Signature Line Component
+function CanvasSignatureLine({ element, isSelected, onSelect, onChange }: {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (e?: any) => void;
+  onChange: (changes: Partial<CanvasElement>) => void;
+}) {
+  const w = element.width || 200;
+  const h = element.height || 45;
+
+  return (
+    <Group
+      id={element.id}
+      x={element.x}
+      y={element.y}
+      draggable={!element.locked}
+      onClick={onSelect}
+      onTap={onSelect}
+      onDragEnd={(e) => onChange({ x: e.target.x(), y: e.target.y() })}
+    >
+      <Line points={[0, h * 0.65, w, h * 0.65]} stroke={isSelected ? '#84a92c' : '#0F172A'} strokeWidth={1.5} />
+      <Text
+        text={element.subText || 'Authorized Signature'}
+        x={0}
+        y={h * 0.75}
+        width={w}
+        align="center"
+        fontSize={9}
+        fontFamily="Inter"
+        fill="#64748B"
+      />
+    </Group>
+  );
+}
+
 export default function CardCanvas({
   elements,
   backgroundColor,
   selectedId,
   selectedIds = [],
   onSelect,
+  onSelectMultiple,
   onElementUpdate,
   onAddDroppedImage,
   scale = CARD.DISPLAY_SCALE,
@@ -360,6 +549,11 @@ export default function CardCanvas({
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Marquee Selection State
+  const [isMarquee, setIsMarquee] = useState(false);
+  const [marqueeStart, setMarqueeStart] = useState<{ x: number; y: number } | null>(null);
+  const [marqueeRect, setMarqueeRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   const stageSize = {
     width: cardWidth * scale,
@@ -388,12 +582,92 @@ export default function CardCanvas({
     transformer.getLayer()?.batchDraw();
   }, [selectedId, selectedIds, elements]);
 
-  // Click on empty area to deselect
-  const handleStageClick = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (e.target === e.target.getStage() || e.target.attrs?.id === 'card-bg') {
+  // Stage Mousedown for Marquee Box Selection
+  const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    const isBackground = e.target === e.target.getStage() || e.target.attrs?.id === 'card-bg';
+    if (!isBackground) return;
+
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+    // Convert from scaled stage coords to unscaled card coords
+    const cardX = pos.x / scale;
+    const cardY = pos.y / scale;
+
+    setIsMarquee(true);
+    setMarqueeStart({ x: cardX, y: cardY });
+    setMarqueeRect({ x: cardX, y: cardY, width: 0, height: 0 });
+
+    const isShift = 'shiftKey' in e.evt ? Boolean((e.evt as MouseEvent).shiftKey) : false;
+    if (!isShift) {
       onSelect(null);
     }
-  }, [onSelect]);
+  };
+
+  const handleStageMouseMove = (_e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (!isMarquee || !marqueeStart) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+    const curX = pos.x / scale;
+    const curY = pos.y / scale;
+
+    const x = Math.min(marqueeStart.x, curX);
+    const y = Math.min(marqueeStart.y, curY);
+    const width = Math.abs(curX - marqueeStart.x);
+    const height = Math.abs(curY - marqueeStart.y);
+
+    setMarqueeRect({ x, y, width, height });
+  };
+
+  const handleStageMouseUp = (_e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    if (!isMarquee || !marqueeRect) {
+      setIsMarquee(false);
+      setMarqueeStart(null);
+      setMarqueeRect(null);
+      return;
+    }
+
+    if (marqueeRect.width > 5 || marqueeRect.height > 5) {
+      // Find all elements within the marquee bounding box
+      const selected: string[] = [];
+      elements.forEach(el => {
+        const elX = el.x;
+        const elY = el.y;
+        const elW = el.width || (el.radius ? el.radius * 2 : 50);
+        const elH = el.height || (el.radius ? el.radius * 2 : 50);
+
+        const overlaps = !(
+          elX + elW < marqueeRect.x ||
+          elX > marqueeRect.x + marqueeRect.width ||
+          elY + elH < marqueeRect.y ||
+          elY > marqueeRect.y + marqueeRect.height
+        );
+
+        if (overlaps) {
+          selected.push(el.id);
+        }
+      });
+
+      if (selected.length > 0) {
+        if (onSelectMultiple) {
+          onSelectMultiple(selected);
+        } else {
+          selected.forEach((id, idx) => onSelect(id, idx > 0));
+        }
+      }
+    }
+
+    setIsMarquee(false);
+    setMarqueeStart(null);
+    setMarqueeRect(null);
+  };
 
   // Handle Drag & Drop file onto Canvas
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -478,6 +752,7 @@ export default function CardCanvas({
         );
 
       case 'rect':
+      case 'frame':
         return (
           <Rect
             key={el.id}
@@ -513,6 +788,41 @@ export default function CardCanvas({
           />
         );
 
+      case 'pill':
+        return (
+          <Group
+            key={el.id}
+            id={el.id}
+            x={el.x}
+            y={el.y}
+            draggable={!el.locked}
+            onClick={selectThis}
+            onTap={selectThis}
+            onDragEnd={(e) => updateThis({ x: snapCoord(e.target.x()), y: snapCoord(e.target.y()) })}
+          >
+            <Rect
+              width={el.width || 120}
+              height={el.height || 30}
+              cornerRadius={(el.height || 30) / 2}
+              fill={el.fill || '#10B981'}
+              stroke={isSelected ? '#84a92c' : el.stroke}
+              strokeWidth={isSelected ? 2 : (el.strokeWidth || 0)}
+            />
+            {el.text && (
+              <Text
+                text={el.text}
+                width={el.width || 120}
+                y={(el.height || 30) / 2 - 6}
+                align="center"
+                fontSize={el.fontSize || 11}
+                fontFamily="Inter"
+                fontStyle="bold"
+                fill="#FFFFFF"
+              />
+            )}
+          </Group>
+        );
+
       case 'circle':
         return (
           <Circle
@@ -522,29 +832,76 @@ export default function CardCanvas({
             y={el.y + (el.radius || 40)}
             radius={el.radius || 40}
             fill={el.fill || '#4f46e5'}
-            stroke={el.stroke}
-            strokeWidth={el.strokeWidth}
+            stroke={isSelected ? '#84a92c' : el.stroke}
+            strokeWidth={isSelected ? 2.5 : el.strokeWidth}
             opacity={el.opacity ?? 1}
             draggable={!el.locked}
             onClick={selectThis}
             onTap={selectThis}
             onDragEnd={(e) => updateThis({ x: snapCoord(e.target.x() - (el.radius || 40)), y: snapCoord(e.target.y() - (el.radius || 40)) })}
-            onTransformEnd={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              node.scaleX(1);
-              node.scaleY(1);
-              updateThis({
-                x: node.x() - (el.radius || 40),
-                y: node.y() - (el.radius || 40),
-                radius: Math.max(10, (el.radius || 40) * scaleX),
-              });
-            }}
           />
         );
 
+      case 'star':
+        return (
+          <Star
+            key={el.id}
+            id={el.id}
+            x={el.x + (el.width || 60) / 2}
+            y={el.y + (el.height || 60) / 2}
+            numPoints={el.starPoints || 5}
+            innerRadius={el.innerRadius || ((el.width || 60) * 0.22)}
+            outerRadius={(el.width || 60) / 2}
+            fill={el.fill || '#F59E0B'}
+            stroke={isSelected ? '#84a92c' : (el.stroke || '#D97706')}
+            strokeWidth={isSelected ? 2.5 : (el.strokeWidth || 1.5)}
+            opacity={el.opacity ?? 1}
+            draggable={!el.locked}
+            onClick={selectThis}
+            onTap={selectThis}
+            onDragEnd={(e) => updateThis({ x: snapCoord(e.target.x() - (el.width || 60) / 2), y: snapCoord(e.target.y() - (el.height || 60) / 2) })}
+          />
+        );
+
+      case 'polygon':
+      case 'badgeShield':
+        return (
+          <RegularPolygon
+            key={el.id}
+            id={el.id}
+            x={el.x + (el.width || 60) / 2}
+            y={el.y + (el.height || 60) / 2}
+            sides={el.sides || (el.type === 'badgeShield' ? 5 : 6)}
+            radius={(el.width || 60) / 2}
+            fill={el.fill || '#3B82F6'}
+            stroke={isSelected ? '#84a92c' : (el.stroke || '#1D4ED8')}
+            strokeWidth={isSelected ? 2.5 : (el.strokeWidth || 1.5)}
+            opacity={el.opacity ?? 1}
+            draggable={!el.locked}
+            onClick={selectThis}
+            onTap={selectThis}
+            onDragEnd={(e) => updateThis({ x: snapCoord(e.target.x() - (el.width || 60) / 2), y: snapCoord(e.target.y() - (el.height || 60) / 2) })}
+          />
+        );
+
+      case 'chip':
+        return <CanvasSmartChip key={el.id} element={el} isSelected={isSelected} onSelect={selectThis} onChange={updateThis} />;
+
+      case 'hologram':
+        return <CanvasHologram key={el.id} element={el} isSelected={isSelected} onSelect={selectThis} onChange={updateThis} />;
+
+      case 'stamp':
+        return <CanvasStamp key={el.id} element={el} isSelected={isSelected} onSelect={selectThis} onChange={updateThis} />;
+
+      case 'rfid':
+        return <CanvasRfidWaves key={el.id} element={el} isSelected={isSelected} onSelect={selectThis} onChange={updateThis} />;
+
+      case 'signature':
+        return <CanvasSignatureLine key={el.id} element={el} isSelected={isSelected} onSelect={selectThis} onChange={updateThis} />;
+
       case 'line':
       case 'arrow':
+      case 'guilloche':
         return (
           <CanvasLineOrArrow
             key={el.id}
@@ -590,6 +947,7 @@ export default function CardCanvas({
         );
 
       case 'qr':
+      case 'qrCode':
         return (
           <CanvasQRCode
             key={el.id}
@@ -655,8 +1013,12 @@ export default function CardCanvas({
           height={stageSize.height}
           scaleX={scale}
           scaleY={scale}
-          onClick={handleStageClick}
-          onTap={handleStageClick}
+          onMouseDown={handleStageMouseDown}
+          onMouseMove={handleStageMouseMove}
+          onMouseUp={handleStageMouseUp}
+          onTouchStart={handleStageMouseDown}
+          onTouchMove={handleStageMouseMove}
+          onTouchEnd={handleStageMouseUp}
         >
           <Layer>
             {/* Card background */}
@@ -688,6 +1050,20 @@ export default function CardCanvas({
               anchorSize={8}
               anchorCornerRadius={2}
             />
+
+            {/* Marquee Selection Rectangle */}
+            {isMarquee && marqueeRect && (
+              <Rect
+                x={marqueeRect.x}
+                y={marqueeRect.y}
+                width={marqueeRect.width}
+                height={marqueeRect.height}
+                fill="rgba(132, 169, 44, 0.15)"
+                stroke="#84a92c"
+                strokeWidth={1.5}
+                dash={[4, 4]}
+              />
+            )}
           </Layer>
         </Stage>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import SiliconLabsLogo from '../components/shared/SiliconLabsLogo';
 import { usePeople, useTemplates } from '../db/hooks';
@@ -81,6 +81,7 @@ const PRESET_TEMPLATES: CardTemplateStyle[] = [
 export default function IDCardStudio() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dbPeople = usePeople();
   const dbTemplates = useTemplates();
 
@@ -144,6 +145,25 @@ export default function IDCardStudio() {
       return matchFolder && matchSearch;
     });
   }, [dbPeople, searchRoster, selectedFolder]);
+
+  // Handle URL param ?personId=X for direct inspection
+  useEffect(() => {
+    const paramId = searchParams.get('personId');
+    if (paramId && dbPeople.length > 0) {
+      const pId = Number(paramId);
+      const targetIdx = filteredRoster.findIndex(p => p.id === pId);
+      if (targetIdx !== -1) {
+        setSelectedPersonIndex(targetIdx);
+      } else {
+        // Person might be in a different folder - switch to 'all'
+        const allIdx = dbPeople.findIndex(p => p.id === pId);
+        if (allIdx !== -1) {
+          setSelectedFolder('all');
+          setSelectedPersonIndex(allIdx);
+        }
+      }
+    }
+  }, [searchParams, dbPeople, filteredRoster]);
 
   const activePerson: Person | null = filteredRoster[selectedPersonIndex] || dbPeople[0] || null;
 

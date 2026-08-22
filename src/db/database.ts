@@ -80,7 +80,7 @@ export interface Person {
 
 export interface CanvasElement {
   id: string;
-  type: 'text' | 'image' | 'rect' | 'circle' | 'photo' | 'dataField' | 'qrCode' | 'barcode' | 'qr' | 'badge' | 'line' | 'arrow' | 'group' | 'frame';
+  type: 'text' | 'image' | 'rect' | 'circle' | 'photo' | 'dataField' | 'qrCode' | 'barcode' | 'qr' | 'badge' | 'line' | 'arrow' | 'group' | 'frame' | 'star' | 'polygon' | 'chip' | 'hologram' | 'stamp' | 'guilloche' | 'signature' | 'pill' | 'rfid' | 'icon' | 'badgeShield' | 'cornerBracket';
   x: number;
   y: number;
   width?: number;
@@ -104,6 +104,12 @@ export interface CanvasElement {
   radius?: number;
   points?: number[];
   arrowHead?: boolean;
+  sides?: number;
+  starPoints?: number;
+  innerRadius?: number;
+  dashPattern?: number[];
+  subText?: string;
+  iconName?: string;
   // Image-specific
   src?: string;
   // QR & Barcode

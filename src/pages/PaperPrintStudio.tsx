@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import { usePeople, useTemplates } from '../db/hooks';
 import type { Person, CardTemplate } from '../db/database';
-import { generateCustomPaperPdf, downloadPdf } from '../engine/exportPdf';
+import { generateCustomPaperPdf, downloadPdf, type PlacedPaperCard } from '../engine/exportPdf';
 import { renderStudioCard, type StudioCardOptions } from '../engine/renderStudioCard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -17,10 +17,12 @@ export interface CardSlot {
   heightMm: number;
   rotationDeg?: number;
   personId?: number;
+  customImageSrc?: string;
 }
 
 export default function PaperPrintStudio() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isDark } = useTheme();
 
   const dbPeople = usePeople();
@@ -46,12 +48,49 @@ export default function PaperPrintStudio() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCardTemplateId, setActiveCardTemplateId] = useState<string>('default');
 
-  // Card slots & Selection
-  const [cardSlots, setCardSlots] = useState<CardSlot[]>([]);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  // Multi-Page Sheet State: Array of Sheets (pages)
+  const [pages, setPages] = useState<CardSlot[][]>([[]]);
+  const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
+
+  // Active slots for the current sheet
+  const cardSlots = pages[currentPageIndex] || [];
+  const setCardSlots = useCallback((updater: CardSlot[] | ((prev: CardSlot[]) => CardSlot[])) => {
+    setPages(prevPages => {
+      const nextPages = [...prevPages];
+      const current = nextPages[currentPageIndex] || [];
+      const updated = typeof updater === 'function' ? updater(current) : updater;
+      nextPages[currentPageIndex] = updated;
+      return nextPages;
+    });
+  }, [currentPageIndex]);
+
+  // Multi-Selection State
+  const [selectedSlotIds, setSelectedSlotIds] = useState<Set<string>>(new Set());
+  const selectedSlotId = selectedSlotIds.size === 1 ? Array.from(selectedSlotIds)[0] : null;
+
+  // Marquee / Box Selection State
+  const [isMarqueeActive, setIsMarqueeActive] = useState(false);
+  const [marqueeStartPx, setMarqueeStartPx] = useState<{ x: number; y: number } | null>(null);
+  const [marqueeCurrentPx, setMarqueeCurrentPx] = useState<{ x: number; y: number } | null>(null);
+  const paperSheetRef = useRef<HTMLDivElement>(null);
+
+  // Rendered preview cache & PDF Export State
   const [renderedCards, setRenderedCards] = useState<Map<string, string>>(new Map());
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [exportMessage, setExportMessage] = useState('');
+
+  // Toast / Action notification
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<number | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMessage(msg);
+    toastTimeoutRef.current = window.setTimeout(() => setToastMessage(null), 3000);
+  }, []);
+
+  // Internal clipboard for slots
+  const [clipboardSlots, setClipboardSlots] = useState<CardSlot[]>([]);
 
   // Responsive workspace sidebar toggles & mobile tabs
   const [rosterSidebarOpen, setRosterSidebarOpen] = useState(true);
@@ -66,9 +105,10 @@ export default function PaperPrintStudio() {
   const [gridMarginX, setGridMarginX] = useState(14);
   const [gridMarginY, setGridMarginY] = useState(15);
 
-  // Dragging cards on sheet
+  // Dragging card slots on sheet
   const [draggedSlotId, setDraggedSlotId] = useState<string | null>(null);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragStartMouse, setDragStartMouse] = useState<{ x: number; y: number } | null>(null);
+  const [initialSlotPositions, setInitialSlotPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
   // Extract unique folders
   const folders = useMemo(() => {
@@ -100,6 +140,19 @@ export default function PaperPrintStudio() {
     return undefined;
   }, [dbTemplates, activeCardTemplateId]);
 
+  // Handle URL param ?personId=X
+  useEffect(() => {
+    const paramId = searchParams.get('personId');
+    if (paramId && dbPeople.length > 0) {
+      const pId = Number(paramId);
+      const target = dbPeople.find(p => p.id === pId);
+      if (target && target.id) {
+        setSelectedIds(new Set([target.id]));
+        showToast(`Selected ${target.fullName} from directory`);
+      }
+    }
+  }, [searchParams, dbPeople, showToast]);
+
   // Update paper dimensions when format changes
   useEffect(() => {
     let w = 210;
@@ -124,155 +177,169 @@ export default function PaperPrintStudio() {
   const cardW = activeTemplate?.widthMm || (activeTemplate?.widthPx ? Math.round((activeTemplate.widthPx / 300) * 25.4 * 10) / 10 : 85.6);
   const cardH = activeTemplate?.heightMm || (activeTemplate?.heightPx ? Math.round((activeTemplate.heightPx / 300) * 25.4 * 10) / 10 : 54.0);
 
-  // Generate Slots based on Imposition Preset
-  const applyImpositionPreset = useCallback((preset: '8-up-duplex' | '8-up-fronts' | '10-up-fronts' | 'custom') => {
+  // ================= SMART MULTI-PAGE IMPOSITION GENERATOR =================
+  const generateImpositionPages = useCallback((preset: '8-up-duplex' | '8-up-fronts' | '10-up-fronts' | 'custom', customTargetPeople?: Person[]) => {
     setImpositionPreset(preset);
-    const slots: CardSlot[] = [];
 
-    const peopleList = selectedIds.size > 0
-      ? dbPeople.filter(p => p.id && selectedIds.has(p.id))
-      : (filteredPeople.length > 0 ? filteredPeople : dbPeople);
+    const peopleList: Person[] = customTargetPeople || (
+      selectedIds.size > 0
+        ? dbPeople.filter(p => p.id && selectedIds.has(p.id))
+        : (filteredPeople.length > 0 ? filteredPeople : dbPeople)
+    );
 
-    if (preset === '8-up-duplex') {
-      const startX = 14;
-      const startY = 15;
-      const gapX = 10;
-      const gapY = 8;
-
-      for (let r = 0; r < 4; r++) {
-        const p = peopleList[r % Math.max(1, peopleList.length)];
-        const pId = p?.id;
-        const y = startY + r * (cardH + gapY);
-
-        // Col 1 (Front)
-        slots.push({
-          id: `slot-${r}-front`,
-          cardIndex: r,
-          face: 'front',
-          xMm: startX,
-          yMm: y,
-          widthMm: cardW,
-          heightMm: cardH,
-          rotationDeg: 0,
-          personId: pId,
-        });
-
-        // Col 2 (Back)
-        slots.push({
-          id: `slot-${r}-back`,
-          cardIndex: r,
-          face: 'back',
-          xMm: startX + cardW + gapX,
-          yMm: y,
-          widthMm: cardW,
-          heightMm: cardH,
-          rotationDeg: 0,
-          personId: pId,
-        });
-      }
-    } else if (preset === '8-up-fronts') {
-      const startX = 14;
-      const startY = 15;
-      const gapX = 10;
-      const gapY = 8;
-
-      let idx = 0;
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 2; c++) {
-          const p = peopleList[idx % Math.max(1, peopleList.length)];
-          slots.push({
-            id: `slot-front-${idx}`,
-            cardIndex: idx,
-            face: 'front',
-            xMm: startX + c * (cardW + gapX),
-            yMm: startY + r * (cardH + gapY),
-            widthMm: cardW,
-            heightMm: cardH,
-            rotationDeg: 0,
-            personId: p?.id,
-          });
-          idx++;
-        }
-      }
-    } else if (preset === '10-up-fronts') {
-      const startX = 12;
-      const startY = 10;
-      const gapX = 6;
-      const gapY = 3;
-
-      let idx = 0;
-      for (let r = 0; r < 5; r++) {
-        for (let c = 0; c < 2; c++) {
-          const p = peopleList[idx % Math.max(1, peopleList.length)];
-          slots.push({
-            id: `slot-10-${idx}`,
-            cardIndex: idx,
-            face: 'front',
-            xMm: startX + c * (cardW + gapX),
-            yMm: startY + r * (cardH + gapY),
-            widthMm: cardW,
-            heightMm: cardH,
-            rotationDeg: 0,
-            personId: p?.id,
-          });
-          idx++;
-        }
-      }
-    } else {
-      // Custom / Freeform starting with 1 card centered
-      slots.push({
-        id: `slot-custom-0`,
-        cardIndex: 0,
-        face: 'front',
-        xMm: Math.max(10, Math.round((paperWidthMm - cardW) / 2)),
-        yMm: Math.max(10, Math.round((paperHeightMm - cardH) / 2)),
-        widthMm: cardW,
-        heightMm: cardH,
-        rotationDeg: 0,
-        personId: peopleList[0]?.id,
-      });
+    if (peopleList.length === 0) {
+      showToast('No personnel records found to impose.');
+      return;
     }
 
-    setCardSlots(slots);
-    setSelectedSlotId(slots[0]?.id || null);
-  }, [cardW, cardH, dbPeople, filteredPeople, paperHeightMm, paperWidthMm, selectedIds]);
+    let capacityPerSheet = 4; // 8-up-duplex has 4 duplex pairs (4 people) per sheet
+    if (preset === '8-up-fronts') capacityPerSheet = 8;
+    else if (preset === '10-up-fronts') capacityPerSheet = 10;
+    else if (preset === 'custom') capacityPerSheet = gridRows * gridCols;
 
-  // Initialize slots
+    const totalSheetsRequired = Math.max(1, Math.ceil(peopleList.length / capacityPerSheet));
+    const generatedPages: CardSlot[][] = [];
+
+    const startX = 14;
+    const startY = 15;
+    const gapX = 10;
+    const gapY = 8;
+
+    for (let pageIdx = 0; pageIdx < totalSheetsRequired; pageIdx++) {
+      const pagePeople = peopleList.slice(pageIdx * capacityPerSheet, (pageIdx + 1) * capacityPerSheet);
+      const slots: CardSlot[] = [];
+
+      if (preset === '8-up-duplex') {
+        // 4 rows, 2 columns per sheet (Col 1 = Front, Col 2 = Back)
+        for (let r = 0; r < 4; r++) {
+          const person = pagePeople[r];
+          if (!person && pageIdx > 0 && r >= pagePeople.length) break; // Don't add blank rows on trailing pages if not desired
+
+          const pId = person ? person.id : peopleList[r % peopleList.length]?.id;
+          const y = startY + r * (cardH + gapY);
+
+          // Col 1 (Front Face)
+          slots.push({
+            id: `p${pageIdx}-slot-${r}-front`,
+            cardIndex: pageIdx * 8 + r * 2,
+            face: 'front',
+            xMm: startX,
+            yMm: y,
+            widthMm: cardW,
+            heightMm: cardH,
+            rotationDeg: 0,
+            personId: pId,
+          });
+
+          // Col 2 (Back Face)
+          slots.push({
+            id: `p${pageIdx}-slot-${r}-back`,
+            cardIndex: pageIdx * 8 + r * 2 + 1,
+            face: 'back',
+            xMm: startX + cardW + gapX,
+            yMm: y,
+            widthMm: cardW,
+            heightMm: cardH,
+            rotationDeg: 0,
+            personId: pId,
+          });
+        }
+      } else if (preset === '8-up-fronts') {
+        let idx = 0;
+        for (let r = 0; r < 4; r++) {
+          for (let c = 0; c < 2; c++) {
+            if (idx >= pagePeople.length && pageIdx > 0) break;
+            const p = pagePeople[idx] || peopleList[idx % peopleList.length];
+            slots.push({
+              id: `p${pageIdx}-slot-front-${idx}`,
+              cardIndex: pageIdx * 8 + idx,
+              face: 'front',
+              xMm: startX + c * (cardW + gapX),
+              yMm: startY + r * (cardH + gapY),
+              widthMm: cardW,
+              heightMm: cardH,
+              rotationDeg: 0,
+              personId: p?.id,
+            });
+            idx++;
+          }
+        }
+      } else if (preset === '10-up-fronts') {
+        const sX = 12;
+        const sY = 10;
+        const gX = 6;
+        const gY = 3;
+        let idx = 0;
+        for (let r = 0; r < 5; r++) {
+          for (let c = 0; c < 2; c++) {
+            if (idx >= pagePeople.length && pageIdx > 0) break;
+            const p = pagePeople[idx] || peopleList[idx % peopleList.length];
+            slots.push({
+              id: `p${pageIdx}-slot-10-${idx}`,
+              cardIndex: pageIdx * 10 + idx,
+              face: 'front',
+              xMm: sX + c * (cardW + gX),
+              yMm: sY + r * (cardH + gY),
+              widthMm: cardW,
+              heightMm: cardH,
+              rotationDeg: 0,
+              personId: p?.id,
+            });
+            idx++;
+          }
+        }
+      } else {
+        // Custom Grid Layout
+        let idx = 0;
+        for (let r = 0; r < gridRows; r++) {
+          for (let c = 0; c < gridCols; c++) {
+            if (idx >= pagePeople.length && pageIdx > 0) break;
+            const p = pagePeople[idx] || peopleList[idx % peopleList.length];
+            slots.push({
+              id: `p${pageIdx}-slot-grid-${r}-${c}-${Date.now()}`,
+              cardIndex: pageIdx * (gridRows * gridCols) + idx,
+              face: 'front',
+              xMm: gridMarginX + c * (cardW + gridGapX),
+              yMm: gridMarginY + r * (cardH + gridGapY),
+              widthMm: cardW,
+              heightMm: cardH,
+              rotationDeg: 0,
+              personId: p?.id,
+            });
+            idx++;
+          }
+        }
+      }
+
+      generatedPages.push(slots.length > 0 ? slots : [
+        {
+          id: `p${pageIdx}-slot-custom-0`,
+          cardIndex: 0,
+          face: 'front',
+          xMm: Math.max(10, Math.round((paperWidthMm - cardW) / 2)),
+          yMm: Math.max(10, Math.round((paperHeightMm - cardH) / 2)),
+          widthMm: cardW,
+          heightMm: cardH,
+          rotationDeg: 0,
+          personId: peopleList[0]?.id,
+        }
+      ]);
+    }
+
+    setPages(generatedPages);
+    setCurrentPageIndex(0);
+    setSelectedSlotIds(new Set(generatedPages[0]?.[0]?.id ? [generatedPages[0][0].id] : []));
+    showToast(`✨ Generated ${totalSheetsRequired} Sheet(s) for ${peopleList.length} Personnel (${preset})`);
+  }, [cardW, cardH, dbPeople, filteredPeople, gridCols, gridGapX, gridGapY, gridMarginX, gridMarginY, gridRows, paperHeightMm, paperWidthMm, selectedIds, showToast]);
+
+  // Initial imposition on load
   useEffect(() => {
-    applyImpositionPreset(impositionPreset);
-  }, []);
-
-  // Custom Grid Builder Generator
-  const handleGenerateCustomGrid = () => {
-    const peopleList = selectedIds.size > 0
-      ? dbPeople.filter(p => p.id && selectedIds.has(p.id))
-      : (filteredPeople.length > 0 ? filteredPeople : dbPeople);
-
-    const slots: CardSlot[] = [];
-    let idx = 0;
-    for (let r = 0; r < gridRows; r++) {
-      for (let c = 0; c < gridCols; c++) {
-        const p = peopleList[idx % Math.max(1, peopleList.length)];
-        slots.push({
-          id: `slot-grid-${r}-${c}-${Date.now()}`,
-          cardIndex: idx,
-          face: 'front',
-          xMm: gridMarginX + c * (cardW + gridGapX),
-          yMm: gridMarginY + r * (cardH + gridGapY),
-          widthMm: cardW,
-          heightMm: cardH,
-          rotationDeg: 0,
-          personId: p?.id,
-        });
-        idx++;
-      }
+    if (dbPeople.length > 0 && pages[0]?.length === 0) {
+      generateImpositionPages('8-up-duplex');
     }
-    setCardSlots(slots);
-    setImpositionPreset('custom');
-    if (slots.length > 0) setSelectedSlotId(slots[0].id);
-  };
+  }, [dbPeople.length, generateImpositionPages, pages]);
 
-  // Pre-render 300 DPI Cards for all slots
+  // Pre-render 300 DPI Cards for all slots across all sheets
   useEffect(() => {
     let isCancelled = false;
 
@@ -288,7 +355,11 @@ export default function PaperPrintStudio() {
         customTemplate: activeTemplate,
       };
 
-      for (const slot of cardSlots) {
+      // Gather all slots from all pages
+      const allSlots: CardSlot[] = [];
+      pages.forEach(pSlots => allSlots.push(...pSlots));
+
+      for (const slot of allSlots) {
         if (isCancelled) break;
         const person = dbPeople.find(p => p.id === slot.personId) || dbPeople[0];
         if (person) {
@@ -298,7 +369,7 @@ export default function PaperPrintStudio() {
               const dataUrl = await renderStudioCard(person, slot.face, cardOptions);
               map.set(key, dataUrl);
             } catch {
-              // Graceful fallback
+              // Fallback handled inside renderStudioCard
             }
           }
         }
@@ -311,61 +382,145 @@ export default function PaperPrintStudio() {
 
     renderAll();
     return () => { isCancelled = true; };
-  }, [cardSlots, dbPeople, activeTemplate, activeCardTemplateId, cardW, cardH]);
+  }, [pages, dbPeople, activeTemplate, activeCardTemplateId, cardW, cardH]);
 
-  // Selected Slot details
+  // Selected Slot details (first selected)
   const selectedSlot = useMemo(() => {
     return cardSlots.find(s => s.id === selectedSlotId) || null;
   }, [cardSlots, selectedSlotId]);
 
   // Update selected slot helper
   const updateSelectedSlot = (updates: Partial<CardSlot>) => {
-    if (!selectedSlotId) return;
-    setCardSlots(prev => prev.map(s => s.id === selectedSlotId ? { ...s, ...updates } : s));
+    if (selectedSlotIds.size === 0) return;
+    setCardSlots(prev => prev.map(s => selectedSlotIds.has(s.id) ? { ...s, ...updates } : s));
   };
 
-  // Interactive Dragging on Sheet
+  // Dimensions in pixel space on screen
   const pxPerMm = 3.6 * zoomScale;
   const sheetWidthPx = paperWidthMm * pxPerMm;
   const sheetHeightPx = paperHeightMm * pxPerMm;
 
+  // ================= MARQUEE & DRAG HANDLERS =================
+  const handleSheetMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return; // Only left click
+    const target = e.target as HTMLElement;
+    // If clicking directly on a slot or its buttons, slot handler will handle it
+    if (target.closest('[data-card-slot="true"]')) return;
+
+    if (!paperSheetRef.current) return;
+    const rect = paperSheetRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setIsMarqueeActive(true);
+    setMarqueeStartPx({ x, y });
+    setMarqueeCurrentPx({ x, y });
+
+    if (!e.shiftKey) {
+      setSelectedSlotIds(new Set());
+    }
+  };
+
   const handleSlotMouseDown = (e: React.MouseEvent, slotId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedSlotId(slotId);
+
+    const isAlreadySelected = selectedSlotIds.has(slotId);
+    let newSelected = new Set(selectedSlotIds);
+
+    if (e.shiftKey) {
+      if (newSelected.has(slotId)) newSelected.delete(slotId);
+      else newSelected.add(slotId);
+    } else {
+      if (!isAlreadySelected) {
+        newSelected = new Set([slotId]);
+      }
+    }
+    setSelectedSlotIds(newSelected);
+
+    // Initialize multi-drag for all selected slots
     setDraggedSlotId(slotId);
-    const slot = cardSlots.find(s => s.id === slotId);
-    if (!slot) return;
-    setDragStart({ x: e.clientX - slot.xMm * pxPerMm, y: e.clientY - slot.yMm * pxPerMm });
+    setDragStartMouse({ x: e.clientX, y: e.clientY });
+
+    const posMap = new Map<string, { x: number; y: number }>();
+    cardSlots.forEach(s => {
+      if (newSelected.has(s.id)) {
+        posMap.set(s.id, { x: s.xMm, y: s.yMm });
+      }
+    });
+    setInitialSlotPositions(posMap);
   };
 
-  const handleSheetMouseMove = (e: React.MouseEvent) => {
-    if (!draggedSlotId || !dragStart) return;
-    const currentSlot = cardSlots.find(s => s.id === draggedSlotId);
-    const currW = currentSlot?.widthMm || cardW;
-    const currH = currentSlot?.heightMm || cardH;
+  const handleSheetMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // 1. If Dragging Slot(s)
+    if (draggedSlotId && dragStartMouse) {
+      const deltaX = (e.clientX - dragStartMouse.x) / pxPerMm;
+      const deltaY = (e.clientY - dragStartMouse.y) / pxPerMm;
 
-    let rawX = (e.clientX - dragStart.x) / pxPerMm;
-    let rawY = (e.clientY - dragStart.y) / pxPerMm;
+      setCardSlots(prev => prev.map(s => {
+        const init = initialSlotPositions.get(s.id);
+        if (!init) return s;
 
-    // Apply snap to grid if active
-    if (snapGrid > 0) {
-      rawX = Math.round(rawX / snapGrid) * snapGrid;
-      rawY = Math.round(rawY / snapGrid) * snapGrid;
+        let rawX = init.x + deltaX;
+        let rawY = init.y + deltaY;
+
+        if (snapGrid > 0) {
+          rawX = Math.round(rawX / snapGrid) * snapGrid;
+          rawY = Math.round(rawY / snapGrid) * snapGrid;
+        }
+
+        const boundedX = Math.max(0, Math.min(paperWidthMm - s.widthMm, rawX));
+        const boundedY = Math.max(0, Math.min(paperHeightMm - s.heightMm, rawY));
+
+        return {
+          ...s,
+          xMm: Math.round(boundedX * 10) / 10,
+          yMm: Math.round(boundedY * 10) / 10,
+        };
+      }));
+      return;
     }
 
-    const newXMm = Math.max(0, Math.min(paperWidthMm - currW, rawX));
-    const newYMm = Math.max(0, Math.min(paperHeightMm - currH, rawY));
+    // 2. If Marquee Selecting
+    if (isMarqueeActive && marqueeStartPx && paperSheetRef.current) {
+      const rect = paperSheetRef.current.getBoundingClientRect();
+      const currX = e.clientX - rect.left;
+      const currY = e.clientY - rect.top;
+      setMarqueeCurrentPx({ x: currX, y: currY });
 
-    setCardSlots(prev => prev.map(s => s.id === draggedSlotId ? { ...s, xMm: Math.round(newXMm * 10) / 10, yMm: Math.round(newYMm * 10) / 10 } : s));
+      const minX = Math.min(marqueeStartPx.x, currX);
+      const maxX = Math.max(marqueeStartPx.x, currX);
+      const minY = Math.min(marqueeStartPx.y, currY);
+      const maxY = Math.max(marqueeStartPx.y, currY);
+
+      // Find intersecting slots
+      const intersecting = new Set<string>(e.shiftKey ? selectedSlotIds : []);
+      cardSlots.forEach(slot => {
+        const slotLeft = slot.xMm * pxPerMm;
+        const slotTop = slot.yMm * pxPerMm;
+        const slotRight = slotLeft + slot.widthMm * pxPerMm;
+        const slotBottom = slotTop + slot.heightMm * pxPerMm;
+
+        // Bounding box collision test
+        const overlaps = !(slotRight < minX || slotLeft > maxX || slotBottom < minY || slotTop > maxY);
+        if (overlaps) {
+          intersecting.add(slot.id);
+        }
+      });
+      setSelectedSlotIds(intersecting);
+    }
   };
 
   const handleSheetMouseUp = () => {
+    setIsMarqueeActive(false);
+    setMarqueeStartPx(null);
+    setMarqueeCurrentPx(null);
     setDraggedSlotId(null);
-    setDragStart(null);
+    setDragStartMouse(null);
+    setInitialSlotPositions(new Map());
   };
 
-  // Slot Management actions
+  // ================= SLOT MANAGEMENT ACTIONS =================
   const handleAddSlot = () => {
     const peopleList = selectedIds.size > 0
       ? dbPeople.filter(p => p.id && selectedIds.has(p.id))
@@ -383,68 +538,159 @@ export default function PaperPrintStudio() {
       personId: peopleList[cardSlots.length % Math.max(1, peopleList.length)]?.id,
     };
     setCardSlots(prev => [...prev, newSlot]);
-    setSelectedSlotId(newSlot.id);
+    setSelectedSlotIds(new Set([newSlot.id]));
     setImpositionPreset('custom');
+    showToast('Added new card slot to current sheet');
   };
 
-  const handleDuplicateSlot = (slotId: string, e?: React.MouseEvent) => {
+  const handleDuplicateSelected = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const source = cardSlots.find(s => s.id === slotId);
-    if (!source) return;
-    const dup: CardSlot = {
-      ...source,
-      id: `slot-dup-${Date.now()}`,
-      cardIndex: cardSlots.length,
-      xMm: Math.min(paperWidthMm - source.widthMm, source.xMm + 10),
-      yMm: Math.min(paperHeightMm - source.heightMm, source.yMm + 10),
-    };
-    setCardSlots(prev => [...prev, dup]);
-    setSelectedSlotId(dup.id);
+    if (selectedSlotIds.size === 0) return;
+
+    const duplicates: CardSlot[] = [];
+    const newSelectedIds = new Set<string>();
+
+    cardSlots.forEach(s => {
+      if (selectedSlotIds.has(s.id)) {
+        const dup: CardSlot = {
+          ...s,
+          id: `slot-dup-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          xMm: Math.min(paperWidthMm - s.widthMm, s.xMm + 10),
+          yMm: Math.min(paperHeightMm - s.heightMm, s.yMm + 10),
+        };
+        duplicates.push(dup);
+        newSelectedIds.add(dup.id);
+      }
+    });
+
+    setCardSlots(prev => [...prev, ...duplicates]);
+    setSelectedSlotIds(newSelectedIds);
     setImpositionPreset('custom');
+    showToast(`Duplicated ${duplicates.length} card slot(s)`);
   };
 
-  const handleDeleteSlot = (slotId: string, e?: React.MouseEvent) => {
+  const handleDeleteSelected = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCardSlots(prev => prev.filter(s => s.id !== slotId));
-    if (selectedSlotId === slotId) {
-      setSelectedSlotId(null);
-    }
+    if (selectedSlotIds.size === 0) return;
+
+    const count = selectedSlotIds.size;
+    setCardSlots(prev => prev.filter(s => !selectedSlotIds.has(s.id)));
+    setSelectedSlotIds(new Set());
+    showToast(`Deleted ${count} card slot(s)`);
   };
 
-  const handleRotateSlot = (slotId: string, deltaDeg: number = 90, e?: React.MouseEvent) => {
+  const handleRotateSelected = (deltaDeg: number = 90, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (selectedSlotIds.size === 0) return;
+
     setCardSlots(prev => prev.map(s => {
-      if (s.id === slotId) {
+      if (selectedSlotIds.has(s.id)) {
         const nextRot = ((s.rotationDeg || 0) + deltaDeg) % 360;
         return { ...s, rotationDeg: nextRot };
       }
       return s;
     }));
+    showToast(`Rotated selected cards by ${deltaDeg}°`);
   };
 
-  const handleToggleFace = (slotId: string, e?: React.MouseEvent) => {
+  const handleToggleFaceSelected = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setCardSlots(prev => prev.map(s => s.id === slotId ? { ...s, face: s.face === 'front' ? 'back' : 'front' } : s));
+    if (selectedSlotIds.size === 0) return;
+
+    setCardSlots(prev => prev.map(s => {
+      if (selectedSlotIds.has(s.id)) {
+        return { ...s, face: s.face === 'front' ? 'back' : 'front' };
+      }
+      return s;
+    }));
+    showToast(`Flipped card faces (Front ↔ Back)`);
   };
 
-  // Keyboard Shortcuts (Delete, Duplicate, Nudge)
+  // ================= SHEET (PAGE) MANAGEMENT =================
+  const handleAddBlankSheet = () => {
+    setPages(prev => {
+      const next = [...prev, []];
+      setCurrentPageIndex(next.length - 1);
+      return next;
+    });
+    setSelectedSlotIds(new Set());
+    showToast(`Added Sheet ${pages.length + 1}`);
+  };
+
+  const handleDuplicateSheet = () => {
+    const current = pages[currentPageIndex] || [];
+    const cloned = current.map(s => ({
+      ...s,
+      id: `p${pages.length}-${s.id}-${Date.now()}`,
+    }));
+    setPages(prev => {
+      const next = [...prev, cloned];
+      setCurrentPageIndex(next.length - 1);
+      return next;
+    });
+    showToast(`Duplicated current sheet as Sheet ${pages.length + 1}`);
+  };
+
+  const handleDeleteSheet = (pageIdx: number) => {
+    if (pages.length <= 1) {
+      setPages([[]]);
+      setCurrentPageIndex(0);
+      setSelectedSlotIds(new Set());
+      showToast('Cleared sheet contents');
+      return;
+    }
+    setPages(prev => prev.filter((_, idx) => idx !== pageIdx));
+    setCurrentPageIndex(prev => Math.min(prev, pages.length - 2));
+    setSelectedSlotIds(new Set());
+    showToast(`Deleted Sheet ${pageIdx + 1}`);
+  };
+
+  // ================= CLIPBOARD & KEYBOARD SHORTCUTS =================
+  const handleCopy = useCallback(() => {
+    if (selectedSlotIds.size === 0) return;
+    const toCopy = cardSlots.filter(s => selectedSlotIds.has(s.id));
+    setClipboardSlots(toCopy);
+    showToast(`📋 Copied ${toCopy.length} card(s) to clipboard`);
+  }, [cardSlots, selectedSlotIds, showToast]);
+
+  const handlePaste = useCallback(() => {
+    if (clipboardSlots.length === 0) return;
+    const newSlots = clipboardSlots.map(s => ({
+      ...s,
+      id: `slot-paste-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      xMm: Math.min(paperWidthMm - s.widthMm, s.xMm + 10),
+      yMm: Math.min(paperHeightMm - s.heightMm, s.yMm + 10),
+    }));
+    setCardSlots(prev => [...prev, ...newSlots]);
+    setSelectedSlotIds(new Set(newSlots.map(s => s.id)));
+    showToast(`📋 Pasted ${newSlots.length} card(s)`);
+  }, [clipboardSlots, paperWidthMm, paperHeightMm, setCardSlots, showToast]);
+
+  // Keyboard Shortcuts (Delete, Duplicate, Copy, Paste, Nudge)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
-      if (!selectedSlotId) return;
-
       if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedSlotIds.size > 0) {
+          e.preventDefault();
+          handleDeleteSelected();
+        }
+      } else if (e.key === 'c' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        handleDeleteSlot(selectedSlotId);
+        handleCopy();
+      } else if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handlePaste();
       } else if (e.key === 'd' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
-        handleDuplicateSlot(selectedSlotId);
+        handleDuplicateSelected();
       } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (selectedSlotIds.size === 0) return;
         e.preventDefault();
         const step = e.shiftKey ? 5 : 1;
         setCardSlots(prev => prev.map(s => {
-          if (s.id !== selectedSlotId) return s;
+          if (!selectedSlotIds.has(s.id)) return s;
           let nx = s.xMm;
           let ny = s.yMm;
           if (e.key === 'ArrowUp') ny = Math.max(0, s.yMm - step);
@@ -458,70 +704,149 @@ export default function PaperPrintStudio() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedSlotId, paperWidthMm, paperHeightMm]);
+  }, [selectedSlotIds, paperWidthMm, paperHeightMm, handleCopy, handlePaste]);
 
-  // 1-Click 300 DPI Vector PDF Generator
+  // System Clipboard Paste Event (Images)
+  useEffect(() => {
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const dataUrl = reader.result as string;
+              const newSlot: CardSlot = {
+                id: `slot-img-${Date.now()}`,
+                cardIndex: cardSlots.length,
+                face: 'front',
+                xMm: 20,
+                yMm: 20,
+                widthMm: cardW,
+                heightMm: cardH,
+                customImageSrc: dataUrl,
+              };
+              setCardSlots(prev => [...prev, newSlot]);
+              setSelectedSlotIds(new Set([newSlot.id]));
+              showToast('📷 Image pasted directly from clipboard onto sheet!');
+            };
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [cardSlots.length, cardW, cardH, setCardSlots, showToast]);
+
+  // Direct Image Drag and Drop onto Sheet
+  const handleDropFile = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result as string;
+          const newSlot: CardSlot = {
+            id: `slot-img-drop-${Date.now()}`,
+            cardIndex: cardSlots.length,
+            face: 'front',
+            xMm: 20,
+            yMm: 20,
+            widthMm: cardW,
+            heightMm: cardH,
+            customImageSrc: dataUrl,
+          };
+          setCardSlots(prev => [...prev, newSlot]);
+          setSelectedSlotIds(new Set([newSlot.id]));
+          showToast(`📥 Placed ${file.name} onto sheet`);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  // ================= MULTI-PAGE 300 DPI PDF GENERATOR =================
   const handleExportPdf = async () => {
     setIsExporting(true);
-    setExportProgress(15);
+    setExportProgress(10);
+    setExportMessage('Preparing multi-page vector imposition engine…');
 
     try {
-      const prog = setInterval(() => {
-        setExportProgress(p => (p < 90 ? p + 20 : p));
-      }, 200);
+      const allPagesPlaced: PlacedPaperCard[][] = [];
+      const totalPages = pages.length;
 
-      const placedCards: import('../engine/exportPdf').PlacedPaperCard[] = [];
+      for (let pIdx = 0; pIdx < totalPages; pIdx++) {
+        setExportProgress(Math.round(10 + (pIdx / totalPages) * 75));
+        setExportMessage(`Rendering 300 DPI cards for Sheet ${pIdx + 1} of ${totalPages}…`);
 
-      for (const s of cardSlots) {
-        const person = dbPeople.find(p => p.id === s.personId) || dbPeople[0];
-        const key = `${person?.id}-${s.face}-${activeCardTemplateId}`;
-        let imgDataUrl = renderedCards.get(key) || '';
+        const pSlots = pages[pIdx] || [];
+        const placedCardsOnThisPage: PlacedPaperCard[] = [];
 
-        // If not pre-rendered yet, render on-the-fly
-        if (!imgDataUrl && person) {
-          const cardOptions: StudioCardOptions = {
-            orientation: activeTemplate?.orientation || (s.widthMm >= s.heightMm ? 'horizontal' : 'vertical'),
-            backgroundColor: activeTemplate?.backgroundColor || '#FFFFFF',
-            fontFamily: 'Inter',
-            headerColor: '#0b131b',
-            accentColor: '#10b981',
-            badgeColor: '#1e3a8a',
-            customTemplate: activeTemplate,
-          };
-          try {
-            imgDataUrl = await renderStudioCard(person, s.face, cardOptions);
-          } catch {
-            // Ignore
+        for (const s of pSlots) {
+          const person = dbPeople.find(p => p.id === s.personId) || dbPeople[0];
+          const key = `${person?.id}-${s.face}-${activeCardTemplateId}`;
+          let imgDataUrl = s.customImageSrc || renderedCards.get(key) || '';
+
+          if (!imgDataUrl && person) {
+            const cardOptions: StudioCardOptions = {
+              orientation: activeTemplate?.orientation || (s.widthMm >= s.heightMm ? 'horizontal' : 'vertical'),
+              backgroundColor: activeTemplate?.backgroundColor || '#FFFFFF',
+              fontFamily: 'Inter',
+              headerColor: '#0b131b',
+              accentColor: '#10b981',
+              badgeColor: '#1e3a8a',
+              customTemplate: activeTemplate,
+            };
+            try {
+              imgDataUrl = await renderStudioCard(person, s.face, cardOptions);
+            } catch {
+              // Ignore
+            }
+          }
+
+          if (imgDataUrl) {
+            placedCardsOnThisPage.push({
+              id: s.id,
+              name: `${person?.fullName || 'Card'} (${s.face})`,
+              side: s.face,
+              png: imgDataUrl,
+              xMm: s.xMm,
+              yMm: s.yMm,
+              widthMm: s.widthMm,
+              heightMm: s.heightMm,
+              rotationDeg: s.rotationDeg || 0,
+            });
           }
         }
 
-        if (imgDataUrl) {
-          placedCards.push({
-            id: s.id,
-            name: `${person?.fullName || 'Card'} (${s.face})`,
-            side: s.face,
-            png: imgDataUrl,
-            xMm: s.xMm,
-            yMm: s.yMm,
-            widthMm: s.widthMm,
-            heightMm: s.heightMm,
-            rotationDeg: s.rotationDeg || 0,
-          });
-        }
+        allPagesPlaced.push(placedCardsOnThisPage);
       }
 
-      if (placedCards.length === 0) {
-        clearInterval(prog);
+      const totalCardsPlaced = allPagesPlaced.reduce((acc, p) => acc + p.length, 0);
+      if (totalCardsPlaced === 0) {
         setIsExporting(false);
         setExportProgress(0);
-        alert('No cards are currently placed on the paper sheet. Please add or select personnel.');
+        alert('No cards are currently placed on any paper sheet. Please add personnel or card slots.');
         return;
       }
 
+      setExportProgress(90);
+      setExportMessage('Assembling 300 DPI vector PDF document…');
+
       const pdfBlob = await generateCustomPaperPdf(
-        placedCards,
+        allPagesPlaced,
         {
-          paperName: `${paperFormat} Imposition Sheet`,
+          paperName: `${paperFormat} Multi-Sheet Imposition`,
           widthMm: paperWidthMm,
           heightMm: paperHeightMm,
           orientation: paperOrientation,
@@ -531,21 +856,22 @@ export default function PaperPrintStudio() {
         }
       );
 
-      clearInterval(prog);
       setExportProgress(100);
-
-      downloadPdf(pdfBlob, `SiliconLabs_${paperFormat}_300DPI_Imposition.pdf`);
+      setExportMessage('Downloading print PDF…');
+      downloadPdf(pdfBlob, `SiliconLabs_${paperFormat}_${totalPages}Pages_300DPI_Imposition.pdf`);
+      showToast(`🎉 Exported ${totalPages}-page 300 DPI PDF (${totalCardsPlaced} cards)!`);
     } catch (err) {
       console.error('Export PDF error:', err);
       const errorMsg = err instanceof Error ? err.message : String(err);
-      alert(`Failed to generate 300 DPI PDF.\n\nError: ${errorMsg}\n\nCheck browser console for full stack trace.`);
+      alert(`Failed to generate 300 DPI PDF.\n\nError: ${errorMsg}`);
     } finally {
       setIsExporting(false);
       setExportProgress(0);
+      setExportMessage('');
     }
   };
 
-  // Toggle selection
+  // Toggle Selection in Roster
   const toggleSelectPerson = (id: number) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -593,18 +919,19 @@ export default function PaperPrintStudio() {
                 Professional Paper Print Studio
               </h1>
               <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>
-                Freeform Photoshop & Canva-grade layout • 300 DPI vector imposition engine.
+                Multi-Page 300 DPI Imposition • Box Selection & Freeform Layout Engine
               </p>
             </div>
           </div>
 
-          {/* Quick Presets & Export Actions */}
+          {/* Quick Presets, Pagination & Export Actions */}
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Imposition Presets */}
             <div className="hidden lg:flex items-center gap-1 p-1 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
               {(['8-up-duplex', '8-up-fronts', '10-up-fronts', 'custom'] as const).map(p => (
                 <button
                   key={p}
-                  onClick={() => applyImpositionPreset(p)}
+                  onClick={() => generateImpositionPages(p)}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                     impositionPreset === p ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                   }`}
@@ -612,7 +939,7 @@ export default function PaperPrintStudio() {
                     color: impositionPreset === p ? '#ffffff' : 'var(--text-secondary)',
                   }}
                 >
-                  {p === '8-up-duplex' ? '8-Up Duplex' : p === '8-up-fronts' ? '8 Fronts' : p === '10-up-fronts' ? '10-Up' : 'Freeform'}
+                  {p === '8-up-duplex' ? '8-Up Duplex (4 Pairs)' : p === '8-up-fronts' ? '8 Fronts' : p === '10-up-fronts' ? '10-Up' : 'Freeform'}
                 </button>
               ))}
             </div>
@@ -624,7 +951,7 @@ export default function PaperPrintStudio() {
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
               title="Toggle Roster Panel"
             >
-              📁 Roster
+              📁 Roster ({selectedIds.size > 0 ? selectedIds.size : filteredPeople.length})
             </button>
 
             <button
@@ -645,21 +972,21 @@ export default function PaperPrintStudio() {
               {isExporting ? (
                 <>
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Compiling PDF ({exportProgress}%)…</span>
+                  <span>{exportProgress}% • {exportMessage || 'Generating…'}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                  <span>Export 300 DPI PDF</span>
+                  <span>Export {pages.length > 1 ? `${pages.length} Pages ` : ''}300 DPI PDF</span>
                 </>
               )}
             </button>
           </div>
         </header>
 
-        {/* Mobile Navigation Tabs (visible only on mobile & tablets < lg) */}
+        {/* Mobile Navigation Tabs */}
         <div
           className="flex lg:hidden items-center justify-around border-b px-2 py-1.5 flex-shrink-0 gap-1.5 z-20 shadow-xs"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
@@ -678,7 +1005,7 @@ export default function PaperPrintStudio() {
               mobileActiveTab === 'artboard' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            📄 Artboard ({cardSlots.length})
+            📄 Sheet {currentPageIndex + 1}/{pages.length} ({cardSlots.length})
           </button>
           <button
             onClick={() => setMobileActiveTab('inspector')}
@@ -692,8 +1019,8 @@ export default function PaperPrintStudio() {
 
         {/* ================= 3-COLUMN WORKSPACE ================= */}
         <div className="flex-1 flex overflow-hidden relative">
-          
-          {/* COLUMN 1: BATCH ROSTER & PERSONNEL (COLLAPSIBLE / RESPONSIVE) */}
+
+          {/* COLUMN 1: BATCH ROSTER & IMPOSITION ACTION (COLLAPSIBLE / RESPONSIVE) */}
           {(rosterSidebarOpen || mobileActiveTab === 'roster') && (
             <aside
               className={`w-full lg:w-80 border-r flex flex-col p-3.5 space-y-3 flex-shrink-0 overflow-y-auto text-xs z-10 shadow-lg lg:shadow-none ${
@@ -727,15 +1054,34 @@ export default function PaperPrintStudio() {
                 </select>
               </div>
 
+              {/* Roster Multi-Page Imposition Action Button */}
+              <div className="p-2.5 rounded-2xl bg-[#84a92c]/10 border border-[#84a92c]/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#84a92c]">Batch Imposition Engine</span>
+                  <span className="text-[10px] font-mono font-bold bg-[#84a92c]/20 px-1.5 py-0.5 rounded">
+                    {selectedIds.size > 0 ? `${selectedIds.size} Selected` : `${filteredPeople.length} in View`}
+                  </span>
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                  Automatically spreads selected personnel across multiple sheets (e.g. 4 duplex pairs/sheet $\rightarrow$ 8 items = 2 sheets, 10 items = 3 sheets).
+                </p>
+                <button
+                  onClick={() => generateImpositionPages(impositionPreset)}
+                  className="w-full py-2 bg-[#198754] hover:bg-[#157347] text-white font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>⚡ Impose {selectedIds.size > 0 ? `${selectedIds.size} Selected` : `All (${filteredPeople.length})`} to Sheets</span>
+                </button>
+              </div>
+
               <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                 <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  {selectedIds.size > 0 ? `${selectedIds.size} selected` : `${filteredPeople.length} in view`}
+                  {selectedIds.size > 0 ? `${selectedIds.size} of ${filteredPeople.length} checked` : `${filteredPeople.length} personnel`}
                 </span>
                 <button
                   onClick={toggleSelectAll}
                   className="text-[10px] font-bold text-[#84a92c] hover:underline cursor-pointer"
                 >
-                  {selectedIds.size === filteredPeople.length && filteredPeople.length > 0 ? 'Deselect' : 'Select All'}
+                  {selectedIds.size === filteredPeople.length && filteredPeople.length > 0 ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
 
@@ -743,7 +1089,7 @@ export default function PaperPrintStudio() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search personnel..."
+                placeholder="Search personnel by name or ID..."
                 className="w-full px-2.5 py-1.5 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c]"
                 style={{
                   backgroundColor: 'var(--bg-elevated)',
@@ -787,29 +1133,123 @@ export default function PaperPrintStudio() {
             </aside>
           )}
 
-          {/* COLUMN 2: CENTER PHYSICAL PAPER SHEET ARTBOARD */}
+          {/* COLUMN 2: CENTER PHYSICAL PAPER SHEET ARTBOARD & PAGINATION */}
           <main
-            className={`flex-1 flex-col items-center justify-center overflow-auto p-4 md:p-8 relative select-none ${
+            className={`flex-1 flex-col items-center justify-start overflow-auto p-4 md:p-8 relative select-none ${
               mobileActiveTab === 'artboard' ? 'flex' : 'hidden lg:flex'
             }`}
             style={{ backgroundColor: 'var(--bg-root)' }}
             onMouseMove={handleSheetMouseMove}
             onMouseUp={handleSheetMouseUp}
-            onClick={() => setSelectedSlotId(null)}
+            onDragOver={e => e.preventDefault()}
+            onDrop={handleDropFile}
           >
             {/* Sheet Ruler Info & Floating Artboard Toolbar */}
-            <div className="absolute top-3 left-4 right-4 flex items-center justify-between text-[11px] font-mono flex-wrap gap-2 z-10" style={{ color: 'var(--text-muted)' }}>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="bg-black/30 backdrop-blur-xs px-2 py-1 rounded-lg">
-                  Sheet: {paperFormat} ({paperWidthMm} × {paperHeightMm} mm) • {cardSlots.length} Cards Placed
+            <div className="w-full max-w-5xl flex items-center justify-between text-[11px] font-mono flex-wrap gap-2 mb-4 z-10" style={{ color: 'var(--text-muted)' }}>
+              
+              {/* Pagination & Sheet Switcher */}
+              <div className="flex items-center gap-2 flex-wrap bg-black/40 backdrop-blur-xs px-3 py-1.5 rounded-2xl border border-white/10">
+                <span className="font-bold text-white text-xs">
+                  Sheet {currentPageIndex + 1} of {pages.length}
                 </span>
+
                 <button
-                  onClick={handleAddSlot}
-                  className="px-2.5 py-1 rounded-lg bg-[#84a92c] text-slate-900 font-bold text-xs hover:opacity-90 cursor-pointer shadow-sm"
+                  onClick={() => setCurrentPageIndex(i => Math.max(0, i - 1))}
+                  disabled={currentPageIndex === 0}
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold cursor-pointer"
+                  title="Previous Sheet"
                 >
-                  + Add Card Slot
+                  ◀ Prev
                 </button>
+
+                <div className="flex items-center gap-1">
+                  {pages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPageIndex(idx)}
+                      className={`w-6 h-6 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        currentPageIndex === idx ? 'bg-[#84a92c] text-slate-900 shadow-xs' : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1))}
+                  disabled={currentPageIndex === pages.length - 1}
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold cursor-pointer"
+                  title="Next Sheet"
+                >
+                  Next ▶
+                </button>
+
+                <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+
+                <button
+                  onClick={handleAddBlankSheet}
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold cursor-pointer"
+                  title="Add Blank Sheet"
+                >
+                  + Sheet
+                </button>
+
+                <button
+                  onClick={handleDuplicateSheet}
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] cursor-pointer"
+                  title="Duplicate Active Sheet"
+                >
+                  Clone
+                </button>
+
+                {pages.length > 1 && (
+                  <button
+                    onClick={() => handleDeleteSheet(currentPageIndex)}
+                    className="px-2 py-0.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-[10px] cursor-pointer"
+                    title="Delete Active Sheet"
+                  >
+                    ✕ Del
+                  </button>
+                )}
               </div>
+
+              {/* Multi-Select Quick Actions Bar */}
+              {selectedSlotIds.size > 0 && (
+                <div className="flex items-center gap-1 bg-[#84a92c]/20 border border-[#84a92c]/50 px-2.5 py-1 rounded-xl text-slate-100 font-sans">
+                  <span className="font-bold text-xs text-[#84a92c] mr-1">
+                    {selectedSlotIds.size} Selected
+                  </span>
+                  <button
+                    onClick={() => handleRotateSelected(90)}
+                    className="px-1.5 py-0.5 rounded bg-black/40 hover:bg-black/60 text-[10px] font-mono cursor-pointer"
+                    title="Rotate Selected 90°"
+                  >
+                    🔄 Rotate
+                  </button>
+                  <button
+                    onClick={handleToggleFaceSelected}
+                    className="px-1.5 py-0.5 rounded bg-black/40 hover:bg-black/60 text-[10px] font-mono cursor-pointer"
+                    title="Flip Front/Back"
+                  >
+                    Flip
+                  </button>
+                  <button
+                    onClick={handleDuplicateSelected}
+                    className="px-1.5 py-0.5 rounded bg-black/40 hover:bg-black/60 text-[10px] font-mono cursor-pointer"
+                    title="Duplicate Selected"
+                  >
+                    + Clone
+                  </button>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-mono cursor-pointer"
+                    title="Delete Selected"
+                  >
+                    ✕ Del
+                  </button>
+                </div>
+              )}
 
               {/* Zoom & Snap controls */}
               <div className="flex items-center gap-2 bg-black/40 backdrop-blur-xs px-3 py-1 rounded-xl border border-white/10">
@@ -854,13 +1294,14 @@ export default function PaperPrintStudio() {
 
             {/* Physical Paper Sheet Canvas Container */}
             <div
-              className="relative bg-white shadow-2xl transition-all duration-150 border border-slate-400 my-auto"
+              ref={paperSheetRef}
+              className="relative bg-white shadow-2xl transition-all duration-150 border border-slate-400 my-auto cursor-crosshair"
               style={{
                 width: `${sheetWidthPx}px`,
                 height: `${sheetHeightPx}px`,
                 boxShadow: '0 25px 60px -15px rgba(0,0,0,0.6)',
               }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={handleSheetMouseDown}
             >
               {/* Subtle mm Grid Paper Background */}
               <div
@@ -883,12 +1324,25 @@ export default function PaperPrintStudio() {
                 </div>
               )}
 
-              {/* Rendered Imposition Slots */}
+              {/* Visual Marquee / Box Selection Overlay */}
+              {isMarqueeActive && marqueeStartPx && marqueeCurrentPx && (
+                <div
+                  className="absolute border-2 border-[#84a92c] bg-[#84a92c]/20 pointer-events-none z-40 rounded-sm"
+                  style={{
+                    left: `${Math.min(marqueeStartPx.x, marqueeCurrentPx.x)}px`,
+                    top: `${Math.min(marqueeStartPx.y, marqueeCurrentPx.y)}px`,
+                    width: `${Math.abs(marqueeCurrentPx.x - marqueeStartPx.x)}px`,
+                    height: `${Math.abs(marqueeCurrentPx.y - marqueeStartPx.y)}px`,
+                  }}
+                />
+              )}
+
+              {/* Rendered Imposition Slots for the Active Sheet */}
               {cardSlots.map(slot => {
-                const isSelected = selectedSlotId === slot.id;
+                const isSelected = selectedSlotIds.has(slot.id);
                 const person = dbPeople.find(p => p.id === slot.personId) || dbPeople[0];
                 const key = `${person?.id}-${slot.face}-${activeCardTemplateId}`;
-                const cardImg = renderedCards.get(key);
+                const cardImg = slot.customImageSrc || renderedCards.get(key);
 
                 const slotXPx = slot.xMm * pxPerMm;
                 const slotYPx = slot.yMm * pxPerMm;
@@ -899,6 +1353,7 @@ export default function PaperPrintStudio() {
                 return (
                   <div
                     key={slot.id}
+                    data-card-slot="true"
                     onMouseDown={e => handleSlotMouseDown(e, slot.id)}
                     className={`absolute group rounded-lg overflow-visible shadow-sm cursor-grab active:cursor-grabbing transition-all ${
                       isSelected
@@ -932,7 +1387,11 @@ export default function PaperPrintStudio() {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button
                           type="button"
-                          onClick={e => handleRotateSlot(slot.id, 90, e)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedSlotIds(new Set([slot.id]));
+                            handleRotateSelected(90, e);
+                          }}
                           className="px-1 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[8px] cursor-pointer"
                           title="Rotate 90°"
                         >
@@ -940,7 +1399,11 @@ export default function PaperPrintStudio() {
                         </button>
                         <button
                           type="button"
-                          onClick={e => handleToggleFace(slot.id, e)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedSlotIds(new Set([slot.id]));
+                            handleToggleFaceSelected(e);
+                          }}
                           className="px-1 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[8px] cursor-pointer"
                           title="Flip Face (Front/Back)"
                         >
@@ -948,7 +1411,11 @@ export default function PaperPrintStudio() {
                         </button>
                         <button
                           type="button"
-                          onClick={e => handleDuplicateSlot(slot.id, e)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedSlotIds(new Set([slot.id]));
+                            handleDuplicateSelected(e);
+                          }}
                           className="px-1 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-[8px] cursor-pointer"
                           title="Duplicate"
                         >
@@ -956,7 +1423,11 @@ export default function PaperPrintStudio() {
                         </button>
                         <button
                           type="button"
-                          onClick={e => handleDeleteSlot(slot.id, e)}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedSlotIds(new Set([slot.id]));
+                            handleDeleteSelected(e);
+                          }}
                           className="px-1 py-0.5 rounded bg-red-600 hover:bg-red-500 text-[8px] cursor-pointer"
                           title="Delete Card"
                         >
@@ -980,6 +1451,13 @@ export default function PaperPrintStudio() {
                 );
               })}
             </div>
+
+            {/* Floating Toast Notification */}
+            {toastMessage && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-slate-950/90 text-white font-medium text-xs shadow-2xl border border-[#84a92c] flex items-center gap-2 animate-fade-in backdrop-blur-md">
+                <span>{toastMessage}</span>
+              </div>
+            )}
           </main>
 
           {/* COLUMN 3: IMPOSITION & SHEET INSPECTOR (COLLAPSIBLE / RESPONSIVE) */}
@@ -994,7 +1472,9 @@ export default function PaperPrintStudio() {
               {selectedSlot && (
                 <div className="p-3 rounded-2xl bg-[#84a92c]/10 border border-[#84a92c]/40 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-[#84a92c]">Selected Card Slot</span>
+                    <span className="font-bold text-xs text-[#84a92c]">
+                      {selectedSlotIds.size > 1 ? `${selectedSlotIds.size} Cards Selected` : 'Selected Card Slot'}
+                    </span>
                     <span className="text-[10px] font-mono bg-[#84a92c]/20 px-1.5 py-0.5 rounded font-bold">
                       {selectedSlot.face.toUpperCase()}
                     </span>
@@ -1064,14 +1544,14 @@ export default function PaperPrintStudio() {
                   {/* Quick Card Controls */}
                   <div className="flex items-center gap-1.5 pt-1">
                     <button
-                      onClick={() => handleRotateSlot(selectedSlot.id, 90)}
+                      onClick={() => handleRotateSelected(90)}
                       className="flex-1 py-1 px-2 rounded-lg border text-[11px] font-bold hover:opacity-80 cursor-pointer text-center"
                       style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                     >
                       Rotate 90° ({selectedSlot.rotationDeg || 0}°)
                     </button>
                     <button
-                      onClick={() => handleToggleFace(selectedSlot.id)}
+                      onClick={handleToggleFaceSelected}
                       className="flex-1 py-1 px-2 rounded-lg border text-[11px] font-bold hover:opacity-80 cursor-pointer text-center"
                       style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                     >
@@ -1218,11 +1698,11 @@ export default function PaperPrintStudio() {
                 </div>
 
                 <button
-                  onClick={handleGenerateCustomGrid}
+                  onClick={() => generateImpositionPages('custom')}
                   className="w-full py-1.5 rounded-xl border text-xs font-bold hover:border-[#84a92c] transition-colors cursor-pointer"
                   style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 >
-                  Apply {gridRows}×{gridCols} Grid Layout ({gridRows * gridCols} Slots)
+                  Apply {gridRows}×{gridCols} Grid Layout ({gridRows * gridCols} Slots/Sheet)
                 </button>
               </div>
 
@@ -1273,14 +1753,14 @@ export default function PaperPrintStudio() {
               <div className="p-3.5 rounded-2xl bg-[#84a92c]/10 border border-[#84a92c]/30 space-y-2">
                 <p className="font-bold text-xs text-[#84a92c]">300 DPI Vector PDF Engine</p>
                 <p className="text-[10px] text-slate-500">
-                  Ready for commercial digital presses and guillotine cutting.
+                  Ready for commercial digital presses and guillotine cutting ({pages.length} Sheet{pages.length > 1 ? 's' : ''}).
                 </p>
                 <button
                   onClick={handleExportPdf}
                   disabled={isExporting}
                   className="btn-primary w-full py-2.5 text-xs font-bold cursor-pointer shadow-xs"
                 >
-                  {isExporting ? 'Generating…' : 'Download Print PDF'}
+                  {isExporting ? 'Generating Multi-Page PDF…' : `Download ${pages.length > 1 ? `${pages.length}-Page ` : ''}Print PDF`}
                 </button>
               </div>
             </aside>

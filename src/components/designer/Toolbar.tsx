@@ -25,7 +25,7 @@ interface ToolbarProps {
   isGroupSelected?: boolean;
 }
 
-let elementCounter = 200;
+let elementCounter = 500;
 function nextId(prefix: string) {
   return `${prefix}-${Date.now()}-${++elementCounter}`;
 }
@@ -55,8 +55,8 @@ export default function Toolbar({
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const imageTemplateInputRef = useRef<HTMLInputElement>(null);
 
-  // Sub-tab in toolbar (Elements, QR & Barcodes, Assets & Graphics, Starter Presets)
-  const [activeTab, setActiveTab] = useState<'elements' | 'qr-barcode' | 'graphics' | 'starters'>('elements');
+  // Sub-tab in toolbar (Elements, Shapes, Security Badges, QR & Barcode, Data Fields, Assets)
+  const [activeTab, setActiveTab] = useState<'elements' | 'shapes' | 'security' | 'qr-barcode' | 'data' | 'graphics'>('elements');
 
   // Custom QR / Barcode inputs
   const [customQrPayload, setCustomQrPayload] = useState('{{id_number}}');
@@ -64,9 +64,10 @@ export default function Toolbar({
 
   // ================= ELEMENT BUILDERS =================
 
-  const addText = (text: string = 'Heading Text', fontSize: number = 22, fontStyle: string = 'bold', fill: string = '#0f172a') => {
+  // 1. Text & Headings
+  const addHeading = (text: string = 'Full Name Label', fontSize: number = 24, fontStyle: string = 'bold', fill: string = '#0f172a') => {
     onAddElement({
-      id: nextId('text'),
+      id: nextId('text-heading'),
       type: 'text',
       x: 50,
       y: 50,
@@ -76,7 +77,7 @@ export default function Toolbar({
       fontStyle,
       fill,
       align: 'left',
-      width: 260,
+      width: 280,
       opacity: 1,
       visible: true,
       locked: false,
@@ -84,16 +85,77 @@ export default function Toolbar({
     });
   };
 
-  const addRect = (fill: string = '#0b131b', cornerRadius: number = 8, w: number = 240, h: number = 80, name: string = 'Banner Box') => {
+  const addSubtext = (text: string = 'Department / Role', fontSize: number = 16, fill: string = '#475569') => {
     onAddElement({
-      id: nextId('rect'),
-      type: 'rect',
+      id: nextId('text-sub'),
+      type: 'text',
+      x: 50,
+      y: 90,
+      text,
+      fontSize,
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fill,
+      align: 'left',
+      width: 260,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Subtext',
+    });
+  };
+
+  const addMonoCode = (text: string = 'ID-2026-0819', fontSize: number = 14) => {
+    onAddElement({
+      id: nextId('text-mono'),
+      type: 'text',
+      x: 50,
+      y: 120,
+      text,
+      fontSize,
+      fontFamily: 'JetBrains Mono',
+      fontStyle: 'bold',
+      fill: '#84a92c',
+      align: 'left',
+      width: 200,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Mono Code',
+    });
+  };
+
+  const addLegalText = () => {
+    onAddElement({
+      id: nextId('text-legal'),
+      type: 'text',
       x: 40,
-      y: 30,
+      y: 580,
+      text: 'Property of SiliconLabs Corp. Return if found. Unauthorized duplication is prohibited.',
+      fontSize: 9,
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fill: '#94a3b8',
+      align: 'center',
+      width: CARD.WIDTH_PX - 80,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Legal Fine Print',
+    });
+  };
+
+  // 2. Core Shapes & Frames
+  const addBannerRect = (fill: string = '#0b131b', w: number = CARD.WIDTH_PX, h: number = 90, name: string = 'Header Banner') => {
+    onAddElement({
+      id: nextId('rect-banner'),
+      type: 'rect',
+      x: 0,
+      y: 0,
       width: w,
       height: h,
       fill,
-      cornerRadius,
+      cornerRadius: 0,
       opacity: 1,
       visible: true,
       locked: false,
@@ -101,7 +163,44 @@ export default function Toolbar({
     });
   };
 
-  const addCircle = (fill: string = '#10b981', radius: number = 35) => {
+  const addCardBox = (fill: string = '#ffffff', cornerRadius: number = 12, w: number = 280, h: number = 90) => {
+    onAddElement({
+      id: nextId('rect-box'),
+      type: 'rect',
+      x: 40,
+      y: 150,
+      width: w,
+      height: h,
+      fill,
+      stroke: '#e2e8f0',
+      strokeWidth: 1.5,
+      cornerRadius,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Card Container Box',
+    });
+  };
+
+  const addPillTag = (text: string = 'ACTIVE STATUS', fill: string = '#10b981') => {
+    onAddElement({
+      id: nextId('pill'),
+      type: 'pill',
+      x: 50,
+      y: 40,
+      width: 130,
+      height: 30,
+      fill,
+      text,
+      fontSize: 11,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Status Pill Tag',
+    });
+  };
+
+  const addCircleBadge = (fill: string = '#10b981', radius: number = 35) => {
     onAddElement({
       id: nextId('circle'),
       type: 'circle',
@@ -116,44 +215,63 @@ export default function Toolbar({
     });
   };
 
-  const addLine = () => {
+  const addStarBadge = (points: number = 5, fill: string = '#F59E0B') => {
     onAddElement({
-      id: nextId('line'),
-      type: 'line',
-      x: 40,
-      y: 180,
-      width: 200,
-      height: 0,
-      points: [0, 0, 200, 0],
-      stroke: '#0f172a',
+      id: nextId('star'),
+      type: 'star',
+      x: 120,
+      y: 120,
+      width: 70,
+      height: 70,
+      starPoints: points,
+      fill,
+      stroke: '#D97706',
+      strokeWidth: 1.5,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: `${points}-Point Star Badge`,
+    });
+  };
+
+  const addSecurityShield = () => {
+    onAddElement({
+      id: nextId('shield'),
+      type: 'badgeShield',
+      x: 80,
+      y: 80,
+      width: 75,
+      height: 90,
+      fill: '#1E3A8A',
+      stroke: '#3B82F6',
       strokeWidth: 2,
       opacity: 1,
       visible: true,
       locked: false,
-      name: 'Divider Line',
+      name: 'Security ID Shield',
     });
   };
 
-  const addArrow = () => {
+  const addPolygon = (sides: number = 6, fill: string = '#3B82F6', name: string = 'Hexagon Badge') => {
     onAddElement({
-      id: nextId('arrow'),
-      type: 'arrow',
-      x: 40,
-      y: 210,
-      width: 180,
-      height: 0,
-      points: [0, 0, 180, 0],
-      stroke: '#84a92c',
-      strokeWidth: 2,
-      arrowHead: true,
+      id: nextId('poly'),
+      type: 'polygon',
+      x: 100,
+      y: 100,
+      width: 80,
+      height: 80,
+      sides,
+      fill,
+      stroke: '#1D4ED8',
+      strokeWidth: 1.5,
       opacity: 1,
       visible: true,
       locked: false,
-      name: 'Directional Arrow',
+      name,
     });
   };
 
-  const addPhoto = () => {
+  const addPhotoBox = () => {
     onAddElement({
       id: nextId('photo'),
       type: 'photo',
@@ -173,6 +291,179 @@ export default function Toolbar({
     });
   };
 
+  // 3. Lines, Dividers & Accents
+  const addSolidLine = () => {
+    onAddElement({
+      id: nextId('line'),
+      type: 'line',
+      x: 40,
+      y: 180,
+      width: 240,
+      height: 0,
+      points: [0, 0, 240, 0],
+      stroke: '#0f172a',
+      strokeWidth: 2,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Solid Divider Line',
+    });
+  };
+
+  const addDashedLine = () => {
+    onAddElement({
+      id: nextId('line-dash'),
+      type: 'line',
+      x: 40,
+      y: 200,
+      width: 240,
+      height: 0,
+      points: [0, 0, 240, 0],
+      stroke: '#84a92c',
+      strokeWidth: 1.5,
+      dashPattern: [6, 4],
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Dashed Security Line',
+    });
+  };
+
+  const addArrow = () => {
+    onAddElement({
+      id: nextId('arrow'),
+      type: 'arrow',
+      x: 40,
+      y: 220,
+      width: 180,
+      height: 0,
+      points: [0, 0, 180, 0],
+      stroke: '#84a92c',
+      strokeWidth: 2,
+      arrowHead: true,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Directional Arrow',
+    });
+  };
+
+  const addCornerBrackets = () => {
+    onAddElement({
+      id: nextId('brackets'),
+      type: 'cornerBracket',
+      x: 35,
+      y: 125,
+      width: 180,
+      height: 220,
+      stroke: '#84a92c',
+      strokeWidth: 2.5,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Photo Corner L-Brackets',
+    });
+  };
+
+  const addGuillochePattern = () => {
+    onAddElement({
+      id: nextId('guilloche'),
+      type: 'guilloche',
+      x: 40,
+      y: 500,
+      width: CARD.WIDTH_PX - 80,
+      height: 30,
+      stroke: '#10b981',
+      strokeWidth: 1.5,
+      opacity: 0.8,
+      visible: true,
+      locked: false,
+      name: 'Guilloche Security Border',
+    });
+  };
+
+  // 4. Security, Tech & Smart Elements
+  const addSmartChip = () => {
+    onAddElement({
+      id: nextId('chip'),
+      type: 'chip',
+      x: 40,
+      y: 220,
+      width: 70,
+      height: 55,
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'EMV Gold Smart Chip',
+    });
+  };
+
+  const addHologramStrip = () => {
+    onAddElement({
+      id: nextId('hologram'),
+      type: 'hologram',
+      x: CARD.WIDTH_PX - 60,
+      y: 0,
+      width: 45,
+      height: CARD.HEIGHT_PX,
+      opacity: 0.9,
+      visible: true,
+      locked: false,
+      name: 'Holographic Security Foil',
+    });
+  };
+
+  const addRfidWaves = () => {
+    onAddElement({
+      id: nextId('rfid'),
+      type: 'rfid',
+      x: CARD.WIDTH_PX - 120,
+      y: 35,
+      width: 50,
+      height: 50,
+      stroke: '#2563EB',
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Contactless RFID Waves',
+    });
+  };
+
+  const addOfficialStamp = () => {
+    onAddElement({
+      id: nextId('stamp'),
+      type: 'stamp',
+      x: CARD.WIDTH_PX - 170,
+      y: 280,
+      width: 100,
+      height: 100,
+      stroke: '#DC2626',
+      opacity: 0.85,
+      visible: true,
+      locked: false,
+      name: 'Official Verified Stamp',
+    });
+  };
+
+  const addSignatureLine = () => {
+    onAddElement({
+      id: nextId('sig'),
+      type: 'signature',
+      x: 280,
+      y: 420,
+      width: 220,
+      height: 50,
+      stroke: '#0f172a',
+      strokeWidth: 1.5,
+      subText: 'Authorized Officer Signature',
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: 'Signature Authorization Line',
+    });
+  };
+
+  // 5. QR & Barcode Generator
   const addCustomQr = () => {
     onAddElement({
       id: nextId('qr'),
@@ -206,9 +497,10 @@ export default function Toolbar({
     });
   };
 
+  // 6. Dynamic Data Bindings
   const addDataField = (fieldKey: string, label: string) => {
     if (fieldKey === '{{photo}}') {
-      addPhoto();
+      addPhotoBox();
       return;
     }
     if (fieldKey === '{{qr_code}}') {
@@ -240,7 +532,7 @@ export default function Toolbar({
     });
   };
 
-  // Asset Graphics
+  // 7. Assets & Logos
   const addSiliconLabsLogo = () => {
     onAddElement({
       id: nextId('logo'),
@@ -255,6 +547,32 @@ export default function Toolbar({
       locked: false,
       name: 'SiliconLabs Monogram Logo',
     });
+  };
+
+  const handleImageTemplateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      onAddElement({
+        id: nextId('custom-img'),
+        type: 'image',
+        x: 40,
+        y: 40,
+        width: 140,
+        height: 140,
+        src: dataUrl,
+        opacity: 1,
+        visible: true,
+        locked: false,
+        name: `Asset: ${file.name.substring(0, 16)}`,
+      });
+    };
+    reader.readAsDataURL(file);
+
+    if (imageTemplateInputRef.current) imageTemplateInputRef.current.value = '';
   };
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -285,133 +603,6 @@ export default function Toolbar({
     };
     reader.readAsText(file);
     if (jsonInputRef.current) jsonInputRef.current.value = '';
-  };
-
-  const handleImageTemplateUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const isSvg = file.type === 'image/svg+xml' || file.name.endsWith('.svg');
-
-    if (isSvg) {
-      // SVG: attempt to parse top-level elements into CanvasElements
-      const textReader = new FileReader();
-      textReader.onload = () => {
-        const svgText = textReader.result as string;
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-        const svgEl = svgDoc.documentElement;
-        const extractedElements: CanvasElement[] = [];
-
-        // Parse top-level children into CanvasElements
-        Array.from(svgEl.children).forEach((child, idx) => {
-          const tag = child.tagName.toLowerCase();
-          const x = parseFloat(child.getAttribute('x') || '0');
-          const y = parseFloat(child.getAttribute('y') || '0');
-          const fill = child.getAttribute('fill') || '#0f172a';
-
-          if (tag === 'rect') {
-            extractedElements.push({
-              id: nextId('svg-rect'),
-              type: 'rect',
-              x,
-              y,
-              width: parseFloat(child.getAttribute('width') || '100'),
-              height: parseFloat(child.getAttribute('height') || '100'),
-              fill,
-              stroke: child.getAttribute('stroke') || '',
-              strokeWidth: parseFloat(child.getAttribute('stroke-width') || '0'),
-              cornerRadius: parseFloat(child.getAttribute('rx') || '0'),
-              opacity: parseFloat(child.getAttribute('opacity') || '1'),
-              visible: true,
-              locked: false,
-              name: `SVG Rect ${idx + 1}`,
-            });
-          } else if (tag === 'circle') {
-            const cx = parseFloat(child.getAttribute('cx') || '0');
-            const cy = parseFloat(child.getAttribute('cy') || '0');
-            const r = parseFloat(child.getAttribute('r') || '40');
-            extractedElements.push({
-              id: nextId('svg-circle'),
-              type: 'circle',
-              x: cx - r,
-              y: cy - r,
-              radius: r,
-              fill,
-              stroke: child.getAttribute('stroke') || '',
-              strokeWidth: parseFloat(child.getAttribute('stroke-width') || '0'),
-              opacity: parseFloat(child.getAttribute('opacity') || '1'),
-              visible: true,
-              locked: false,
-              name: `SVG Circle ${idx + 1}`,
-            });
-          } else if (tag === 'text') {
-            extractedElements.push({
-              id: nextId('svg-text'),
-              type: 'text',
-              x,
-              y,
-              text: child.textContent || 'Text',
-              fontSize: parseFloat(child.getAttribute('font-size') || '16'),
-              fontFamily: child.getAttribute('font-family') || 'Inter',
-              fill,
-              opacity: parseFloat(child.getAttribute('opacity') || '1'),
-              visible: true,
-              locked: false,
-              name: `SVG Text ${idx + 1}`,
-            });
-          }
-        });
-
-        if (extractedElements.length > 0) {
-          // Add extracted vector elements
-          extractedElements.forEach(el => onAddElement(el));
-        } else {
-          // Complex SVG: fall back to rasterizing as a background image
-          const dataUrlReader = new FileReader();
-          dataUrlReader.onload = () => {
-            const dataUrl = dataUrlReader.result as string;
-            onAddElement({
-              id: nextId('svg-bg'),
-              type: 'image',
-              x: 0,
-              y: 0,
-              width: CARD.WIDTH_PX,
-              height: CARD.HEIGHT_PX,
-              src: dataUrl,
-              opacity: 1,
-              visible: true,
-              locked: true,
-              name: `BG: ${file.name.substring(0, 16)}`,
-            });
-          };
-          dataUrlReader.readAsDataURL(file);
-        }
-      };
-      textReader.readAsText(file);
-    } else {
-      // PNG/JPG: place as locked background image at full card size
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        onAddElement({
-          id: nextId('img-bg'),
-          type: 'image',
-          x: 0,
-          y: 0,
-          width: CARD.WIDTH_PX,
-          height: CARD.HEIGHT_PX,
-          src: dataUrl,
-          opacity: 1,
-          visible: true,
-          locked: true,
-          name: `BG: ${file.name.substring(0, 16)}`,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    if (imageTemplateInputRef.current) imageTemplateInputRef.current.value = '';
   };
 
   return (
@@ -524,7 +715,7 @@ export default function Toolbar({
         )}
       </div>
 
-      {/* Alignment Actions Bar (shown when 2+ items selected) */}
+      {/* Alignment Actions Bar */}
       {selectedCount >= 2 && onAlign && (
         <div className="p-2 rounded-xl border space-y-1.5" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#84a92c] font-mono">
@@ -546,43 +737,68 @@ export default function Toolbar({
       )}
 
       {/* Toolbar Sub-Navigation Tabs */}
-      <div className="flex rounded-lg border p-0.5" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+      <div className="grid grid-cols-3 gap-1 rounded-xl border p-1" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
         <button
           onClick={() => setActiveTab('elements')}
-          className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
-            activeTab === 'elements' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'elements' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Layers
+          ✨ Elements
+        </button>
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'security' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          🛡️ Security & Chips
+        </button>
+        <button
+          onClick={() => setActiveTab('shapes')}
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'shapes' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          📐 Shapes & Lines
         </button>
         <button
           onClick={() => setActiveTab('qr-barcode')}
-          className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
-            activeTab === 'qr-barcode' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'qr-barcode' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          QR & Barcode
+          📱 QR & Barcode
+        </button>
+        <button
+          onClick={() => setActiveTab('data')}
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'data' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          🗂️ Data Tags
         </button>
         <button
           onClick={() => setActiveTab('graphics')}
-          className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all cursor-pointer ${
-            activeTab === 'graphics' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            activeTab === 'graphics' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Assets
+          🖼️ Assets & Import
         </button>
       </div>
 
-      {/* TAB 1: VECTOR GRAPHIC LAYERS */}
+      {/* TAB 1: CORE VECTOR ELEMENTS */}
       {activeTab === 'elements' && (
         <div className="space-y-3">
           <p className="text-[11px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
-            Vector Graphic Elements
+            Text & Core Layout Elements
           </p>
+
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => addText('Full Name Label', 24, 'bold', '#0f172a')}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={() => addHeading('Full Name Label', 24, 'bold', '#0f172a')}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               <span className="font-serif font-bold text-sm">T</span>
@@ -590,8 +806,8 @@ export default function Toolbar({
             </button>
 
             <button
-              onClick={() => addText('Department / Role', 16, 'normal', '#475569')}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={() => addSubtext('Department / Role', 16, '#475569')}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               <span className="font-serif text-xs">t</span>
@@ -599,85 +815,222 @@ export default function Toolbar({
             </button>
 
             <button
-              onClick={() => addRect('#0b131b', 0, CARD.WIDTH_PX, 90, 'Header Banner')}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={() => addMonoCode('ID-2026-0819', 14)}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="w-4 h-2.5 bg-current rounded-2xs inline-block" />
-              <span>Banner</span>
+              <span className="font-mono font-bold text-xs">#01</span>
+              <span>Mono Badge</span>
             </button>
 
             <button
-              onClick={() => addRect('#ffffff', 12, 260, 80, 'Card Card Box')}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={addLegalText}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="w-3.5 h-3.5 border-2 border-current rounded-xs inline-block" />
-              <span>Card Box</span>
+              <span className="text-[10px] font-mono">§</span>
+              <span>Fine Print</span>
             </button>
 
             <button
-              onClick={() => addCircle('#10b981', 35)}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={addPhotoBox}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="w-3.5 h-3.5 border-2 border-current rounded-full inline-block" />
-              <span>Badge Seal</span>
-            </button>
-
-            <button
-              onClick={addPhoto}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
-              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
               <span>Photo Box</span>
             </button>
 
             <button
-              onClick={addLine}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              onClick={() => addPillTag('OFFICIAL PASS', '#10b981')}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="w-3.5 h-2 bg-[#10b981] rounded-full inline-block" />
+              <span>Status Pill</span>
+            </button>
+
+            <button
+              onClick={() => addBannerRect('#0b131b', CARD.WIDTH_PX, 90, 'Header Banner')}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="w-4 h-2 bg-current rounded-2xs inline-block" />
+              <span>Banner</span>
+            </button>
+
+            <button
+              onClick={() => addCardBox('#ffffff', 12, 280, 90)}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="w-3.5 h-3.5 border border-current rounded-xs inline-block" />
+              <span>Card Box</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: SECURITY, TECH & SMART ELEMENTS */}
+      {activeTab === 'security' && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
+            Security, Chips & Holograms
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={addSmartChip}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-amber-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">💳</span>
+              <span>EMV Gold Chip</span>
+            </button>
+
+            <button
+              onClick={addHologramStrip}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-emerald-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">✨</span>
+              <span>Hologram Foil</span>
+            </button>
+
+            <button
+              onClick={addRfidWaves}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">📶</span>
+              <span>RFID / NFC</span>
+            </button>
+
+            <button
+              onClick={addOfficialStamp}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-red-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">🔴</span>
+              <span>Official Stamp</span>
+            </button>
+
+            <button
+              onClick={addSecurityShield}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">🛡️</span>
+              <span>Security Shield</span>
+            </button>
+
+            <button
+              onClick={addSignatureLine}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">✍️</span>
+              <span>Signature Line</span>
+            </button>
+
+            <button
+              onClick={addGuillochePattern}
+              className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-teal-400 col-span-2"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">〰️</span>
+              <span>Guilloche Security Border Pattern</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: SHAPES, LINES & ACCENTS */}
+      {activeTab === 'shapes' && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
+            Vector Shapes, Badges & Lines
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => addStarBadge(5, '#F59E0B')}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-amber-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">★</span>
+              <span>5-Point Star</span>
+            </button>
+
+            <button
+              onClick={() => addPolygon(6, '#3B82F6', 'Hexagon Badge')}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-sm">⬡</span>
+              <span>Hexagon</span>
+            </button>
+
+            <button
+              onClick={() => addCircleBadge('#10b981', 35)}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-emerald-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="w-3.5 h-3.5 border-2 border-current rounded-full inline-block" />
+              <span>Circle Badge</span>
+            </button>
+
+            <button
+              onClick={() => addPolygon(3, '#EF4444', 'Warning Triangle')}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-red-400"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-xs">▲</span>
+              <span>Triangle</span>
+            </button>
+
+            <button
+              onClick={addSolidLine}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               <span className="w-4 h-0.5 bg-current inline-block" />
-              <span>Line</span>
+              <span>Solid Line</span>
+            </button>
+
+            <button
+              onClick={addDashedLine}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-xs font-mono">---</span>
+              <span>Dashed Line</span>
             </button>
 
             <button
               onClick={addArrow}
-              className="py-2 px-2.5 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               <span className="text-xs font-mono font-bold">➔</span>
               <span>Arrow</span>
             </button>
-          </div>
 
-          {/* Dynamic Data Bindings */}
-          <div className="pt-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5 font-mono" style={{ color: 'var(--text-muted)' }}>
-              Dynamic Person Data Bindings
-            </p>
-            <div className="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto pr-1">
-              {DATA_FIELDS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => addDataField(f.key, f.label)}
-                  className="px-2.5 py-1.5 rounded-lg border text-left flex items-center justify-between text-xs transition-colors cursor-pointer"
-                  style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
-                >
-                  <span className="font-semibold">{f.label}</span>
-                  <span className="font-mono text-[10px] text-[#84a92c] font-bold">{f.key}</span>
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={addCornerBrackets}
+              className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <span className="text-xs font-mono font-bold">⌈ ⌉</span>
+              <span>L-Brackets</span>
+            </button>
           </div>
         </div>
       )}
 
-      {/* TAB 2: QR & BARCODE GENERATOR */}
+      {/* TAB 4: QR & BARCODE GENERATOR */}
       {activeTab === 'qr-barcode' && (
         <div className="space-y-4">
           {/* Live QR Generator */}
@@ -755,11 +1108,33 @@ export default function Toolbar({
         </div>
       )}
 
-      {/* TAB 3: ASSETS & BRAND GRAPHICS */}
+      {/* TAB 5: DYNAMIC DATA BINDINGS */}
+      {activeTab === 'data' && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
+            Dynamic Personnel Fields (14+)
+          </p>
+          <div className="grid grid-cols-1 gap-1 max-h-80 overflow-y-auto pr-1">
+            {DATA_FIELDS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => addDataField(f.key, f.label)}
+                className="px-2.5 py-2 rounded-xl border text-left flex items-center justify-between text-xs transition-colors cursor-pointer hover:border-[#84a92c]"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+              >
+                <span className="font-semibold">{f.label}</span>
+                <span className="font-mono text-[10px] text-[#84a92c] font-bold">{f.key}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: ASSETS & BRAND GRAPHICS */}
       {activeTab === 'graphics' && (
         <div className="space-y-3">
           <p className="text-[11px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
-            Logos & Graphic Assets
+            Logos & Custom Image Importer
           </p>
 
           <input
@@ -772,13 +1147,13 @@ export default function Toolbar({
 
           <button
             onClick={() => imageTemplateInputRef.current?.click()}
-            className="w-full py-2.5 px-3 border font-bold rounded-xl flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer"
+            className="w-full py-2.5 px-3 border font-bold rounded-xl flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer hover:border-[#84a92c]"
             style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
           >
             <svg className="w-4 h-4 text-[#84a92c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
-            <span>Upload Image / Logo from PC</span>
+            <span>Upload Custom Image / Logo from PC</span>
           </button>
 
           <div className="grid grid-cols-1 gap-2 pt-1">
@@ -797,31 +1172,12 @@ export default function Toolbar({
         </div>
       )}
 
-      {/* Template Import / Export & Save */}
-      <div className="pt-2 border-t space-y-2" style={{ borderColor: 'var(--border-primary)' }}>
-        <input ref={jsonInputRef} type="file" accept=".json,application/json" onChange={handleJsonUpload} className="hidden" />
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => jsonInputRef.current?.click()}
-            className="py-1.5 px-2 border font-medium rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-            style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
-          >
-            <span>Import JSON</span>
-          </button>
-          <button
-            onClick={onExportTemplate}
-            className="py-1.5 px-2 border font-semibold rounded-lg flex items-center justify-center gap-1 cursor-pointer text-[#84a92c]"
-            style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
-          >
-            <span>Export JSON</span>
-          </button>
-        </div>
-
+      {/* Save & Template Actions */}
+      <div className="pt-3 border-t space-y-2" style={{ borderColor: 'var(--border-primary)' }}>
         <button
           onClick={onSave}
           disabled={saving}
-          className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 cursor-pointer shadow-md font-bold text-xs"
+          className="btn-primary w-full py-2.5 text-xs font-bold shadow-md cursor-pointer flex items-center justify-center gap-2"
         >
           {saving ? (
             <>
@@ -829,9 +1185,38 @@ export default function Toolbar({
               <span>Saving Template…</span>
             </>
           ) : (
-            <span>Save Template to Library</span>
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span>Save Vector Template</span>
+            </>
           )}
         </button>
+
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            ref={jsonInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleJsonUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => jsonInputRef.current?.click()}
+            className="py-1.5 px-2 rounded-xl border text-[11px] font-bold hover:opacity-80 transition-opacity cursor-pointer text-center"
+            style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+          >
+            Import JSON
+          </button>
+          <button
+            onClick={onExportTemplate}
+            className="py-1.5 px-2 rounded-xl border text-[11px] font-bold hover:opacity-80 transition-opacity cursor-pointer text-center"
+            style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+          >
+            Export JSON
+          </button>
+        </div>
       </div>
     </div>
   );

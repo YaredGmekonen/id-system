@@ -245,8 +245,8 @@ export default function OrderQueueTable({
                 <td className="py-3 px-3 text-right relative">
                   <div className="flex items-center justify-end gap-1.5">
                     <button
-                      onClick={() => navigate('/studio')}
-                      className="btn-secondary py-1 px-2.5 text-[11px] font-bold"
+                      onClick={() => navigate(`/studio?personId=${p.id}`)}
+                      className="btn-secondary py-1 px-2.5 text-[11px] font-bold cursor-pointer"
                     >
                       Inspect Card
                     </button>

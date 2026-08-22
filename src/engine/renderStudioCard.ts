@@ -285,6 +285,221 @@ async function _renderStudioCardInner(
         } catch {
           // Skip
         }
+      } else if (el.type === 'star') {
+        const cx = elX + elW / 2;
+        const cy = elY + elH / 2;
+        const numPoints = el.starPoints || 5;
+        const outerR = Math.min(elW, elH) / 2;
+        const innerR = (el.innerRadius || (outerR * 0.45));
+        ctx.fillStyle = el.fill || '#F59E0B';
+        ctx.beginPath();
+        for (let i = 0; i < numPoints * 2; i++) {
+          const r = i % 2 === 0 ? outerR : innerR;
+          const angle = (i * Math.PI) / numPoints - Math.PI / 2;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        if (el.stroke && el.strokeWidth) {
+          ctx.strokeStyle = el.stroke;
+          ctx.lineWidth = (el.strokeWidth || 1) * scaleFactorX;
+          ctx.stroke();
+        }
+      } else if (el.type === 'polygon') {
+        const cx = elX + elW / 2;
+        const cy = elY + elH / 2;
+        const sides = el.sides || 6;
+        const rad = Math.min(elW, elH) / 2;
+        ctx.fillStyle = el.fill || '#3B82F6';
+        ctx.beginPath();
+        for (let i = 0; i < sides; i++) {
+          const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+          const x = cx + Math.cos(angle) * rad;
+          const y = cy + Math.sin(angle) * rad;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        if (el.stroke && el.strokeWidth) {
+          ctx.strokeStyle = el.stroke;
+          ctx.lineWidth = (el.strokeWidth || 1) * scaleFactorX;
+          ctx.stroke();
+        }
+      } else if (el.type === 'badgeShield') {
+        // Heraldic / Security ID Shield
+        ctx.fillStyle = el.fill || '#1E3A8A';
+        ctx.beginPath();
+        ctx.moveTo(elX + elW / 2, elY);
+        ctx.lineTo(elX + elW, elY + elH * 0.2);
+        ctx.lineTo(elX + elW * 0.85, elY + elH * 0.7);
+        ctx.lineTo(elX + elW / 2, elY + elH);
+        ctx.lineTo(elX + elW * 0.15, elY + elH * 0.7);
+        ctx.lineTo(elX, elY + elH * 0.2);
+        ctx.closePath();
+        ctx.fill();
+        if (el.stroke && el.strokeWidth) {
+          ctx.strokeStyle = el.stroke;
+          ctx.lineWidth = (el.strokeWidth || 1) * scaleFactorX;
+          ctx.stroke();
+        }
+      } else if (el.type === 'chip') {
+        // EMV Gold Smart Chip
+        const rad = 6 * scaleFactorX;
+        const grad = ctx.createLinearGradient(elX, elY, elX + elW, elY + elH);
+        grad.addColorStop(0, '#F59E0B');
+        grad.addColorStop(0.5, '#FDE68A');
+        grad.addColorStop(1, '#D97706');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(elX, elY, elW, elH, rad);
+        else ctx.rect(elX, elY, elW, elH);
+        ctx.fill();
+        ctx.strokeStyle = '#92400E';
+        ctx.lineWidth = 1.5 * scaleFactorX;
+        ctx.stroke();
+
+        // Internal circuit contact cuts
+        ctx.strokeStyle = '#78350F';
+        ctx.lineWidth = 1 * scaleFactorX;
+        ctx.beginPath();
+        ctx.moveTo(elX, elY + elH * 0.35);
+        ctx.lineTo(elX + elW * 0.35, elY + elH * 0.35);
+        ctx.lineTo(elX + elW * 0.35, elY + elH * 0.65);
+        ctx.lineTo(elX, elY + elH * 0.65);
+
+        ctx.moveTo(elX + elW, elY + elH * 0.35);
+        ctx.lineTo(elX + elW * 0.65, elY + elH * 0.35);
+        ctx.lineTo(elX + elW * 0.65, elY + elH * 0.65);
+        ctx.lineTo(elX + elW, elY + elH * 0.65);
+
+        ctx.moveTo(elX + elW * 0.5, elY);
+        ctx.lineTo(elX + elW * 0.5, elY + elH * 0.35);
+
+        ctx.moveTo(elX + elW * 0.5, elY + elH * 0.65);
+        ctx.lineTo(elX + elW * 0.5, elY + elH);
+        ctx.stroke();
+      } else if (el.type === 'hologram') {
+        // Iridescent Holographic Security Foil Strip
+        const grad = ctx.createLinearGradient(elX, elY, elX + elW, elY + elH);
+        grad.addColorStop(0, '#E0E7FF');
+        grad.addColorStop(0.2, '#A7F3D0');
+        grad.addColorStop(0.4, '#FDE68A');
+        grad.addColorStop(0.6, '#FBCFE8');
+        grad.addColorStop(0.8, '#BAE6FD');
+        grad.addColorStop(1, '#DDD6FE');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(elX, elY, elW, elH, 4 * scaleFactorX);
+        else ctx.rect(elX, elY, elW, elH);
+        ctx.fill();
+        ctx.strokeStyle = '#94A3B8';
+        ctx.lineWidth = 0.8 * scaleFactorX;
+        ctx.stroke();
+
+        // Micro-text pattern
+        ctx.fillStyle = 'rgba(71, 85, 105, 0.45)';
+        ctx.font = `bold ${Math.round(8 * scaleFactorX)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('VALID SECURE AUTH', elX + elW / 2, elY + elH / 2 + 3 * scaleFactorX);
+      } else if (el.type === 'stamp') {
+        // Official Circular Seal Stamp
+        const cx = elX + elW / 2;
+        const cy = elY + elH / 2;
+        const rad = Math.min(elW, elH) / 2;
+        const stampColor = el.stroke || el.fill || '#DC2626';
+
+        ctx.strokeStyle = stampColor;
+        ctx.lineWidth = 3 * scaleFactorX;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad - 2 * scaleFactorX, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.lineWidth = 1 * scaleFactorX;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad - 8 * scaleFactorX, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = stampColor;
+        ctx.font = `bold ${Math.round(9 * scaleFactorX)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('★ OFFICIAL ★', cx, cy - 8 * scaleFactorX);
+        ctx.fillText('VERIFIED', cx, cy + 3 * scaleFactorX);
+        ctx.fillText('AUTHENTIC', cx, cy + 13 * scaleFactorX);
+      } else if (el.type === 'guilloche') {
+        // Guilloche Security Wavy Border
+        ctx.strokeStyle = el.stroke || el.fill || '#10B981';
+        ctx.lineWidth = (el.strokeWidth || 1.2) * scaleFactorX;
+        ctx.beginPath();
+        const amplitude = elH / 4;
+        const freq = (Math.PI * 6) / elW;
+        for (let x = 0; x <= elW; x += 2) {
+          const y = elY + elH / 2 + Math.sin(x * freq) * amplitude;
+          if (x === 0) ctx.moveTo(elX + x, y);
+          else ctx.lineTo(elX + x, y);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        for (let x = 0; x <= elW; x += 2) {
+          const y = elY + elH / 2 + Math.cos(x * freq) * amplitude;
+          if (x === 0) ctx.moveTo(elX + x, y);
+          else ctx.lineTo(elX + x, y);
+        }
+        ctx.stroke();
+      } else if (el.type === 'rfid') {
+        // Contactless NFC / RFID Wave Emblem
+        const cx = elX + elW * 0.2;
+        const cy = elY + elH / 2;
+        ctx.strokeStyle = el.stroke || el.fill || '#2563EB';
+        ctx.lineWidth = 2 * scaleFactorX;
+        for (let i = 1; i <= 3; i++) {
+          const r = i * (elW * 0.22);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, -Math.PI / 4, Math.PI / 4);
+          ctx.stroke();
+        }
+      } else if (el.type === 'signature') {
+        // Signature Line
+        ctx.strokeStyle = el.stroke || '#0F172A';
+        ctx.lineWidth = (el.strokeWidth || 1) * scaleFactorX;
+        ctx.beginPath();
+        ctx.moveTo(elX, elY + elH * 0.7);
+        ctx.lineTo(elX + elW, elY + elH * 0.7);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748B';
+        ctx.font = `${Math.round(9 * scaleFactorX)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(el.subText || 'Authorized Signature', elX + elW / 2, elY + elH * 0.95);
+      } else if (el.type === 'pill') {
+        const rad = elH / 2;
+        ctx.fillStyle = el.fill || '#10B981';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(elX, elY, elW, elH, rad);
+        else ctx.rect(elX, elY, elW, elH);
+        ctx.fill();
+        if (el.text) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = `bold ${Math.round((el.fontSize || 12) * scaleFactorX)}px Inter, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(el.text, elX + elW / 2, elY + elH / 2 + (el.fontSize || 12) * 0.35 * scaleFactorX);
+        }
+      } else if (el.type === 'cornerBracket') {
+        const arm = Math.min(elW, elH) * 0.3;
+        ctx.strokeStyle = el.stroke || '#84A92C';
+        ctx.lineWidth = (el.strokeWidth || 2) * scaleFactorX;
+        // TL
+        ctx.beginPath(); ctx.moveTo(elX, elY + arm); ctx.lineTo(elX, elY); ctx.lineTo(elX + arm, elY); ctx.stroke();
+        // TR
+        ctx.beginPath(); ctx.moveTo(elX + elW - arm, elY); ctx.lineTo(elX + elW, elY); ctx.lineTo(elX + elW, elY + arm); ctx.stroke();
+        // BL
+        ctx.beginPath(); ctx.moveTo(elX, elY + elH - arm); ctx.lineTo(elX, elY + elH); ctx.lineTo(elX + arm, elY + elH); ctx.stroke();
+        // BR
+        ctx.beginPath(); ctx.moveTo(elX + elW - arm, elY + elH); ctx.lineTo(elX + elW, elY + elH); ctx.lineTo(elX + elW, elY + elH - arm); ctx.stroke();
       }
 
       ctx.restore();

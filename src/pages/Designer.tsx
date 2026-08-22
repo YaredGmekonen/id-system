@@ -294,6 +294,52 @@ export default function Designer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo, handleCopy, handlePaste, handleDuplicate, handleGroup, handleUngroup, selectedId, selectedIds, currentElements, pushUndo, setCurrentElements]);
 
+  // System Clipboard Paste Event (Images directly from OS clipboard / screenshot)
+  useEffect(() => {
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const dataUrl = reader.result as string;
+              const newImgElement: CanvasElement = {
+                id: `img-clipboard-${Date.now()}`,
+                type: 'image',
+                x: 60,
+                y: 60,
+                width: 160,
+                height: 160,
+                src: dataUrl,
+                opacity: 1,
+                visible: true,
+                locked: false,
+                name: `Pasted Image (${new Date().toLocaleTimeString()})`,
+              };
+              pushUndo();
+              setCurrentElements(prev => [...prev, newImgElement]);
+              setSelectedId(newImgElement.id);
+              setSelectedIds([newImgElement.id]);
+              showToast('📷 Image pasted directly from clipboard onto canvas!');
+            };
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [pushUndo, setCurrentElements, showToast]);
+
   // Add element (with undo snapshot)
   const handleAddElement = useCallback((element: CanvasElement) => {
     pushUndo();
@@ -723,6 +769,10 @@ export default function Designer() {
               selectedId={selectedId}
               selectedIds={selectedIds}
               onSelect={handleSelect}
+              onSelectMultiple={(ids) => {
+                setSelectedIds(ids);
+                setSelectedId(ids.length > 0 ? ids[ids.length - 1] : null);
+              }}
               onElementUpdate={handleElementUpdate}
               onAddDroppedImage={handleAddElement}
               backgroundColor={currentBgColor}

@@ -152,7 +152,7 @@ export default function PeopleList() {
             {/* Action buttons (Inspect, Edit, Delete) */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
-                onClick={() => navigate('/studio')}
+                onClick={() => navigate(`/studio?personId=${person.id}`)}
                 className="px-2 py-1 text-[10px] font-bold rounded-lg border hover:border-[#84a92c] transition-colors cursor-pointer"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
