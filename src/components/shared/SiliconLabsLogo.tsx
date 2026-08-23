@@ -1,72 +1,100 @@
 import { useTheme } from '../../context/ThemeContext';
 
-interface SiliconLabsLogoProps {
+export interface SiliconLabsLogoProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  layout?: 'horizontal' | 'stacked' | 'symbol';
+  variant?: 'light' | 'dark' | 'auto' | 'black' | 'white';
   showText?: boolean;
-  variant?: 'light' | 'dark' | 'auto';
+  showSubText?: boolean;
   subText?: string;
 }
 
 export default function SiliconLabsLogo({
   className = '',
   size = 'md',
-  showText = true,
+  layout = 'horizontal',
   variant = 'auto',
+  showText = true,
+  showSubText = false,
   subText = 'CREDENTIAL PLATFORM',
 }: SiliconLabsLogoProps) {
-  let isDark = true;
+  let isDarkTheme = true;
   try {
     const theme = useTheme();
-    isDark = theme.isDark;
+    isDarkTheme = theme.isDark;
   } catch {
-    // Used outside ThemeProvider (e.g., login page) — default to dark
+    // Fallback if rendered outside ThemeProvider
   }
 
-  // Resolve variant: 'auto' follows system theme, 'light'/'dark' are explicit
-  const resolvedVariant = variant === 'auto' ? (isDark ? 'light' : 'dark') : variant;
+  const effectiveLayout = showText === false ? 'symbol' : layout;
 
-  const sizeMap = {
-    sm: { icon: 'w-6 h-6', text: 'text-xs', sub: 'text-[7px]' },
-    md: { icon: 'w-8 h-8', text: 'text-sm', sub: 'text-[8px]' },
-    lg: { icon: 'w-10 h-10', text: 'text-base', sub: 'text-[9px]' },
-    xl: { icon: 'w-14 h-14', text: 'text-xl', sub: 'text-[10px]' },
+  // Resolve color scheme: dark background needs white logo, light background needs color/dark logo
+  const isDarkBg =
+    variant === 'white'
+      ? true
+      : variant === 'black' || variant === 'light'
+      ? false
+      : variant === 'dark'
+      ? false
+      : isDarkTheme;
+
+  // Select the exact official asset according to the brand guide
+  let logoSrc = '/brand/silicon-labs-master-horizontal-web.png';
+
+  if (effectiveLayout === 'symbol') {
+    if (variant === 'black') {
+      logoSrc = '/brand/silicon-labs-symbol-black.png';
+    } else if (isDarkBg) {
+      logoSrc = '/brand/silicon-labs-symbol-white.png';
+    } else {
+      logoSrc = '/brand/silicon-labs-symbol-only.png';
+    }
+  } else if (effectiveLayout === 'stacked') {
+    if (variant === 'black') {
+      logoSrc = '/brand/silicon-labs-stacked-black.png';
+    } else if (isDarkBg) {
+      logoSrc = '/brand/silicon-labs-stacked-white.png';
+    } else {
+      logoSrc = '/brand/silicon-labs-stacked-color.png';
+    }
+  } else {
+    // Horizontal Lockup
+    if (variant === 'black') {
+      logoSrc = '/brand/silicon-labs-black-horizontal.png';
+    } else if (isDarkBg) {
+      logoSrc = '/brand/silicon-labs-white-reverse-horizontal.png';
+    } else {
+      logoSrc = '/brand/silicon-labs-master-horizontal-web.png';
+    }
+  }
+
+  // Dimension scaling mapping
+  const heightClasses = {
+    xs: effectiveLayout === 'symbol' ? 'h-5 w-5' : effectiveLayout === 'stacked' ? 'h-8' : 'h-6',
+    sm: effectiveLayout === 'symbol' ? 'h-6 w-6' : effectiveLayout === 'stacked' ? 'h-10' : 'h-7',
+    md: effectiveLayout === 'symbol' ? 'h-8 w-8' : effectiveLayout === 'stacked' ? 'h-12' : 'h-9',
+    lg: effectiveLayout === 'symbol' ? 'h-10 w-10' : effectiveLayout === 'stacked' ? 'h-16' : 'h-12',
+    xl: effectiveLayout === 'symbol' ? 'h-14 w-14' : effectiveLayout === 'stacked' ? 'h-20' : 'h-16',
+    '2xl': effectiveLayout === 'symbol' ? 'h-20 w-20' : effectiveLayout === 'stacked' ? 'h-28' : 'h-22',
   };
 
-  const currentSize = sizeMap[size];
-
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* Real SiliconLabs PNG Logo */}
-      <div className={`relative flex-shrink-0 ${currentSize.icon} flex items-center justify-center`}>
-        <img
-          src="/siliconlabs-logo.png"
-          alt="SiliconLabs"
-          className="w-full h-full object-contain"
-          draggable={false}
-        />
-      </div>
-
-      {/* Typography */}
-      {showText && (
-        <div className="flex flex-col leading-none">
-          <div className="flex items-center tracking-tight">
-            <span
-              className={`font-black uppercase tracking-wider ${currentSize.text} ${
-                resolvedVariant === 'dark' ? 'text-slate-900' : 'text-white'
-              }`}
-            >
-              SILICON<span className="text-[#84a92c]">LABS</span>
-            </span>
-          </div>
-          {subText && (
-            <span className={`font-mono tracking-widest uppercase font-bold mt-0.5 ${currentSize.sub} ${
-              resolvedVariant === 'dark' ? 'text-slate-500' : 'text-[#64748b]'
-            }`}>
-              {subText}
-            </span>
-          )}
-        </div>
+    <div className={`inline-flex flex-col items-start select-none ${className}`}>
+      <img
+        src={logoSrc}
+        alt="Silicon Labs"
+        className={`${heightClasses[size]} w-auto object-contain transition-opacity duration-200`}
+        draggable={false}
+      />
+      {showSubText && subText && (
+        <span
+          className={`text-[8px] font-mono tracking-widest uppercase font-bold mt-1 ${
+            isDarkBg ? 'text-slate-400' : 'text-slate-600'
+          }`}
+        >
+          {subText}
+        </span>
       )}
     </div>
   );

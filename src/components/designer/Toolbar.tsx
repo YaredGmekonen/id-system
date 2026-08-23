@@ -532,20 +532,52 @@ export default function Toolbar({
     });
   };
 
-  // 7. Assets & Logos
-  const addSiliconLabsLogo = () => {
+  // 7. Assets & Logos (Official Brand Variants)
+  const addSiliconLabsHorizontalLogo = (variant: 'color' | 'white' = 'color') => {
     onAddElement({
-      id: nextId('logo'),
+      id: nextId('logo-h'),
       type: 'image',
       x: 30,
       y: 20,
-      width: 65,
-      height: 65,
-      src: '/siliconlabs-logo.png',
+      width: 180,
+      height: 42,
+      src: variant === 'white' ? '/brand/silicon-labs-white-reverse-horizontal.png' : '/brand/silicon-labs-master-horizontal-web.png',
       opacity: 1,
       visible: true,
       locked: false,
-      name: 'SiliconLabs Monogram Logo',
+      name: `Silicon Labs Horizontal (${variant})`,
+    });
+  };
+
+  const addSiliconLabsStackedLogo = (variant: 'color' | 'white' = 'color') => {
+    onAddElement({
+      id: nextId('logo-s'),
+      type: 'image',
+      x: 30,
+      y: 20,
+      width: 110,
+      height: 75,
+      src: variant === 'white' ? '/brand/silicon-labs-stacked-white.png' : '/brand/silicon-labs-stacked-color.png',
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: `Silicon Labs Stacked (${variant})`,
+    });
+  };
+
+  const addSiliconLabsSymbolLogo = (variant: 'color' | 'white' = 'color') => {
+    onAddElement({
+      id: nextId('logo-sym'),
+      type: 'image',
+      x: 30,
+      y: 20,
+      width: 55,
+      height: 55,
+      src: variant === 'white' ? '/brand/silicon-labs-symbol-white.png' : '/brand/silicon-labs-symbol-only.png',
+      opacity: 1,
+      visible: true,
+      locked: false,
+      name: `Silicon Labs Emblem (${variant})`,
     });
   };
 
@@ -1158,14 +1190,50 @@ export default function Toolbar({
 
           <div className="grid grid-cols-1 gap-2 pt-1">
             <button
-              onClick={addSiliconLabsLogo}
+              onClick={() => addSiliconLabsHorizontalLogo('color')}
               className="p-2.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer hover:border-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <img src="/siliconlabs-logo.png" alt="SiliconLabs" className="w-8 h-8 object-contain" />
+              <img src="/brand/silicon-labs-master-horizontal-web.png" alt="Silicon Labs Horizontal" className="h-6 w-auto object-contain" />
               <div>
-                <p className="font-bold text-xs">SiliconLabs Monogram Logo</p>
-                <p className="text-[10px] text-slate-500 font-mono">Official Brand Asset</p>
+                <p className="font-bold text-xs">Horizontal Color Logo</p>
+                <p className="text-[10px] text-slate-500 font-mono">Master Web Variant</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => addSiliconLabsHorizontalLogo('white')}
+              className="p-2.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer hover:border-[#84a92c] bg-slate-950"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
+              <img src="/brand/silicon-labs-white-reverse-horizontal.png" alt="Silicon Labs White" className="h-6 w-auto object-contain" />
+              <div>
+                <p className="font-bold text-xs text-white">White Reverse Logo</p>
+                <p className="text-[10px] text-slate-400 font-mono">Dark Backgrounds</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => addSiliconLabsStackedLogo('color')}
+              className="p-2.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer hover:border-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <img src="/brand/silicon-labs-stacked-color.png" alt="Silicon Labs Stacked" className="h-8 w-auto object-contain" />
+              <div>
+                <p className="font-bold text-xs">Stacked Color Logo</p>
+                <p className="text-[10px] text-slate-500 font-mono">Vertical / Narrow Lockup</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => addSiliconLabsSymbolLogo('color')}
+              className="p-2.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer hover:border-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+            >
+              <img src="/brand/silicon-labs-symbol-only.png" alt="Silicon Labs Symbol" className="h-7 w-7 object-contain" />
+              <div>
+                <p className="font-bold text-xs">Emblem Symbol Only</p>
+                <p className="text-[10px] text-slate-500 font-mono">App Icon / Badge</p>
               </div>
             </button>
           </div>

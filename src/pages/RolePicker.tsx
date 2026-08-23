@@ -94,16 +94,13 @@ export default function RolePicker() {
       {/* ===== LEFT SIDE — LOGIN FORM ===== */}
       <div className="w-full lg:w-[45%] bg-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between overflow-y-auto">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <img src="/siliconlabs-logo.png" alt="SiliconLabs" className="h-10 w-auto" draggable={false} />
-          <div className="leading-none">
-            <span className="text-sm font-black text-slate-900 tracking-wider">
-              SILICON<span className="text-[#84a92c]">LABS</span>
-            </span>
-            <span className="block text-[8px] text-slate-400 font-mono tracking-widest font-bold mt-0.5">
-              CREDENTIAL PLATFORM
-            </span>
-          </div>
+        <div className="flex items-center">
+          <img
+            src="/brand/silicon-labs-master-horizontal-web.png"
+            alt="Silicon Labs"
+            className="h-10 w-auto object-contain"
+            draggable={false}
+          />
         </div>
 
         {/* Main Form */}
@@ -258,7 +255,12 @@ export default function RolePicker() {
 
         {/* Center */}
         <div className="relative z-10 my-auto max-w-lg space-y-5 py-8">
-          <img src="/siliconlabs-logo.png" alt="SiliconLabs" className="h-20 w-auto mb-6 drop-shadow-2xl" draggable={false} />
+          <img
+            src="/brand/silicon-labs-white-reverse-horizontal.png"
+            alt="Silicon Labs"
+            className="h-12 w-auto mb-6 object-contain drop-shadow-2xl"
+            draggable={false}
+          />
           <h2 className="text-3xl xl:text-4xl font-extrabold text-white tracking-tight leading-tight">
             Built for smarter credential solutions.
           </h2>
