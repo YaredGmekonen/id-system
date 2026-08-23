@@ -160,7 +160,7 @@ export default function DocumentScanner({ onScanSuccess, activeFolderId, activeF
 
         {activeFolderName && (
           <span className="text-[10px] font-mono font-bold bg-[#84a92c]/10 text-[#84a92c] px-2.5 py-1 rounded-lg border border-[#84a92c]/20 flex-shrink-0">
-            📁 {activeFolderName}
+            {activeFolderName}
           </span>
         )}
       </div>
@@ -396,7 +396,7 @@ export default function DocumentScanner({ onScanSuccess, activeFolderId, activeF
                 {/* Destination folder info */}
                 <div className="p-2.5 rounded-xl border flex items-center gap-2" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
                   <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>Saving to folder:</span>
-                  <span className="text-[10px] font-mono font-bold text-[#84a92c]">📁 {activeFolderName || 'Unclassified'}</span>
+                  <span className="text-[10px] font-mono font-bold text-[#84a92c]">{activeFolderName || 'Unclassified'}</span>
                 </div>
               </div>
             </div>

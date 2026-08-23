@@ -47,6 +47,8 @@ export interface BatchFolder {
 export interface Person {
   id?: number;
   fullName: string;
+  firstName?: string;
+  lastName?: string;
   idNumber: string;
   category: 'Employees' | 'Staff' | 'Executives' | 'Contractors' | 'Students' | 'Archive Digitized' | string;
   department: string;
@@ -55,6 +57,12 @@ export interface Person {
   email: string;
   bloodGroup: string;
   joinedDate: string;
+  gender?: 'Male' | 'Female' | 'Other' | string;
+  schoolName?: string;
+  grade?: string;
+  section?: string;
+  rollNumber?: string;
+  guardianName?: string;
   emergencyPhone?: string;
   photoDataUrl: string; // base64 data URL
   status: 'Active' | 'Pending' | 'Printed' | 'Processing';

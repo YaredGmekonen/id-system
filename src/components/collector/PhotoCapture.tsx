@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Camera, Upload, X, RefreshCw, AlertCircle, Check } from 'lucide-react';
 
 interface PhotoCaptureProps {
   value?: string;
@@ -22,24 +23,50 @@ export default function PhotoCapture({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode: 'user' | 'environment' = facingMode) => {
+    setCameraError(null);
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 400, height: 400 },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
       }
+
+      let mediaStream: MediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: mode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback to basic constraint if specific resolution failed
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
       setStream(mediaStream);
       setIsCameraActive(true);
-      setCameraError(false);
-    } catch {
-      setCameraError(true);
+      setFacingMode(mode);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.play().catch(err => {
+          console.warn('Auto-play was prevented:', err);
+        });
+      }
+    } catch (err: any) {
+      console.error('Camera access error:', err);
+      setCameraError(err.message || 'Camera permission denied or device unavailable.');
+      setIsCameraActive(false);
     }
-  }, []);
+  }, [facingMode, stream]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
@@ -49,20 +76,38 @@ export default function PhotoCapture({
     setIsCameraActive(false);
   }, [stream]);
 
+  const switchCamera = () => {
+    const nextMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera(nextMode);
+  };
+
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    canvas.width = 400;
-    canvas.height = 400;
+
+    const vWidth = video.videoWidth || 640;
+    const vHeight = video.videoHeight || 480;
+
+    // Portrait 3:4 aspect ratio crop from center
+    const targetW = 360;
+    const targetH = 480;
+    canvas.width = targetW;
+    canvas.height = targetH;
+
     const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    const size = Math.min(video.videoWidth, video.videoHeight);
-    const sx = (video.videoWidth - size) / 2;
-    const sy = (video.videoHeight - size) / 2;
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, 400, 400);
+    // Crop center vertical region
+    const cropH = vHeight;
+    const cropW = Math.round(vHeight * (3 / 4));
+    const sx = Math.max(0, Math.round((vWidth - cropW) / 2));
+    const sy = 0;
 
-    const dataUrl = canvas.toDataURL('image/png');
+    ctx.drawImage(video, sx, sy, cropW, cropH, 0, 0, targetW, targetH);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
     setPhoto(dataUrl);
     stopCamera();
   }, [setPhoto, stopCamera]);
@@ -90,7 +135,7 @@ export default function PhotoCapture({
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-center gap-4 p-3.5 rounded-xl border shadow-2xs font-sans text-xs"
+      className="flex flex-col sm:flex-row items-center gap-4 p-3.5 rounded-xl border font-sans text-xs"
       style={{
         backgroundColor: 'var(--bg-elevated)',
         borderColor: 'var(--border-primary)',
@@ -101,11 +146,7 @@ export default function PhotoCapture({
 
       {/* Portrait frame */}
       <div
-        className="relative w-24 h-28 rounded-xl overflow-hidden border-2 flex items-center justify-center flex-shrink-0 shadow-inner"
-        style={{
-          backgroundColor: 'var(--bg-surface)',
-          borderColor: 'var(--border-primary)',
-        }}
+        className="relative w-24 h-30 rounded-xl overflow-hidden border-2 flex items-center justify-center flex-shrink-0 shadow-inner bg-slate-900 border-slate-700"
       >
         {isCameraActive ? (
           <video
@@ -118,11 +159,9 @@ export default function PhotoCapture({
         ) : currentPhoto ? (
           <img src={currentPhoto} alt={personName || 'Portrait'} className="w-full h-full object-cover" />
         ) : (
-          <div className="flex flex-col items-center justify-center p-2 text-center" style={{ color: 'var(--text-muted)' }}>
-            <svg className="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
-            <span className="text-[9px] font-mono mt-0.5 font-bold">NO PHOTO</span>
+          <div className="flex flex-col items-center justify-center p-2 text-center text-slate-500">
+            <Camera className="w-6 h-6 opacity-40 mb-1" />
+            <span className="text-[9px] font-mono font-bold uppercase">No Photo</span>
           </div>
         )}
 
@@ -133,7 +172,7 @@ export default function PhotoCapture({
 
       {/* Action buttons */}
       <div className="flex flex-col gap-2 flex-1 w-full sm:w-auto">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isCameraActive ? (
             <>
               <button
@@ -141,13 +180,25 @@ export default function PhotoCapture({
                 onClick={capturePhoto}
                 className="btn-primary py-1.5 px-3 flex items-center gap-1.5 font-bold cursor-pointer"
               >
-                <span>📸</span>
+                <Check className="w-3.5 h-3.5" />
                 <span>Snap Photo</span>
               </button>
+
+              <button
+                type="button"
+                onClick={switchCamera}
+                className="p-1.5 rounded-lg border hover:border-[#84a92c] cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+                title="Switch Camera (Front/Back)"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-[#84a92c]" />
+              </button>
+
               <button
                 type="button"
                 onClick={stopCamera}
-                className="btn-secondary py-1.5 px-3 cursor-pointer"
+                className="py-1.5 px-3 rounded-lg border text-xs font-semibold hover:opacity-80 cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
               >
                 Cancel
               </button>
@@ -156,21 +207,20 @@ export default function PhotoCapture({
             <>
               <button
                 type="button"
-                onClick={startCamera}
-                className="btn-secondary py-1.5 px-3 flex items-center gap-1.5 cursor-pointer font-bold"
-                disabled={cameraError}
+                onClick={() => startCamera('user')}
+                className="py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold transition-all hover:border-[#84a92c]"
+                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
               >
-                <svg className="w-3.5 h-3.5 text-[#84a92c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-                </svg>
-                <span>{cameraError ? 'Camera Disabled' : 'Take Webcam Photo'}</span>
+                <Camera className="w-3.5 h-3.5 text-[#84a92c]" />
+                <span>Open Live Camera</span>
               </button>
 
-              <label className="btn-secondary py-1.5 px-3 flex items-center gap-1.5 cursor-pointer font-bold">
-                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                <span>Upload Portrait</span>
+              <label
+                className="py-1.5 px-3 rounded-lg border flex items-center gap-1.5 cursor-pointer font-bold transition-all hover:border-[#84a92c]"
+                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+              >
+                <Upload className="w-3.5 h-3.5 text-slate-400" />
+                <span>Upload File</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -183,18 +233,25 @@ export default function PhotoCapture({
                 <button
                   type="button"
                   onClick={() => setPhoto('')}
-                  className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
+                  className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-red-500/30"
                   title="Clear photo"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </>
           )}
         </div>
 
+        {cameraError && (
+          <div className="flex items-center gap-1 text-[11px] text-amber-500 font-mono">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{cameraError} (Use Upload File instead)</span>
+          </div>
+        )}
+
         <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-          Passport aspect ratio recommended. Image automatically embedded into print-ready 300 DPI layout.
+          High-definition 3:4 portrait ratio. Scaled and embedded automatically into 300 DPI ID templates.
         </p>
       </div>
     </div>

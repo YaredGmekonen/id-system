@@ -83,7 +83,7 @@ export default function Designer() {
     setCurrentElements(prev);
     setSelectedId(null);
     setSelectedIds([]);
-    showToast('↩ Undo applied');
+    showToast('Undo applied');
   }, [undoStack, currentElements, setCurrentElements, showToast]);
 
   const handleRedo = useCallback(() => {
@@ -94,14 +94,14 @@ export default function Designer() {
     setCurrentElements(next);
     setSelectedId(null);
     setSelectedIds([]);
-    showToast('↪ Redo applied');
+    showToast('Redo applied');
   }, [redoStack, currentElements, setCurrentElements, showToast]);
 
   // ===== COPY / PASTE / DUPLICATE =====
   const handleCopy = useCallback(() => {
     if (selectedElement) {
       setClipboard({ ...selectedElement });
-      showToast('📋 Element copied to clipboard');
+      showToast('Element copied to clipboard');
     }
   }, [selectedElement, showToast]);
 
@@ -118,7 +118,7 @@ export default function Designer() {
     setCurrentElements(prev => [...prev, pasted]);
     setSelectedId(pasted.id);
     setSelectedIds([pasted.id]);
-    showToast('📋 Element pasted');
+    showToast('Element pasted');
   }, [clipboard, setCurrentElements, pushUndo, showToast]);
 
   const handleDuplicate = useCallback(() => {
@@ -134,7 +134,7 @@ export default function Designer() {
     setCurrentElements(prev => [...prev, dup]);
     setSelectedId(dup.id);
     setSelectedIds([dup.id]);
-    showToast('✨ Element duplicated');
+    showToast('Element duplicated');
   }, [selectedElement, setCurrentElements, pushUndo, showToast]);
 
   // ===== GROUP / UNGROUP =====
@@ -616,7 +616,7 @@ export default function Designer() {
                 style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                 title="Toggle Left Toolbar"
               >
-                🛠️ Tools
+                <span>Tools</span>
               </button>
               <button
                 onClick={() => setRightSidebarOpen(o => !o)}
@@ -624,7 +624,7 @@ export default function Designer() {
                 style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                 title="Toggle Properties & Layers"
               >
-                ⚙️ Properties
+                <span>Properties</span>
               </button>
             </div>
 
@@ -652,7 +652,7 @@ export default function Designer() {
               mobileActiveTab === 'tools' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            🛠️ Tools & Templates
+            <span>Tools & Templates</span>
           </button>
           <button
             onClick={() => setMobileActiveTab('canvas')}
@@ -660,7 +660,7 @@ export default function Designer() {
               mobileActiveTab === 'canvas' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            🎨 Vector Canvas
+            <span>Vector Canvas</span>
           </button>
           <button
             onClick={() => setMobileActiveTab('properties')}
@@ -668,7 +668,7 @@ export default function Designer() {
               mobileActiveTab === 'properties' ? 'bg-[#84a92c] text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'
             }`}
           >
-            ⚙️ Properties
+            <span>Properties</span>
           </button>
         </div>
 

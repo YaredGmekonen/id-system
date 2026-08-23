@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { usePeople, deletePerson, updatePerson } from '../../db/hooks';
 import type { Person } from '../../db/database';
 import Modal from '../shared/Modal';
+import {
+  Search,
+  Edit3,
+  Trash2,
+  FileText,
+  Eye,
+  CheckCircle2,
+  UserCheck,
+} from 'lucide-react';
 
 export default function PeopleList() {
   const people = usePeople();
@@ -25,7 +34,8 @@ export default function PeopleList() {
     return people.filter(p =>
       p.fullName.toLowerCase().includes(search.toLowerCase()) ||
       p.idNumber.toLowerCase().includes(search.toLowerCase()) ||
-      p.department.toLowerCase().includes(search.toLowerCase())
+      p.department.toLowerCase().includes(search.toLowerCase()) ||
+      (p.schoolName && p.schoolName.toLowerCase().includes(search.toLowerCase()))
     );
   }, [people, search]);
 
@@ -70,7 +80,7 @@ export default function PeopleList() {
   if (people.length === 0) {
     return (
       <div className="text-center py-12 space-y-2 font-sans" style={{ color: 'var(--text-muted)' }}>
-        <span className="text-3xl block">📋</span>
+        <FileText className="w-10 h-10 mx-auto text-slate-500 opacity-60" />
         <p className="text-sm font-bold font-sans" style={{ color: 'var(--text-primary)' }}>No personnel registered yet</p>
         <p className="text-xs">Use the registration form on the left or spreadsheet import to add records.</p>
       </div>
@@ -94,9 +104,7 @@ export default function PeopleList() {
 
       {/* Search Input */}
       <div className="relative">
-        <svg className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-        </svg>
+        <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 opacity-40" />
         <input
           type="text"
           value={search}
@@ -145,7 +153,7 @@ export default function PeopleList() {
                 </span>
               </div>
               <p className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                {person.role || 'Member'} • {person.department || 'General'}
+                {person.role || 'Member'} • {person.schoolName || person.department || 'General'}
               </p>
             </div>
 
@@ -166,7 +174,7 @@ export default function PeopleList() {
 
               <button
                 onClick={() => handleOpenEdit(person)}
-                className="p-1 rounded-lg border hover:text-[#84a92c] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg border hover:text-[#84a92c] transition-colors cursor-pointer"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   borderColor: 'var(--border-primary)',
@@ -174,23 +182,19 @@ export default function PeopleList() {
                 }}
                 title="Edit Record"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-                </svg>
+                <Edit3 className="w-3.5 h-3.5" />
               </button>
 
               <button
                 onClick={() => handleDelete(person)}
-                className="p-1 rounded-lg border text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg border text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   borderColor: 'var(--border-primary)',
                 }}
                 title="Delete Record"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                </svg>
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -230,7 +234,7 @@ export default function PeopleList() {
                   required
                   value={editId}
                   onChange={e => setEditId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border font-mono font-bold focus:outline-none focus:border-[#84a92c]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c]"
                   style={{
                     backgroundColor: 'var(--bg-elevated)',
                     borderColor: 'var(--border-primary)',
@@ -238,9 +242,8 @@ export default function PeopleList() {
                   }}
                 />
               </div>
-
               <div>
-                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Department</label>
+                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Department / Class</label>
                 <input
                   type="text"
                   value={editDept}
@@ -270,14 +273,47 @@ export default function PeopleList() {
                   }}
                 />
               </div>
-
               <div>
-                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Phone</label>
+                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Blood Group</label>
+                <select
+                  value={editBlood}
+                  onChange={e => setEditBlood(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    borderColor: 'var(--border-primary)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  {['O+', 'A+', 'B+', 'AB+', 'O-', 'A-', 'B-', 'AB-'].map(bg => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Phone Number</label>
                 <input
                   type="text"
                   value={editPhone}
                   onChange={e => setEditPhone(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border font-mono focus:outline-none focus:border-[#84a92c]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c]"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    borderColor: 'var(--border-primary)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </div>
+              <div>
+                <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={e => setEditEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c]"
                   style={{
                     backgroundColor: 'var(--bg-elevated)',
                     borderColor: 'var(--border-primary)',
@@ -291,7 +327,7 @@ export default function PeopleList() {
               <button
                 type="button"
                 onClick={() => setEditingPerson(null)}
-                className="px-4 py-2 rounded-xl border text-xs font-bold hover:opacity-80"
+                className="px-4 py-2 text-xs font-semibold rounded-xl border hover:opacity-80 cursor-pointer"
                 style={{
                   backgroundColor: 'var(--bg-elevated)',
                   borderColor: 'var(--border-primary)',
@@ -300,13 +336,12 @@ export default function PeopleList() {
               >
                 Cancel
               </button>
-
               <button
                 type="submit"
                 disabled={isSaving}
-                className="btn-primary py-2 px-5 text-xs font-bold shadow-xs cursor-pointer"
+                className="btn-primary px-5 py-2 text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
-                {isSaving ? 'Saving…' : 'Save Changes'}
+                <span>{isSaving ? 'Saving…' : 'Save Changes'}</span>
               </button>
             </div>
           </form>

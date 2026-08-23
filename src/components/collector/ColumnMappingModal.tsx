@@ -9,13 +9,15 @@ interface ColumnMappingModalProps {
   headers: string[];
   rawRows: Record<string, any>[];
   fileName: string;
+  activeFolderId?: number;
+  activeFolderName?: string;
   onImportComplete: (count: number) => void;
 }
 
 const SYSTEM_FIELDS: { key: keyof Omit<Person, 'id' | 'createdAt'>; label: string; required?: boolean }[] = [
   { key: 'fullName', label: 'Full Name', required: true },
   { key: 'idNumber', label: 'ID Number', required: true },
-  { key: 'department', label: 'Department' },
+  { key: 'department', label: 'Department / Class' },
   { key: 'role', label: 'Role / Designation' },
   { key: 'category', label: 'Category / Group' },
   { key: 'phone', label: 'Phone Number' },
@@ -31,6 +33,8 @@ export default function ColumnMappingModal({
   headers,
   rawRows,
   fileName,
+  activeFolderId,
+  activeFolderName,
   onImportComplete,
 }: ColumnMappingModalProps) {
   // Auto-match initial mapping based on fuzzy header names
@@ -38,25 +42,24 @@ export default function ColumnMappingModal({
     const map: Record<string, string> = {};
 
     headers.forEach(header => {
-      const lower = header.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (lower.includes('fullname') || lower === 'name' || lower.includes('studentname') || lower.includes('employeename')) {
+      const h = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      if (h.includes('name') || h.includes('studentname') || h.includes('fullname')) {
         map['fullName'] = header;
-      } else if (lower.includes('id') || lower.includes('reg') || lower.includes('roll') || lower.includes('code')) {
+      } else if (h.includes('id') || h.includes('roll') || h.includes('reg') || h.includes('code') || h.includes('serial')) {
         map['idNumber'] = header;
-      } else if (lower.includes('dept') || lower.includes('department') || lower.includes('faculty') || lower.includes('major')) {
+      } else if (h.includes('dept') || h.includes('grade') || h.includes('class') || h.includes('section')) {
         map['department'] = header;
-      } else if (lower.includes('role') || lower.includes('title') || lower.includes('designation') || lower.includes('class') || lower.includes('grade')) {
+      } else if (h.includes('role') || h.includes('title') || h.includes('position')) {
         map['role'] = header;
-      } else if (lower.includes('phone') || lower.includes('mobile') || lower.includes('tel') || lower.includes('contact')) {
+      } else if (h.includes('phone') || h.includes('contact') || h.includes('mobile') || h.includes('tel')) {
         map['phone'] = header;
-      } else if (lower.includes('mail')) {
+      } else if (h.includes('email') || h.includes('mail')) {
         map['email'] = header;
-      } else if (lower.includes('blood')) {
+      } else if (h.includes('blood') || h.includes('bg')) {
         map['bloodGroup'] = header;
-      } else if (lower.includes('category') || lower.includes('group') || lower.includes('type')) {
-        map['category'] = header;
-      } else if (lower.includes('date') || lower.includes('join') || lower.includes('enroll')) {
-        map['joinedDate'] = header;
+      } else if (h.includes('emergency') || h.includes('guardian') || h.includes('parent')) {
+        map['emergencyPhone'] = header;
       }
     });
 
@@ -66,27 +69,15 @@ export default function ColumnMappingModal({
   const [mapping, setMapping] = useState<Record<string, string>>(initialMapping);
   const [importing, setImporting] = useState(false);
 
-  const handleFieldChange = (systemKey: string, spreadsheetHeader: string) => {
+  const handleFieldChange = (systemKey: string, excelHeader: string) => {
     setMapping(prev => ({
       ...prev,
-      [systemKey]: spreadsheetHeader,
+      [systemKey]: excelHeader,
     }));
   };
 
-  // Preview mapped data for the first 3 rows
-  const previewRows = useMemo(() => {
-    return rawRows.slice(0, 3).map((row, idx) => {
-      const p: Record<string, any> = { _id: idx };
-      SYSTEM_FIELDS.forEach(field => {
-        const col = mapping[field.key];
-        p[field.key] = col ? row[col] || '' : '';
-      });
-      return p;
-    });
-  }, [rawRows, mapping]);
-
-  const handleConfirmImport = async () => {
-    if (!mapping['fullName'] && !headers.length) {
+  const handleImport = async () => {
+    if (!mapping['fullName']) {
       alert('Please map at least the Full Name column.');
       return;
     }
@@ -102,15 +93,18 @@ export default function ColumnMappingModal({
         return {
           fullName: name,
           idNumber: idNum,
-          category: (mapping['category'] ? String(row[mapping['category']] || '') : '') || 'General',
-          department: (mapping['department'] ? String(row[mapping['department']] || '') : '') || 'Standard Operations',
-          role: (mapping['role'] ? String(row[mapping['role']] || '') : '') || 'Member',
-          phone: (mapping['phone'] ? String(row[mapping['phone']] || '') : '') || '+1 (555) 000-0000',
+          category: (mapping['category'] ? String(row[mapping['category']] || '') : '') || 'Students',
+          department: (mapping['department'] ? String(row[mapping['department']] || '') : '') || 'Grade 10',
+          role: (mapping['role'] ? String(row[mapping['role']] || '') : '') || 'Student Member',
+          phone: (mapping['phone'] ? String(row[mapping['phone']] || '') : '') || '',
           email: (mapping['email'] ? String(row[mapping['email']] || '') : '') || `${name.toLowerCase().replace(/\s+/g, '.')}@idplatform.internal`,
           bloodGroup: (mapping['bloodGroup'] ? String(row[mapping['bloodGroup']] || '') : '') || 'O+',
           joinedDate: (mapping['joinedDate'] ? String(row[mapping['joinedDate']] || '') : '') || new Date().toISOString().split('T')[0],
           emergencyPhone: (mapping['emergencyPhone'] ? String(row[mapping['emergencyPhone']] || '') : '') || '',
           photoDataUrl: '',
+          batchFolderId: activeFolderId,
+          folderName: activeFolderName || 'Student Intake',
+          sourceFileName: fileName,
           status: 'Active',
           fulfillmentStatus: 'Unfulfilled',
           paymentStatus: 'Paid',
@@ -139,24 +133,25 @@ export default function ColumnMappingModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Map Spreadsheet Columns to ID Card Fields"
-      maxWidth="max-w-3xl"
+      size="lg"
     >
-      <div className="space-y-5 font-body text-ink">
+      <div className="space-y-5 font-sans text-xs" style={{ color: 'var(--text-primary)' }}>
         
         {/* File Info */}
-        <div className="flex items-center justify-between p-3 bg-paper-200 rounded-md text-xs border border-paper-300">
+        <div className="flex items-center justify-between p-3 rounded-xl border text-xs" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-teal font-bold">FILE:</span>
-            <span className="font-semibold text-ink">{fileName}</span>
+            <span className="font-mono text-[#84a92c] font-bold">FILE:</span>
+            <span className="font-semibold">{fileName}</span>
+            {activeFolderName && <span className="font-mono text-[#84a92c] ml-2">({activeFolderName})</span>}
           </div>
-          <span className="font-mono text-ink-muted">
+          <span className="font-mono" style={{ color: 'var(--text-muted)' }}>
             {rawRows.length.toLocaleString()} records detected
           </span>
         </div>
 
         {/* Field Mapping Grid */}
         <div className="space-y-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-ink-muted font-display">
+          <h4 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>
             Field Mapping Configuration
           </h4>
 
@@ -164,18 +159,19 @@ export default function ColumnMappingModal({
             {SYSTEM_FIELDS.map(field => {
               const currentVal = mapping[field.key] || '';
               return (
-                <div key={field.key} className="p-2.5 bg-paper-100 rounded-md border border-paper-300 flex flex-col justify-between">
+                <div key={field.key} className="p-2.5 rounded-xl border flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-ink mb-0">
-                      {field.label} {field.required && <span className="text-stamp">*</span>}
+                    <label className="text-xs font-semibold mb-0">
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
                     </label>
-                    <span className="text-[10px] font-mono text-ink-muted">{field.key}</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{field.key}</span>
                   </div>
 
                   <select
                     value={currentVal}
                     onChange={e => handleFieldChange(field.key, e.target.value)}
-                    className="w-full text-xs py-1.5 px-2 bg-paper-50 border border-paper-300 rounded text-ink font-medium focus:outline-none focus:border-teal"
+                    className="w-full text-xs py-1.5 px-2 rounded-lg border font-medium focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                    style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                   >
                     <option value="">-- Do not map --</option>
                     {headers.map(h => (
@@ -190,63 +186,33 @@ export default function ColumnMappingModal({
           </div>
         </div>
 
-        {/* Live Preview Table */}
-        <div className="space-y-2 pt-2 border-t border-paper-300">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-ink-muted font-display">
-            Sample Data Preview (First 3 Rows)
-          </h4>
-
-          <div className="overflow-x-auto border border-paper-300 rounded-md">
-            <table className="w-full text-[11px] text-left">
-              <thead className="bg-paper-200 text-ink-muted font-mono uppercase text-[10px] border-b border-paper-300">
-                <tr>
-                  <th className="py-1.5 px-2.5">Full Name</th>
-                  <th className="py-1.5 px-2.5">ID Number</th>
-                  <th className="py-1.5 px-2.5">Department</th>
-                  <th className="py-1.5 px-2.5">Role</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-paper-300 bg-paper-50 font-body">
-                {previewRows.map((r, i) => (
-                  <tr key={i}>
-                    <td className="py-1.5 px-2.5 font-bold text-ink">{r.fullName || <span className="text-ink-muted italic">empty</span>}</td>
-                    <td className="py-1.5 px-2.5 font-mono text-teal">{r.idNumber || <span className="text-ink-muted italic">auto-generate</span>}</td>
-                    <td className="py-1.5 px-2.5">{r.department || <span className="text-ink-muted italic">empty</span>}</td>
-                    <td className="py-1.5 px-2.5">{r.role || <span className="text-ink-muted italic">empty</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Preview / Instructions */}
+        <div className="p-3 rounded-xl border text-[11px] space-y-1" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-muted)' }}>
+          <p className="font-bold" style={{ color: 'var(--text-primary)' }}>Import Guidelines:</p>
+          <p>• Mandatory fields: Full Name</p>
+          <p>• Missing photo columns can be added dynamically using the Photo Capture camera station or Archive Digitizer.</p>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-paper-300">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t" style={{ borderColor: 'var(--border-primary)' }}>
           <button
             type="button"
             onClick={onClose}
-            disabled={importing}
-            className="btn-secondary"
+            className="px-4 py-2 text-xs font-semibold rounded-xl border hover:opacity-80 cursor-pointer"
+            style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
           >
             Cancel
           </button>
+
           <button
             type="button"
-            onClick={handleConfirmImport}
-            disabled={importing || rawRows.length === 0}
-            className="btn-primary flex items-center gap-2"
+            onClick={handleImport}
+            disabled={importing || !mapping['fullName']}
+            className="btn-primary py-2 px-6 text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
           >
-            {importing ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-paper/30 border-t-paper rounded-full animate-spin" />
-                <span>Importing Records…</span>
-              </>
-            ) : (
-              <span>Import {rawRows.length.toLocaleString()} Records into Database</span>
-            )}
+            <span>{importing ? 'Importing records…' : `Import ${rawRows.length} Records`}</span>
           </button>
         </div>
-
       </div>
     </Modal>
   );

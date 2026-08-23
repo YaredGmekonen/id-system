@@ -841,24 +841,24 @@ export default function OverviewDashboard() {
                         <select
                           value={batch.status || 'Ready for Design'}
                           onChange={e => updateBatchFolder(batch.dbFolderId!, { status: e.target.value as BatchFolder['status'] })}
-                          className="text-[10px] py-1.5 px-1.5 rounded-lg border font-bold focus:outline-none cursor-pointer"
+                          className="text-[10px] py-1.5 px-2 rounded-lg border font-bold focus:outline-none cursor-pointer"
                           style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                           title="Change folder status"
                         >
-                          <option value="Ready for Design">📋 Ready</option>
-                          <option value="In Design">🎨 Design</option>
-                          <option value="Approved">✅ Approved</option>
-                          <option value="Printed">🖨️ Printed</option>
-                          <option value="Archived">📦 Archive</option>
+                          <option value="Ready for Design">Ready for Design</option>
+                          <option value="In Design">In Design</option>
+                          <option value="Approved">Approved</option>
+                          <option value="Printed">Printed</option>
+                          <option value="Archived">Archived</option>
                         </select>
 
                         {/* Rename */}
                         <button
                           onClick={() => { setRenamingFolderId(batch.dbFolderId!); setRenameValue(batch.name); }}
-                          className="px-2 py-1.5 text-[10px] font-bold rounded-lg border hover:border-[#84a92c] cursor-pointer"
+                          className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border hover:border-[#84a92c] cursor-pointer"
                           style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
                           title="Rename folder"
-                        >✏️</button>
+                        >Rename</button>
 
                         {/* Delete */}
                         <button
@@ -867,10 +867,10 @@ export default function OverviewDashboard() {
                               deleteBatchFolder(batch.dbFolderId!);
                             }
                           }}
-                          className="px-2 py-1.5 text-[10px] font-bold rounded-lg border hover:border-red-500 text-red-500 cursor-pointer"
+                          className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border hover:border-red-500 text-red-500 cursor-pointer"
                           style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                           title="Delete folder"
-                        >🗑️</button>
+                        >Delete</button>
                       </>
                     )}
                   </div>

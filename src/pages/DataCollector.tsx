@@ -142,10 +142,10 @@ export default function DataCollector() {
               className="text-xs py-1.5 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer min-w-[200px]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
             >
-              <option value="">📁 No Folder (Unclassified)</option>
+              <option value="">No Folder (Unclassified)</option>
               {dbFolders.map(f => (
                 <option key={f.id} value={f.id}>
-                  📁 {f.name} ({f.totalRecords || 0} records) — {f.status}
+                  {f.name} ({f.totalRecords || 0} records) — {f.status}
                 </option>
               ))}
             </select>
@@ -170,7 +170,7 @@ export default function DataCollector() {
                   style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
                   title="Rename folder"
                 >
-                  ✏️ Rename
+                  Rename
                 </button>
 
                 {/* Status Dropdown */}
@@ -180,11 +180,11 @@ export default function DataCollector() {
                   className="text-[10px] py-1 px-2 rounded-lg border font-bold focus:outline-none cursor-pointer"
                   style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 >
-                  <option value="Ready for Design">📋 Ready for Design</option>
-                  <option value="In Design">🎨 In Design</option>
-                  <option value="Approved">✅ Approved</option>
-                  <option value="Printed">🖨️ Printed</option>
-                  <option value="Archived">📦 Archived</option>
+                  <option value="Ready for Design">Ready for Design</option>
+                  <option value="In Design">In Design</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Printed">Printed</option>
+                  <option value="Archived">Archived</option>
                 </select>
 
                 {/* Delete */}
@@ -194,7 +194,7 @@ export default function DataCollector() {
                   style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                   title="Delete folder"
                 >
-                  🗑️
+                  Delete
                 </button>
               </div>
             )}
