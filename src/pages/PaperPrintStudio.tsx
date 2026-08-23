@@ -120,6 +120,9 @@ export default function PaperPrintStudio() {
   // Internal clipboard for slots
   const [clipboardSlots, setClipboardSlots] = useState<CardSlot[]>([]);
 
+  // Rendered high-resolution card cache for real visual display on paper sheet
+  const [renderedCardMap, setRenderedCardMap] = useState<Map<string, string>>(new Map());
+
   // Responsive workspace sidebar toggles & mobile tabs
   const [rosterSidebarOpen, setRosterSidebarOpen] = useState(true);
   const [controlsSidebarOpen, setControlsSidebarOpen] = useState(true);
@@ -302,7 +305,7 @@ export default function PaperPrintStudio() {
     let isMounted = true;
     const renderAll = async () => {
       const cache = new Map<string, string>();
-      const customTmpl = dbTemplates.find(t => String(t.id) === activeCardTemplateId);
+      const customTmpl = dbTemplates.find(t => String(t.id) === activeCardTemplateId || `custom-${t.id}` === activeCardTemplateId);
 
       const options: StudioCardOptions = {
         orientation: 'horizontal',
@@ -319,20 +322,20 @@ export default function PaperPrintStudio() {
         customTemplate: customTmpl,
       };
 
-      const uniquePeople = dbPeople.slice(0, 40);
-      for (const p of uniquePeople) {
-        if (!p.id) continue;
+      for (let i = 0; i < dbPeople.length; i++) {
+        const p = dbPeople[i];
+        const pid = p.id ?? i;
         try {
           const frontUrl = await renderStudioCard(p, 'front', options);
           const backUrl = await renderStudioCard(p, 'back', options);
-          cache.set(`${p.id}-front-${activeCardTemplateId}`, frontUrl);
-          cache.set(`${p.id}-back-${activeCardTemplateId}`, backUrl);
-        } catch {
-          // ignore
+          cache.set(`${pid}-front-${activeCardTemplateId}`, frontUrl);
+          cache.set(`${pid}-back-${activeCardTemplateId}`, backUrl);
+        } catch (err) {
+          console.error('Error rendering card:', err);
         }
       }
 
-      if (isMounted) setRenderedCards(cache);
+      if (isMounted) setRenderedCardMap(new Map(cache));
     };
 
     if (dbPeople.length > 0) renderAll();
@@ -546,7 +549,7 @@ export default function PaperPrintStudio() {
           if (!person) continue;
 
           const key = `${person.id}-${slot.face}-${activeCardTemplateId}`;
-          const dataUrl = slot.customImageSrc || renderedCards.get(key) || await renderStudioCard(person, slot.face, {
+          const dataUrl = slot.customImageSrc || renderedCardMap.get(key) || await renderStudioCard(person, slot.face, {
             orientation: 'horizontal',
             backgroundColor: '#FFFFFF',
             fontFamily: 'Outfit',
@@ -636,13 +639,32 @@ export default function PaperPrintStudio() {
 
           {/* Action Bar */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Card Template Selector */}
+            <div className="hidden md:flex items-center gap-1.5">
+              <select
+                value={activeCardTemplateId}
+                onChange={e => setActiveCardTemplateId(e.target.value)}
+                className="text-xs py-1.5 px-2.5 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+              >
+                <option value="student-academic">Template: School / Academic Pass</option>
+                <option value="corporate-standard">Template: Corporate Standard</option>
+                <option value="hightech-enclave">Template: High-Tech Security</option>
+                <option value="healthcare-medic">Template: Healthcare & Medic</option>
+                <option value="executive-gold">Template: Executive Gold</option>
+                {dbTemplates.map(t => (
+                  <option key={t.id} value={`custom-${t.id}`}>Custom: {t.name}</option>
+                ))}
+              </select>
+            </div>
+
             <button
               onClick={() => generateImpositionPages(impositionPreset)}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer hover:border-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
             >
               <Zap className="w-3.5 h-3.5 text-[#84a92c]" />
-              <span>Bulk Duplicate & Print</span>
+              <span>Impose to Paper</span>
             </button>
 
             <button
@@ -1028,9 +1050,10 @@ export default function PaperPrintStudio() {
                 {/* Rendered Imposition Slots */}
                 {cardSlots.map(slot => {
                   const isSelected = selectedSlotIds.has(slot.id);
-                  const person = dbPeople.find(p => p.id === slot.personId) || dbPeople[0];
-                  const key = `${person?.id}-${slot.face}-${activeCardTemplateId}`;
-                  const cardImg = slot.customImageSrc || renderedCards.get(key);
+                  const person = dbPeople.find(p => p.id === slot.personId) || dbPeople[slot.cardIndex % Math.max(1, dbPeople.length)] || dbPeople[0];
+                  const pid = person?.id ?? (slot.cardIndex % Math.max(1, dbPeople.length));
+                  const key = `${pid}-${slot.face}-${activeCardTemplateId}`;
+                  const cardImg = slot.customImageSrc || renderedCardMap.get(key);
 
                   const slotXPx = slot.xMm * pxPerMm;
                   const slotYPx = slot.yMm * pxPerMm;

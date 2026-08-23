@@ -271,38 +271,112 @@ export default function DocumentScanner({ onScanSuccess, activeFolderId, activeF
               {/* Source Document & Extracted Photo */}
               <div className="md:col-span-5 space-y-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider block font-mono mb-1" style={{ color: 'var(--text-muted)' }}>
-                    Scanned Source Document
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider block font-mono" style={{ color: 'var(--text-muted)' }}>
+                      Scanned Document (Click to Crop Photo)
+                    </label>
+                    <span className="text-[9px] text-[#84a92c] font-semibold">Click photo on page</span>
+                  </div>
+
                   <div
-                    className="w-full aspect-[3/4] rounded-xl border overflow-hidden flex items-center justify-center"
+                    className="w-full aspect-[3/4] rounded-xl border overflow-hidden flex items-center justify-center relative group cursor-crosshair"
                     style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                   >
                     {selectedImage ? (
-                      <img src={selectedImage} alt="Scanned Document" className="w-full h-full object-contain" />
+                      <img
+                        src={selectedImage}
+                        alt="Scanned Document"
+                        className="w-full h-full object-contain cursor-crosshair"
+                        onClick={e => {
+                          if (!selectedImage) return;
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const clickXNorm = (e.clientX - rect.left) / rect.width;
+                          const clickYNorm = (e.clientY - rect.top) / rect.height;
+
+                          const img = new Image();
+                          img.crossOrigin = 'anonymous';
+                          img.onload = () => {
+                            const cropW = Math.round(img.width * 0.28);
+                            const cropH = Math.round(img.height * 0.20);
+                            const cropX = Math.max(0, Math.min(img.width - cropW, Math.round(clickXNorm * img.width - cropW / 2)));
+                            const cropY = Math.max(0, Math.min(img.height - cropH, Math.round(clickYNorm * img.height - cropH / 2)));
+
+                            const c = document.createElement('canvas');
+                            c.width = 400;
+                            c.height = 480;
+                            const ctx = c.getContext('2d')!;
+                            ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, 400, 480);
+                            setEditPhoto(c.toDataURL('image/png'));
+                          };
+                          img.src = selectedImage;
+                        }}
+                        title="Click on student's portrait to crop"
+                      />
                     ) : (
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>No Document</span>
                     )}
                   </div>
+
+                  {/* Quick Slot Selector Row */}
+                  <div className="flex gap-1 mt-1.5 flex-wrap">
+                    {[1, 2, 3, 4, 5].map(slotNum => (
+                      <button
+                        key={slotNum}
+                        type="button"
+                        onClick={() => {
+                          if (!selectedImage) return;
+                          const img = new Image();
+                          img.crossOrigin = 'anonymous';
+                          img.onload = () => {
+                            const cropW = Math.round(img.width * 0.28);
+                            const cropH = Math.round(img.height * 0.17);
+                            const cropX = Math.round(img.width * 0.08);
+                            const cropY = Math.round(img.height * (0.07 + (slotNum - 1) * 0.18));
+
+                            const c = document.createElement('canvas');
+                            c.width = 400;
+                            c.height = 480;
+                            const ctx = c.getContext('2d')!;
+                            ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, 400, 480);
+                            setEditPhoto(c.toDataURL('image/png'));
+                          };
+                          img.src = selectedImage;
+                        }}
+                        className="px-2 py-1 text-[9px] font-mono font-bold rounded-lg border hover:border-[#84a92c] cursor-pointer"
+                        style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+                      >
+                        Slot {slotNum}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Extracted Photo Preview */}
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider block font-mono mb-1" style={{ color: 'var(--text-muted)' }}>
-                    Extracted / Portrait Photo
-                  </label>
-                  <div className="relative w-28 h-32 rounded-xl border overflow-hidden group"
-                    style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="relative w-24 h-28 rounded-xl border overflow-hidden group flex-shrink-0 shadow-xs"
+                    style={{ backgroundColor: 'var(--bg-elevated)', borderColor: '#84a92c' }}
                   >
                     {editPhoto ? (
                       <img src={editPhoto} alt="Portrait" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[10px]" style={{ color: 'var(--text-muted)' }}>No Photo</div>
                     )}
-                    <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] font-bold cursor-pointer transition-opacity">
-                      Replace
+                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] font-bold cursor-pointer transition-opacity">
+                      Upload
                       <input type="file" accept="image/*" onChange={handleReplacePhoto} className="hidden" />
                     </label>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider block font-mono mb-1 text-[#84a92c]">
+                      Selected Portrait
+                    </label>
+                    <label className="text-[10px] font-bold text-[#84a92c] hover:underline cursor-pointer flex items-center gap-1">
+                      <span>Upload New Image</span>
+                      <input type="file" accept="image/*" onChange={handleReplacePhoto} className="hidden" />
+                    </label>
+                    <p className="text-[9px] text-slate-400 mt-1">
+                      Click directly on the scanned page or choose a slot button above.
+                    </p>
                   </div>
                 </div>
               </div>

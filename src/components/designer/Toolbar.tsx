@@ -1,6 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { DATA_FIELDS, CARD } from '../../design-tokens';
 import type { CanvasElement, CardTemplate } from '../../db/database';
+import {
+  Sparkles,
+  ShieldCheck,
+  Shapes,
+  QrCode,
+  FolderKanban,
+  Image as ImageIcon,
+  CreditCard,
+  Radio,
+  PenTool,
+  Award,
+  Layers,
+} from 'lucide-react';
 
 interface ToolbarProps {
   onAddElement: (element: CanvasElement) => void;
@@ -626,11 +639,9 @@ export default function Toolbar({
             backElements: parsed.backElements || [],
             isDefault: false,
           });
-        } else {
-          alert('Invalid template JSON format.');
         }
-      } catch {
-        alert('Failed to parse JSON file.');
+      } catch (err) {
+        console.error('Failed to parse template JSON file:', err);
       }
     };
     reader.readAsText(file);
@@ -772,51 +783,57 @@ export default function Toolbar({
       <div className="grid grid-cols-3 gap-1 rounded-xl border p-1" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
         <button
           onClick={() => setActiveTab('elements')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'elements' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          ✨ Elements
+          <Sparkles className="w-3 h-3 text-amber-400" />
+          <span>Elements</span>
         </button>
         <button
           onClick={() => setActiveTab('security')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'security' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          🛡️ Security & Chips
+          <ShieldCheck className="w-3 h-3 text-blue-400" />
+          <span>Security</span>
         </button>
         <button
           onClick={() => setActiveTab('shapes')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'shapes' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          📐 Shapes & Lines
+          <Shapes className="w-3 h-3 text-[#84a92c]" />
+          <span>Shapes</span>
         </button>
         <button
           onClick={() => setActiveTab('qr-barcode')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'qr-barcode' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          📱 QR & Barcode
+          <QrCode className="w-3 h-3 text-purple-400" />
+          <span>Codes</span>
         </button>
         <button
           onClick={() => setActiveTab('data')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'data' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          🗂️ Data Tags
+          <FolderKanban className="w-3 h-3 text-emerald-400" />
+          <span>Data Tags</span>
         </button>
         <button
           onClick={() => setActiveTab('graphics')}
-          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+          className={`py-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
             activeTab === 'graphics' ? 'bg-[#198754] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          🖼️ Assets & Import
+          <ImageIcon className="w-3 h-3 text-cyan-400" />
+          <span>Assets</span>
         </button>
       </div>
 
@@ -918,7 +935,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-amber-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">💳</span>
+              <CreditCard className="w-4 h-4 text-amber-400" />
               <span>EMV Gold Chip</span>
             </button>
 
@@ -927,7 +944,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-emerald-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">✨</span>
+              <Sparkles className="w-4 h-4 text-emerald-400" />
               <span>Hologram Foil</span>
             </button>
 
@@ -936,7 +953,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">📶</span>
+              <Radio className="w-4 h-4 text-blue-400" />
               <span>RFID / NFC</span>
             </button>
 
@@ -945,7 +962,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-red-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">🔴</span>
+              <Award className="w-4 h-4 text-red-400" />
               <span>Official Stamp</span>
             </button>
 
@@ -954,7 +971,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">🛡️</span>
+              <ShieldCheck className="w-4 h-4 text-blue-400" />
               <span>Security Shield</span>
             </button>
 
@@ -963,7 +980,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">✍️</span>
+              <PenTool className="w-4 h-4 text-[#84a92c]" />
               <span>Signature Line</span>
             </button>
 
@@ -972,7 +989,7 @@ export default function Toolbar({
               className="py-2.5 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-teal-400 col-span-2"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">〰️</span>
+              <Layers className="w-4 h-4 text-teal-400" />
               <span>Guilloche Security Border Pattern</span>
             </button>
           </div>

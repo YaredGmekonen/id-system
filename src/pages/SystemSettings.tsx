@@ -1,15 +1,31 @@
 import { useState } from 'react';
 import Sidebar from '../components/layout/Sidebar';
+import Modal from '../components/shared/Modal';
 import { useAuth } from '../context/AuthContext';
 import { usePeople, useTemplates } from '../db/hooks';
 import { db } from '../db/database';
 import { seedDatabase } from '../db/seed';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export default function SystemSettings() {
   const { currentUser, currentRole, logout } = useAuth();
   const dbPeople = usePeople();
   const dbTemplates = useTemplates();
   const role = currentRole || 'admin';
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => Promise<void> | void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Active Settings Tab
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -114,9 +130,10 @@ export default function SystemSettings() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }, 1000);
+      setSaveSuccessMsg('Database backup exported successfully!');
     } catch (err) {
       console.error('Backup error:', err);
-      alert('Failed to export database backup.');
+      setSaveSuccessMsg('Failed to export database backup.');
     }
   };
 
@@ -130,38 +147,50 @@ export default function SystemSettings() {
       try {
         const parsed = JSON.parse(reader.result as string);
         if (Array.isArray(parsed.people)) {
-          await db.people.clear();
-          await db.people.bulkAdd(parsed.people);
-          if (Array.isArray(parsed.templates)) {
-            await db.templates.clear();
-            await db.templates.bulkAdd(parsed.templates);
-          }
-          alert(`Successfully restored ${parsed.people.length} records into local database!`);
-          window.location.reload();
+          setConfirmModal({
+            isOpen: true,
+            title: 'Restore Database Backup',
+            message: `Restoring this backup will replace current database with ${parsed.people.length} personnel records and ${parsed.templates?.length || 0} templates. Proceed?`,
+            confirmText: 'Restore Backup',
+            onConfirm: async () => {
+              await db.people.clear();
+              await db.people.bulkAdd(parsed.people);
+              if (Array.isArray(parsed.templates)) {
+                await db.templates.clear();
+                await db.templates.bulkAdd(parsed.templates);
+              }
+              window.location.reload();
+            },
+          });
         } else {
-          alert('Invalid backup JSON format.');
+          setSaveSuccessMsg('Invalid backup JSON format.');
         }
       } catch {
-        alert('Could not parse backup file.');
+        setSaveSuccessMsg('Could not parse backup file.');
       }
     };
     reader.readAsText(file);
   };
 
   // Reset Database
-  const handleResetDatabase = async () => {
-    if (confirm('WARNING: Are you sure you want to reset all database records back to the default seed?')) {
-      setIsResetting(true);
-      try {
-        await db.people.clear();
-        await db.templates.clear();
-        await seedDatabase();
-        alert('Database has been reset to default clean state.');
-        window.location.reload();
-      } finally {
-        setIsResetting(false);
-      }
-    }
+  const handleResetDatabase = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reset Local Database',
+      message: 'WARNING: Are you sure you want to reset all database records back to the default seed? All newly imported personnel records will be replaced with standard test records.',
+      confirmText: 'Reset to Factory Seed',
+      onConfirm: async () => {
+        setIsResetting(true);
+        try {
+          await db.people.clear();
+          await db.templates.clear();
+          await seedDatabase();
+          window.location.reload();
+        } finally {
+          setIsResetting(false);
+        }
+      },
+    });
   };
 
   return (
@@ -737,6 +766,41 @@ export default function SystemSettings() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <Modal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          title={confirmModal.title}
+          size="sm"
+        >
+          <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-start gap-3 p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+              <p className="leading-relaxed">{confirmModal.message}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-xs font-bold rounded-xl border hover:opacity-80 cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmModal.onConfirm()}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer"
+              >
+                {confirmModal.confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

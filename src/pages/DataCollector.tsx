@@ -3,8 +3,10 @@ import Sidebar from '../components/layout/Sidebar';
 import DocumentScanner from '../components/collector/DocumentScanner';
 import RegistrationForm from '../components/collector/RegistrationForm';
 import PeopleList from '../components/collector/PeopleList';
+import Modal from '../components/shared/Modal';
 import { useBatchFolders, addBatchFolder, updateBatchFolder, deleteBatchFolder } from '../db/hooks';
 import type { BatchFolder } from '../db/database';
+import { FolderKanban, AlertTriangle } from 'lucide-react';
 
 export default function DataCollector() {
   const [collectorMode, setCollectorMode] = useState<'scanner' | 'manual'>('manual');
@@ -16,6 +18,19 @@ export default function DataCollector() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderSource, setNewFolderSource] = useState<BatchFolder['sourceType']>('Manual Intake');
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => Promise<void> | void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Rename & Status
   const [renamingFolderId, setRenamingFolderId] = useState<number | null>(null);
@@ -61,11 +76,17 @@ export default function DataCollector() {
     await updateBatchFolder(id, { status });
   };
 
-  const handleDeleteFolder = async (id: number) => {
-    if (confirm('Delete this folder? Records inside will remain unclassified.')) {
-      await deleteBatchFolder(id);
-      if (activeFolderId === id) setActiveFolderId(undefined);
-    }
+  const handleDeleteFolder = (id: number, name: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete Folder "${name}"`,
+      message: `Are you sure you want to delete folder "${name}"? Contained personnel records will remain safely preserved in the database.`,
+      onConfirm: async () => {
+        await deleteBatchFolder(id);
+        if (activeFolderId === id) setActiveFolderId(undefined);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   return (
@@ -189,7 +210,7 @@ export default function DataCollector() {
 
                 {/* Delete */}
                 <button
-                  onClick={() => handleDeleteFolder(activeFolder.id!)}
+                  onClick={() => handleDeleteFolder(activeFolder.id!, activeFolder.name)}
                   className="px-2.5 py-1 text-[10px] font-bold rounded-lg border hover:border-red-500 text-red-500 cursor-pointer"
                   style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                   title="Delete folder"
@@ -286,8 +307,9 @@ export default function DataCollector() {
                 <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border-primary)' }}>
                   <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Direct Biometric Registration</h2>
                   {activeFolder && (
-                    <span className="text-[10px] font-mono font-bold text-[#84a92c] bg-[#84a92c]/10 px-2 py-0.5 rounded border border-[#84a92c]/20">
-                      📁 {activeFolder.name}
+                    <span className="text-[10px] font-mono font-bold text-[#84a92c] bg-[#84a92c]/10 px-2 py-0.5 rounded border border-[#84a92c]/20 inline-flex items-center gap-1">
+                      <FolderKanban className="w-3 h-3 text-[#84a92c]" />
+                      <span>{activeFolder.name}</span>
                     </span>
                   )}
                 </div>
@@ -309,6 +331,41 @@ export default function DataCollector() {
           </div>
         </div>
       </div>
+
+      {/* In-App Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <Modal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          title={confirmModal.title}
+          size="sm"
+        >
+          <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-start gap-3 p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+              <p className="leading-relaxed">{confirmModal.message}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-xs font-bold rounded-xl border hover:opacity-80 cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmModal.onConfirm()}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer"
+              >
+                Delete Folder
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

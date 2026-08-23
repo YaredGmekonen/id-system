@@ -11,6 +11,7 @@ import {
   Eye,
   CheckCircle2,
   UserCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function PeopleList() {
@@ -19,6 +20,7 @@ export default function PeopleList() {
 
   const [search, setSearch] = useState('');
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [personToDelete, setPersonToDelete] = useState<Person | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Edit form fields
@@ -39,10 +41,8 @@ export default function PeopleList() {
     );
   }, [people, search]);
 
-  const handleDelete = async (person: Person) => {
-    if (person.id !== undefined && confirm(`Remove ${person.fullName} (${person.idNumber}) from directory?`)) {
-      await deletePerson(person.id);
-    }
+  const handleDelete = (person: Person) => {
+    setPersonToDelete(person);
   };
 
   const handleOpenEdit = (person: Person) => {
@@ -345,6 +345,46 @@ export default function PeopleList() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {personToDelete && (
+        <Modal
+          isOpen={!!personToDelete}
+          onClose={() => setPersonToDelete(null)}
+          title="Delete Personnel Record"
+          size="sm"
+        >
+          <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-start gap-3 p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+              <p className="leading-relaxed">
+                Are you sure you want to permanently remove <strong className="text-white">{personToDelete.fullName}</strong> ({personToDelete.idNumber}) from the directory?
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+              <button
+                type="button"
+                onClick={() => setPersonToDelete(null)}
+                className="px-4 py-2 text-xs font-bold rounded-xl border hover:opacity-80 cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (personToDelete.id !== undefined) await deletePerson(personToDelete.id);
+                  setPersonToDelete(null);
+                }}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer"
+              >
+                Delete Record
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

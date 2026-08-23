@@ -49,6 +49,8 @@ export default function WorkerCommandPanel({
     setShowAddModal(false);
   };
 
+  const [workerToDelete, setWorkerToDelete] = useState<Worker | null>(null);
+
   const handleStatusToggle = async (worker: Worker) => {
     const nextStatus: Worker['status'] =
       worker.status === 'Online'
@@ -59,10 +61,8 @@ export default function WorkerCommandPanel({
     await updateWorker(worker.id!, { status: nextStatus });
   };
 
-  const handleDeleteWorker = async (id: number) => {
-    if (confirm('Decommission this field station node?')) {
-      await deleteWorker(id);
-    }
+  const handleDeleteWorker = (worker: Worker) => {
+    setWorkerToDelete(worker);
   };
 
   return (
@@ -187,7 +187,7 @@ export default function WorkerCommandPanel({
                   </button>
                 )}
                 <button
-                  onClick={() => handleDeleteWorker(w.id!)}
+                  onClick={() => handleDeleteWorker(w)}
                   className="p-1 rounded text-ink-muted hover:text-stamp"
                   title="Remove Worker"
                 >

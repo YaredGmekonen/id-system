@@ -18,6 +18,7 @@ import {
   Plus,
   Layers,
   Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -49,6 +50,7 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Column Mapping Modal State
   const [mappingModalOpen, setMappingModalOpen] = useState(false);
@@ -58,9 +60,10 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     const computedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     if (!computedFullName) {
-      alert('Please enter First Name and Last Name.');
+      setErrorMessage('Please enter First Name and Last Name.');
       return;
     }
 
@@ -155,7 +158,7 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
         const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { defval: '' });
 
         if (!jsonData || jsonData.length === 0) {
-          alert('The uploaded spreadsheet contains no data rows.');
+          setErrorMessage('The uploaded spreadsheet contains no data rows.');
           return;
         }
 
@@ -166,7 +169,7 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
         setMappingModalOpen(true);
       } catch (err) {
         console.error('Failed to parse spreadsheet:', err);
-        alert('Failed to parse spreadsheet file. Please ensure it is a valid .xlsx or .csv file.');
+        setErrorMessage('Failed to parse spreadsheet file. Please ensure it is a valid .xlsx or .csv file.');
       }
     };
 
@@ -218,6 +221,22 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
       {/* Main Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+        {errorMessage && (
+          <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-bold flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-xs text-slate-400 hover:text-white cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* 1. Biometric Photo Section */}
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold uppercase font-mono tracking-wider text-slate-400 flex items-center gap-1">

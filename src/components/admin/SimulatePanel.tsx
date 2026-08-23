@@ -20,7 +20,6 @@ export default function SimulatePanel() {
 
   const handleRunRealBatch = async () => {
     if (!activeTemplate) {
-      alert('No template found. Please wait for the library to initialize.');
       return;
     }
 
@@ -74,7 +73,6 @@ export default function SimulatePanel() {
       setShowDoneModal(true);
     } catch (err) {
       console.error('Batch generation failed:', err);
-      alert('Batch generation encountered an error.');
     } finally {
       setIsRunning(false);
     }

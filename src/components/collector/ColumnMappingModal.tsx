@@ -68,6 +68,7 @@ export default function ColumnMappingModal({
 
   const [mapping, setMapping] = useState<Record<string, string>>(initialMapping);
   const [importing, setImporting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleFieldChange = (systemKey: string, excelHeader: string) => {
     setMapping(prev => ({
@@ -77,8 +78,9 @@ export default function ColumnMappingModal({
   };
 
   const handleImport = async () => {
+    setErrorMsg(null);
     if (!mapping['fullName']) {
-      alert('Please map at least the Full Name column.');
+      setErrorMsg('Please map at least the Full Name column to continue.');
       return;
     }
 
@@ -122,7 +124,7 @@ export default function ColumnMappingModal({
       onClose();
     } catch (err) {
       console.error('Import failed:', err);
-      alert('Failed to insert mapped records.');
+      setErrorMsg('Failed to insert mapped records into the database.');
     } finally {
       setImporting(false);
     }
@@ -137,6 +139,12 @@ export default function ColumnMappingModal({
     >
       <div className="space-y-5 font-sans text-xs" style={{ color: 'var(--text-primary)' }}>
         
+        {errorMsg && (
+          <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 font-bold">
+            {errorMsg}
+          </div>
+        )}
+
         {/* File Info */}
         <div className="flex items-center justify-between p-3 rounded-xl border text-xs" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
           <div className="flex items-center gap-2">

@@ -41,10 +41,10 @@ export default function UserManagementPanel({ users }: UserManagementPanelProps)
     });
   };
 
-  const handleDeleteUser = async (id: number) => {
-    if (confirm('Delete this user account?')) {
-      await deleteUserAccount(id);
-    }
+  const [userToDelete, setUserToDelete] = useState<UserAccount | null>(null);
+
+  const handleDeleteUser = (user: UserAccount) => {
+    setUserToDelete(user);
   };
 
   return (
@@ -131,7 +131,7 @@ export default function UserManagementPanel({ users }: UserManagementPanelProps)
                       {u.status === 'Active' ? 'Suspend' : 'Activate'}
                     </button>
                     <button
-                      onClick={() => handleDeleteUser(u.id!)}
+                      onClick={() => handleDeleteUser(u)}
                       className="btn-danger py-1 px-2 text-[11px]"
                     >
                       Delete

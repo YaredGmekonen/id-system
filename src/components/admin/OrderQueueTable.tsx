@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Person } from '../../db/database';
 import { updatePerson, deletePerson } from '../../db/hooks';
+import { CheckCircle2, RefreshCw, PauseCircle, Trash2, X } from 'lucide-react';
 
 interface OrderQueueTableProps {
   people: Person[];
@@ -91,10 +92,8 @@ export default function OrderQueueTable({
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Delete this record from the database?')) {
-      await deletePerson(id);
-      setActiveMenuId(null);
-    }
+    await deletePerson(id);
+    setActiveMenuId(null);
   };
 
   return (
@@ -266,28 +265,32 @@ export default function OrderQueueTable({
                           </p>
                           <button
                             onClick={() => handleStatusChange(p.id!, 'Fulfilled')}
-                            className="w-full text-left px-2 py-1 hover:bg-paper-200 rounded text-[11px] text-teal font-semibold"
+                            className="w-full text-left px-2 py-1.5 hover:bg-paper-200 rounded text-[11px] text-teal font-semibold flex items-center gap-1.5 cursor-pointer"
                           >
-                            ✓ Mark Fulfilled
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Mark Fulfilled</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(p.id!, 'Processing')}
-                            className="w-full text-left px-2 py-1 hover:bg-paper-200 rounded text-[11px] text-navy font-semibold"
+                            className="w-full text-left px-2 py-1.5 hover:bg-paper-200 rounded text-[11px] text-navy font-semibold flex items-center gap-1.5 cursor-pointer"
                           >
-                            ⚙ Set Processing
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Set Processing</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(p.id!, 'On Hold')}
-                            className="w-full text-left px-2 py-1 hover:bg-paper-200 rounded text-[11px] text-ochre font-semibold"
+                            className="w-full text-left px-2 py-1.5 hover:bg-paper-200 rounded text-[11px] text-ochre font-semibold flex items-center gap-1.5 cursor-pointer"
                           >
-                            ⏸ Place On Hold
+                            <PauseCircle className="w-3.5 h-3.5" />
+                            <span>Place On Hold</span>
                           </button>
                           <div className="border-t border-paper-300 my-1 pt-1">
                             <button
                               onClick={() => handleDelete(p.id!)}
-                              className="w-full text-left px-2 py-1 hover:bg-stamp-50 rounded text-[11px] text-stamp font-semibold"
+                              className="w-full text-left px-2 py-1.5 hover:bg-stamp-50 rounded text-[11px] text-stamp font-semibold flex items-center gap-1.5 cursor-pointer"
                             >
-                              ✕ Delete Record
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete Record</span>
                             </button>
                           </div>
                         </div>

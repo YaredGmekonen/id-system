@@ -125,45 +125,40 @@ export async function parseDocumentImage(
   const bloodGroup = bgMatch ? bgMatch[0].toUpperCase() : '';
 
   // ===== PHOTO EXTRACTION =====
-  // Attempt to crop the photo region from the document image (typically upper-right quadrant)
+  // Attempt to detect and crop portrait photo region using face detector and heuristic bounds
   let photoDataUrl = '';
   try {
     if (dataUrl) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-        img.src = dataUrl;
-      });
+      const { detectPhotoBoxesOnDocument, cropRegionFromImage } = await import('./faceDetector');
+      const detectedBoxes = await detectPhotoBoxesOnDocument(dataUrl, 5);
 
-      if (img.width > 0 && img.height > 0) {
-        const photoCropCanvas = document.createElement('canvas');
-        photoCropCanvas.width = 400;
-        photoCropCanvas.height = 480;
-        const pcCtx = photoCropCanvas.getContext('2d')!;
+      if (detectedBoxes && detectedBoxes.length > 0) {
+        // Use the first detected portrait region
+        const bestBox = detectedBoxes[0];
+        photoDataUrl = await cropRegionFromImage(dataUrl, bestBox, 400, 480);
+      } else {
+        // Fallback: Check standard left-side registration ledger column (X: 8-36%, Y: 8-28%)
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = dataUrl;
+        });
 
-        // Standard document photo location: upper-right quadrant
-        const cropX = Math.round(img.width * 0.65);
-        const cropY = Math.round(img.height * 0.12);
-        const cropW = Math.round(img.width * 0.28);
-        const cropH = Math.round(img.height * 0.30);
+        if (img.width > 0 && img.height > 0) {
+          const photoCropCanvas = document.createElement('canvas');
+          photoCropCanvas.width = 400;
+          photoCropCanvas.height = 480;
+          const pcCtx = photoCropCanvas.getContext('2d')!;
 
-        pcCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, 400, 480);
+          // Ledger left-column photo location (matches school registers & ID intake pages)
+          const cropX = Math.round(img.width * 0.08);
+          const cropY = Math.round(img.height * 0.08);
+          const cropW = Math.round(img.width * 0.30);
+          const cropH = Math.round(img.height * 0.20);
 
-        // Check if cropped region has actual content (not blank)
-        const imgData = pcCtx.getImageData(0, 0, 400, 480).data;
-        let totalVariance = 0;
-        const sampleSize = 200;
-        for (let i = 0; i < sampleSize; i++) {
-          const idx = Math.floor(Math.random() * (imgData.length / 4)) * 4;
-          const r = imgData[idx], g = imgData[idx + 1], b = imgData[idx + 2];
-          totalVariance += Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b);
-        }
-        const avgVariance = totalVariance / sampleSize;
-
-        // Only use the crop if it has sufficient visual variance (not blank/white)
-        if (avgVariance > 15) {
+          pcCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, 400, 480);
           photoDataUrl = photoCropCanvas.toDataURL('image/png');
         }
       }

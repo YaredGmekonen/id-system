@@ -8,6 +8,7 @@ import { usePeople, useWorkers, useTemplates, deletePeople, updatePerson, useBat
 import type { Person, BatchFolder } from '../db/database';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { FolderKanban, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Palette, Printer, FileText, Layers, ArrowRight } from 'lucide-react';
 
 type FilterStatus = 'All' | 'Unfulfilled' | 'Processing' | 'Fulfilled' | 'Refunded' | 'On Hold';
 type ViewMode = 'roster' | 'folders';
@@ -30,6 +31,20 @@ export default function OverviewDashboard() {
   const [inspectFace, setInspectFace] = useState<'front' | 'back'>('front');
   const [inspectCardUrl, setInspectCardUrl] = useState<string>('');
   const [isPrinting, setIsPrinting] = useState(false);
+
+  // Professional In-App Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    onConfirm: () => Promise<void> | void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Render live 300 DPI preview for inspect modal
   useEffect(() => {
@@ -141,18 +156,25 @@ export default function OverviewDashboard() {
     }
   };
 
-  // Batch Delete
-  const handleBatchDelete = async () => {
+  // Batch Delete with In-App Confirmation Modal
+  const handleBatchDelete = () => {
     if (selectedIds.size === 0) return;
-    if (confirm(`Are you sure you want to permanently delete all ${selectedIds.size} selected records from the database?`)) {
-      setIsBatchOperating(true);
-      try {
-        await deletePeople(Array.from(selectedIds));
-        setSelectedIds(new Set());
-      } finally {
-        setIsBatchOperating(false);
-      }
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Selected Personnel Records',
+      message: `Are you sure you want to permanently delete all ${selectedIds.size} selected records from the database? This action cannot be undone.`,
+      confirmText: `Delete ${selectedIds.size} Records`,
+      onConfirm: async () => {
+        setIsBatchOperating(true);
+        try {
+          await deletePeople(Array.from(selectedIds));
+          setSelectedIds(new Set());
+        } finally {
+          setIsBatchOperating(false);
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
   };
 
   // Batch Mark as Fulfilled
@@ -363,7 +385,10 @@ export default function OverviewDashboard() {
           {role === 'designer' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-[#84a92c]">🎨 Vector Templates in Library</p>
+                <p className="text-xs font-bold text-[#84a92c] flex items-center gap-1.5">
+                  <Palette className="w-4 h-4 text-[#84a92c]" />
+                  <span>Vector Templates in Library</span>
+                </p>
                 <p className="text-3xl font-black" style={{ color: 'var(--text-primary)' }}>{dbTemplates.length} Designs</p>
                 <button
                   onClick={() => navigate('/designer')}
@@ -374,7 +399,10 @@ export default function OverviewDashboard() {
               </div>
 
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-blue-500">📁 Batches Awaiting Card Design</p>
+                <p className="text-xs font-bold text-blue-500 flex items-center gap-1.5">
+                  <FolderKanban className="w-4 h-4 text-blue-500" />
+                  <span>Batches Awaiting Card Design</span>
+                </p>
                 <p className="text-3xl font-black" style={{ color: 'var(--text-primary)' }}>{folderBatches.length} Batches</p>
                 <button
                   onClick={() => navigate('/studio')}
@@ -385,7 +413,10 @@ export default function OverviewDashboard() {
               </div>
 
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-emerald-500">🖨️ Ready to Imposition Print</p>
+                <p className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+                  <Printer className="w-4 h-4 text-emerald-500" />
+                  <span>Ready to Imposition Print</span>
+                </p>
                 <p className="text-3xl font-black" style={{ color: 'var(--text-primary)' }}>{totalCount} Cards</p>
                 <button
                   onClick={() => navigate('/print')}
@@ -401,7 +432,10 @@ export default function OverviewDashboard() {
           {role === 'collector' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-[#84a92c]">📝 Intake Form & Camera</p>
+                <p className="text-xs font-bold text-[#84a92c] flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-[#84a92c]" />
+                  <span>Intake Form & Camera</span>
+                </p>
                 <p className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{totalCount} Enrolled</p>
                 <button
                   onClick={() => navigate('/collector')}
@@ -412,7 +446,10 @@ export default function OverviewDashboard() {
               </div>
 
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-purple-500">📑 Archive Book Digitizer</p>
+                <p className="text-xs font-bold text-purple-500 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-purple-500" />
+                  <span>Archive Book Digitizer</span>
+                </p>
                 <p className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>OCR Multi-Crop</p>
                 <button
                   onClick={() => navigate('/digitizer')}
@@ -423,7 +460,10 @@ export default function OverviewDashboard() {
               </div>
 
               <div className="p-5 rounded-2xl border space-y-2" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}>
-                <p className="text-xs font-bold text-blue-500">📁 Create Intake Batch Folder</p>
+                <p className="text-xs font-bold text-blue-500 flex items-center gap-1.5">
+                  <FolderKanban className="w-4 h-4 text-blue-500" />
+                  <span>Create Intake Batch Folder</span>
+                </p>
                 <p className="text-xs text-slate-500">Create a named folder before importing rosters.</p>
                 <button
                   onClick={() => setCreateFolderModalOpen(true)}
@@ -603,14 +643,14 @@ export default function OverviewDashboard() {
               )}
             </div>
 
-            {/* Desktop / Tablet Records Table */}
+            {/* Desktop / Tablet Records Table (Scrollable Container with Sticky Header) */}
             <div
-              className="hidden sm:block rounded-2xl border overflow-hidden shadow-xs"
+              className="hidden sm:block rounded-2xl border shadow-xs overflow-hidden"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
                 <table className="w-full text-left text-xs">
-                  <thead>
+                  <thead className="sticky top-0 z-10 shadow-xs">
                     <tr
                       className="border-b text-[10px] font-mono font-bold uppercase tracking-wider"
                       style={{
@@ -684,7 +724,10 @@ export default function OverviewDashboard() {
                             <td className="px-4 py-3.5 font-mono font-bold text-[#84a92c]">{p.idNumber}</td>
 
                             <td className="px-4 py-3.5 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                              📁 {p.folderName || p.sourceFileName || 'Default Roster'}
+                              <span className="inline-flex items-center gap-1">
+                                <FolderKanban className="w-3.5 h-3.5 text-[#84a92c] flex-shrink-0" />
+                                <span>{p.folderName || p.sourceFileName || 'Default Roster'}</span>
+                              </span>
                             </td>
 
                             <td className="px-4 py-3.5 font-medium" style={{ color: 'var(--text-secondary)' }}>{p.department || 'General'}</td>
@@ -863,9 +906,18 @@ export default function OverviewDashboard() {
                         {/* Delete */}
                         <button
                           onClick={() => {
-                            if (confirm(`Delete folder "${batch.name}"? Records will remain unclassified.`)) {
-                              deleteBatchFolder(batch.dbFolderId!);
-                            }
+                            setConfirmModal({
+                              isOpen: true,
+                              title: `Delete Folder "${batch.name}"`,
+                              message: `Are you sure you want to delete folder "${batch.name}"? Contained personnel records will remain safely preserved in the directory.`,
+                              confirmText: 'Delete Folder',
+                              onConfirm: async () => {
+                                if (batch.dbFolderId) {
+                                  await deleteBatchFolder(batch.dbFolderId);
+                                }
+                                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                              },
+                            });
                           }}
                           className="px-2.5 py-1.5 text-[10px] font-bold rounded-lg border hover:border-red-500 text-red-500 cursor-pointer"
                           style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
@@ -966,7 +1018,8 @@ export default function OverviewDashboard() {
                 }}
                 className="btn-secondary py-2 px-3 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
-                <span>📄 Download 300 DPI PDF</span>
+                <Printer className="w-3.5 h-3.5 text-[#84a92c]" />
+                <span>Download 300 DPI PDF</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -986,9 +1039,10 @@ export default function OverviewDashboard() {
                     setInspectModalOpen(false);
                     navigate(`/studio?personId=${selectedPerson.id}`);
                   }}
-                  className="btn-primary py-2 px-4 text-xs font-bold cursor-pointer"
+                  className="btn-primary py-2 px-4 text-xs font-bold flex items-center gap-1 cursor-pointer"
                 >
-                  Open in ID Studio ➔
+                  <span>Open in ID Studio</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -1063,6 +1117,41 @@ export default function OverviewDashboard() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Professional In-App Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <Modal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          title={confirmModal.title}
+          size="sm"
+        >
+          <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-start gap-3 p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+              <p className="leading-relaxed">{confirmModal.message}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 text-xs font-bold rounded-xl border hover:opacity-80 cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => confirmModal.onConfirm()}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-sm cursor-pointer"
+              >
+                {confirmModal.confirmText || 'Confirm'}
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

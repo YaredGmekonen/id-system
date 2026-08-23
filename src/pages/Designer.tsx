@@ -327,7 +327,7 @@ export default function Designer() {
               setCurrentElements(prev => [...prev, newImgElement]);
               setSelectedId(newImgElement.id);
               setSelectedIds([newImgElement.id]);
-              showToast('📷 Image pasted directly from clipboard onto canvas!');
+              showToast('Image pasted directly from clipboard onto canvas!');
             };
             reader.readAsDataURL(file);
           }
@@ -413,7 +413,7 @@ export default function Designer() {
         const id = await addTemplate(templateData);
         setEditingTemplateId(id);
       }
-      alert(`Template "${templateName}" saved! (${cardWidth}×${cardHeight}px). It is now available in ID Card Studio & Print Studio.`);
+      showToast(`Template "${templateName}" saved successfully!`);
     } finally {
       setSaving(false);
     }

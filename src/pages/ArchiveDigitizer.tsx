@@ -48,6 +48,12 @@ export default function ArchiveDigitizer() {
   const [excelStudents, setExcelStudents] = useState<ExcelStudent[]>([]);
   const [excelFileName, setExcelFileName] = useState('');
   const [isCropping, setIsCropping] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   // Step: Match & Review
   const [matches, setMatches] = useState<MatchedRecord[]>([]);
@@ -86,7 +92,7 @@ export default function ArchiveDigitizer() {
       setExcelStudents(students);
       setExcelFileName(file.name);
     } catch {
-      alert('Could not read Excel file. Please ensure valid column headers.');
+      showToast('Could not read Excel file. Please ensure valid column headers.');
     }
   };
 
@@ -159,7 +165,7 @@ export default function ArchiveDigitizer() {
       setMatches(newMatches);
       setStep('match');
     } catch {
-      alert('Error during photo crop or data matching.');
+      showToast('Error during photo crop or data matching.');
     } finally {
       setIsCropping(false);
     }
@@ -212,7 +218,7 @@ export default function ArchiveDigitizer() {
       setSavedCount(persons.length);
       setStep('done');
     } catch {
-      alert('Error saving records to database.');
+      showToast('Error saving records to database.');
     } finally {
       setIsSaving(false);
     }
@@ -732,6 +738,14 @@ export default function ArchiveDigitizer() {
           )}
         </div>
       </div>
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white border border-[#84a92c] shadow-2xl text-xs font-bold animate-fade-in flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#84a92c] animate-pulse" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -116,7 +116,6 @@ export default function ImpositionBoardModal({
       downloadPdf(pdfBytes, 'SiliconLabs_A4_8Up_Imposition_Sheet.pdf');
     } catch (err) {
       console.error('Failed to generate A4 sheet:', err);
-      alert('Error generating print sheet. Please check console for details.');
     } finally {
       setIsGenerating(false);
     }

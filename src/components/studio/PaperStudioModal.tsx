@@ -291,7 +291,6 @@ export default function PaperStudioModal({
       downloadPdf(pdfBytes, `SiliconLabs_${selectedPreset.toUpperCase()}_Print_Sheet.pdf`);
     } catch (err) {
       console.error('Failed to export paper PDF:', err);
-      alert('Error generating print PDF. Check console for details.');
     } finally {
       setIsGenerating(false);
     }
