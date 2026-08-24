@@ -52,7 +52,7 @@ export default function Sidebar({ onCloseMobile }: SidebarProps = {}) {
           className="px-5 py-4 flex items-center justify-between"
           style={{ borderBottom: '1px solid var(--border-primary)' }}
         >
-          <SiliconLabsLogo size="md" subText="CREDENTIAL PLATFORM" />
+          <SiliconLabsLogo size="md" showSubText={true} subText="CREDENTIAL PLATFORM" />
           {/* Close button on mobile */}
           <button
             onClick={() => setMobileOpen(false)}

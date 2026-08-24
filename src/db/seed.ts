@@ -1,4 +1,4 @@
-import { db, type Person, type CardTemplate, type CanvasElement, type Worker, type UserAccount } from './database';
+import { db, type Person, type CardTemplate, type CanvasElement, type Worker, type UserAccount, type BatchFolder } from './database';
 import { CARD, BRAND } from '../design-tokens';
 
 // ===== INITIAL WORKER ROSTER =====
@@ -79,7 +79,7 @@ const INITIAL_USERS: Omit<UserAccount, 'id'>[] = [
     role: 'admin',
     status: 'Active',
     lastLogin: 'Just now',
-    avatar: 'AK',
+    avatar: 'SA',
     createdAt: new Date('2026-01-01'),
   },
   {
@@ -102,243 +102,82 @@ const INITIAL_USERS: Omit<UserAccount, 'id'>[] = [
   },
 ];
 
-// ===== INITIAL 10 PERSONNEL RECORDS =====
+// ===== INITIAL 5 SOURCE BATCHES =====
 
-const INITIAL_PEOPLE: Omit<Person, 'id'>[] = [
+const INITIAL_BATCH_FOLDERS: Omit<BatchFolder, 'id'>[] = [
   {
-    fullName: 'Alicia Tran',
-    idNumber: 'ID-2026-081',
-    category: 'Engineering',
-    department: 'Software Engineering',
-    role: 'Principal Systems Lead',
-    phone: '+1 (555) 001-0022',
-    email: 'alicia.tran@idplatform.internal',
-    bloodGroup: 'A+',
-    joinedDate: '2024-03-01',
-    emergencyPhone: '+1 (555) 888-7777',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Unfulfilled',
-    paymentStatus: 'Paid',
-    channel: 'Terminal Station',
-    totalAmount: '$120',
-    workerId: 1,
-    collectedBy: 'Hanna Mengistu',
-    location: 'District Station #1',
-    createdAt: new Date('2026-07-01T08:02:00'),
+    name: 'Grade 10 Engineering Batch A',
+    sourceType: 'Excel Import',
+    status: 'Ready for Design',
+    collectorName: 'Hanna Mengistu',
+    totalRecords: 24,
+    assignedDesigner: 'Selamawit Bekele',
+    notes: 'Imported from central academic roster .xlsx',
+    createdAt: new Date('2026-06-15T08:00:00'),
+    updatedAt: new Date('2026-06-15T08:00:00'),
   },
   {
-    fullName: 'Mohamed El-Sayed',
-    idNumber: 'ID-2026-082',
-    category: 'Operations',
-    department: 'Hardware Operations',
-    role: 'Firmware Specialist',
-    phone: '+1 (555) 002-0033',
-    email: 'mo.elsayed@idplatform.internal',
-    bloodGroup: 'O+',
-    joinedDate: '2024-04-10',
-    emergencyPhone: '+1 (555) 999-6666',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Processing',
-    paymentStatus: 'Paid',
-    channel: 'Enrollment Kiosk',
-    totalAmount: '$75',
-    workerId: 2,
-    collectedBy: 'Dawit Tadesse',
-    location: 'Commercial Center Station #4',
-    createdAt: new Date('2026-07-01T08:12:00'),
+    name: 'Metropolitan Field Staff 2026',
+    sourceType: 'Manual Intake',
+    status: 'In Design',
+    collectorName: 'Dawit Tadesse',
+    totalRecords: 18,
+    assignedDesigner: 'Selamawit Bekele',
+    notes: 'Onboarded via District Station #4 kiosk',
+    createdAt: new Date('2026-06-18T09:30:00'),
+    updatedAt: new Date('2026-06-18T09:30:00'),
   },
   {
-    fullName: 'Sofia Meyers',
-    idNumber: 'ID-2026-083',
-    category: 'Leadership',
-    department: 'Product Strategy',
-    role: 'Executive Director',
-    phone: '+1 (555) 003-0044',
-    email: 'sofia.meyers@idplatform.internal',
-    bloodGroup: 'B+',
-    joinedDate: '2023-11-15',
-    emergencyPhone: '+1 (555) 444-3333',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Fulfilled',
-    paymentStatus: 'Paid',
-    channel: 'HQ Terminal',
-    totalAmount: '$275',
-    workerId: 3,
-    collectedBy: 'Selamawit Bekele',
-    location: 'HQ Security Operations',
-    createdAt: new Date('2026-07-01T08:40:00'),
+    name: 'Security Operations Enclave',
+    sourceType: 'Manual Intake',
+    status: 'Approved',
+    collectorName: 'Selamawit Bekele',
+    totalRecords: 14,
+    assignedDesigner: 'System Administrator',
+    notes: 'High clearance personnel credentials',
+    createdAt: new Date('2026-06-20T11:00:00'),
+    updatedAt: new Date('2026-06-20T11:00:00'),
   },
   {
-    fullName: 'Carlos Ramirez',
-    idNumber: 'ID-2026-084',
-    category: 'Operations',
-    department: 'Field Logistics',
-    role: 'Logistics Supervisor',
-    phone: '+1 (555) 004-0055',
-    email: 'c.ramirez@idplatform.internal',
-    bloodGroup: 'AB+',
-    joinedDate: '2025-01-12',
-    emergencyPhone: '+1 (555) 555-2222',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Refunded',
-    paymentStatus: 'Refunded',
-    channel: 'Terminal Station',
-    totalAmount: '$210',
-    workerId: 1,
-    collectedBy: 'Hanna Mengistu',
-    location: 'District Station #1',
-    createdAt: new Date('2026-07-01T09:02:00'),
+    name: 'Archive Digitized Registry Book 04',
+    sourceType: 'Archive Digitizer',
+    status: 'In Design',
+    collectorName: 'Michael Chen',
+    totalRecords: 15,
+    assignedDesigner: 'Selamawit Bekele',
+    notes: '5-up legacy student register scan extraction',
+    createdAt: new Date('2026-06-22T14:15:00'),
+    updatedAt: new Date('2026-06-22T14:15:00'),
   },
   {
-    fullName: 'Nina Patel',
-    idNumber: 'ID-2026-085',
-    category: 'Engineering',
-    department: 'Software Engineering',
-    role: 'Computer Vision Engineer',
-    phone: '+1 (555) 005-0066',
-    email: 'nina.patel@idplatform.internal',
-    bloodGroup: 'O-',
-    joinedDate: '2024-02-20',
-    emergencyPhone: '+1 (555) 777-1111',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Fulfilled',
-    paymentStatus: 'Paid',
-    channel: 'Enrollment Kiosk',
-    totalAmount: '$340',
-    workerId: 2,
-    collectedBy: 'Dawit Tadesse',
-    location: 'Commercial Center Station #4',
-    createdAt: new Date('2026-07-01T09:16:00'),
-  },
-  {
-    fullName: 'Ethan Clarke',
-    idNumber: 'ID-2026-086',
-    category: 'Quality',
-    department: 'Quality Assurance',
-    role: 'Systems QA Lead',
-    phone: '+1 (555) 006-0077',
-    email: 'ethan.clarke@idplatform.internal',
-    bloodGroup: 'A-',
-    joinedDate: '2024-08-05',
-    emergencyPhone: '+1 (555) 888-4444',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'On Hold',
-    paymentStatus: 'Pending',
-    channel: 'Terminal Station',
-    totalAmount: '$460',
-    workerId: 1,
-    collectedBy: 'Hanna Mengistu',
-    location: 'District Station #1',
-    createdAt: new Date('2026-07-01T09:24:00'),
-  },
-  {
-    fullName: 'Maya Johnson',
-    idNumber: 'ID-2026-087',
-    category: 'Engineering',
-    department: 'Software Engineering',
-    role: 'Cloud Architect',
-    phone: '+1 (555) 007-0088',
-    email: 'maya.johnson@idplatform.internal',
-    bloodGroup: 'B-',
-    joinedDate: '2023-09-18',
-    emergencyPhone: '+1 (555) 222-9999',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Unfulfilled',
-    paymentStatus: 'Paid',
-    channel: 'Enrollment Kiosk',
-    totalAmount: '$150',
-    workerId: 2,
-    collectedBy: 'Dawit Tadesse',
-    location: 'Commercial Center Station #4',
-    createdAt: new Date('2026-07-01T09:35:00'),
-  },
-  {
-    fullName: 'David Kim',
-    idNumber: 'ID-2026-088',
-    category: 'Security',
-    department: 'Operations & Security',
-    role: 'Security Operations Lead',
-    phone: '+1 (555) 008-0099',
-    email: 'david.kim@idplatform.internal',
-    bloodGroup: 'O+',
-    joinedDate: '2024-06-01',
-    emergencyPhone: '+1 (555) 333-7777',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Processing',
-    paymentStatus: 'Paid',
-    channel: 'HQ Terminal',
-    totalAmount: '$580',
-    workerId: 3,
-    collectedBy: 'Selamawit Bekele',
-    location: 'HQ Security Operations',
-    createdAt: new Date('2026-07-01T09:48:00'),
-  },
-  {
-    fullName: 'Elena Rostova',
-    idNumber: 'ID-2026-089',
-    category: 'Design',
-    department: 'Product Design',
-    role: 'UX Architecture Specialist',
-    phone: '+1 (555) 009-0100',
-    email: 'elena.rostova@idplatform.internal',
-    bloodGroup: 'A+',
-    joinedDate: '2024-11-01',
-    emergencyPhone: '+1 (555) 666-8888',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Fulfilled',
-    paymentStatus: 'Paid',
-    channel: 'Terminal Station',
-    totalAmount: '$190',
-    workerId: 1,
-    collectedBy: 'Hanna Mengistu',
-    location: 'District Station #1',
-    createdAt: new Date('2026-07-01T10:05:00'),
-  },
-  {
-    fullName: 'James Wright',
-    idNumber: 'ID-2026-090',
-    category: 'Operations',
-    department: 'Field Operations',
-    role: 'Operations Coordinator',
-    phone: '+1 (555) 010-0111',
-    email: 'james.wright@idplatform.internal',
-    bloodGroup: 'AB-',
-    joinedDate: '2025-02-14',
-    emergencyPhone: '+1 (555) 111-4444',
-    photoDataUrl: '',
-    status: 'Active',
-    fulfillmentStatus: 'Unfulfilled',
-    paymentStatus: 'Paid',
-    channel: 'Mobile Outreach Unit',
-    totalAmount: '$80',
-    workerId: 4,
-    collectedBy: 'Michael Chen',
-    location: 'Mobile Van Unit #2',
-    createdAt: new Date('2026-07-01T10:20:00'),
+    name: 'Executive Leadership Credential Run',
+    sourceType: 'Manual Intake',
+    status: 'Printed',
+    collectorName: 'Hanna Mengistu',
+    totalRecords: 10,
+    assignedDesigner: 'System Administrator',
+    notes: 'Complete 300 DPI duplex print run completed',
+    createdAt: new Date('2026-06-25T16:00:00'),
+    updatedAt: new Date('2026-06-25T16:00:00'),
   },
 ];
 
-// Generate high-end stylized avatar graphics
-function generateAvatarDataUrl(name: string, role: string, index: number): string {
+// Helper to generate initials avatar graphics
+function generateAvatarDataUrl(name: string, index: number): string {
   const canvas = document.createElement('canvas');
   canvas.width = 300;
   canvas.height = 300;
   const ctx = canvas.getContext('2d')!;
 
   const palettes = [
-    ['#14213D', '#1F315B', '#0F8B8D'], // Navy & Teal
-    ['#14171A', '#2A2F35', '#657786'], // Ink Monochrome
-    ['#B23A2E', '#8C2B22', '#C98A2C'], // Stamp & Ochre
-    ['#0F8B8D', '#0B6869', '#14213D'], // Teal & Navy
+    ['#14213D', '#1F315B', '#0F8B8D'],
+    ['#14171A', '#2A2F35', '#657786'],
+    ['#B23A2E', '#8C2B22', '#C98A2C'],
+    ['#0F8B8D', '#0B6869', '#14213D'],
+    ['#1e3a8a', '#2563eb', '#60a5fa'],
+    ['#064e3b', '#059669', '#34d399'],
+    ['#701a75', '#a21caf', '#e879f9'],
+    ['#7c2d12', '#c2410c', '#fb923c'],
   ];
 
   const [bgDark, bgMid, accent] = palettes[index % palettes.length];
@@ -357,19 +196,144 @@ function generateAvatarDataUrl(name: string, role: string, index: number): strin
   ctx.lineWidth = 6;
   ctx.stroke();
 
-  // Initials
   const initials = name
     .split(' ')
     .map(n => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
     .join('')
     .toUpperCase();
   ctx.fillStyle = '#F2F3F1';
   ctx.font = 'bold 96px "Space Grotesk", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(initials, 150, 155);
+  ctx.fillText(initials || 'ID', 150, 155);
 
   return canvas.toDataURL('image/png');
+}
+
+// Full 81 Enterprise Personnel Database
+const BASE_PEOPLE_DATA = [
+  { name: 'Alicia Tran', role: 'Principal Systems Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 001-0022', email: 'alicia.tran@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Mohamed El-Sayed', role: 'Firmware Specialist', dept: 'Hardware Operations', cat: 'Operations', phone: '+1 (555) 002-0033', email: 'mo.elsayed@idplatform.internal', blood: 'O+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Sofia Meyers', role: 'Executive Director', dept: 'Product Strategy', cat: 'Leadership', phone: '+1 (555) 003-0044', email: 'sofia.meyers@idplatform.internal', blood: 'B+', fulfillment: 'Fulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Carlos Ramirez', role: 'Logistics Supervisor', dept: 'Field Logistics', cat: 'Operations', phone: '+1 (555) 004-0055', email: 'c.ramirez@idplatform.internal', blood: 'AB+', fulfillment: 'Refunded', payment: 'Refunded', status: 'Active' },
+  { name: 'Nina Patel', role: 'Computer Vision Engineer', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 005-0066', email: 'nina.patel@idplatform.internal', blood: 'O-', fulfillment: 'Fulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ethan Clarke', role: 'Systems QA Lead', dept: 'Quality Assurance', cat: 'Quality', phone: '+1 (555) 006-0077', email: 'ethan.clarke@idplatform.internal', blood: 'A-', fulfillment: 'On Hold', payment: 'Pending', status: 'Active' },
+  { name: 'Maya Johnson', role: 'Cloud Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 007-0088', email: 'maya.johnson@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'David Kim', role: 'Security Operations Lead', dept: 'Operations & Security', cat: 'Security', phone: '+1 (555) 008-0099', email: 'david.kim@idplatform.internal', blood: 'O+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Elena Rostova', role: 'UX Architecture Specialist', dept: 'Product Design', cat: 'Design', phone: '+1 (555) 009-0100', email: 'elena.rostova@idplatform.internal', blood: 'A+', fulfillment: 'Fulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'James Wright', role: 'Operations Coordinator', dept: 'Field Operations', cat: 'Operations', phone: '+1 (555) 010-0111', email: 'james.wright@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Liya Tesfaye', role: 'Intake Registrar', dept: 'Enrollment Unit', cat: 'Operations', phone: '+251 911 201 101', email: 'liya.t@idplatform.internal', blood: 'A+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Samuel Bekele', role: 'Senior Enclave Admin', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+251 911 201 102', email: 'samuel.b@idplatform.internal', blood: 'O+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Amara Okafor', role: 'Embedded Systems Lead', dept: 'Hardware Engineering', cat: 'Engineering', phone: '+234 802 334 501', email: 'amara.o@idplatform.internal', blood: 'B+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Lucas Silva', role: 'Industrial Designer', dept: 'Product Design', cat: 'Design', phone: '+55 11 98765 4321', email: 'lucas.s@idplatform.internal', blood: 'AB+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Chloe Dubois', role: 'Quality Compliance Officer', dept: 'Regulatory Affairs', cat: 'Quality', phone: '+33 1 42 68 55 00', email: 'chloe.d@idplatform.internal', blood: 'O-', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Tariq Mansour', role: 'Network Security Architect', dept: 'Cybersecurity', cat: 'Security', phone: '+971 4 390 1111', email: 'tariq.m@idplatform.internal', blood: 'A-', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Yuto Takahashi', role: 'Robotics Automation Lead', dept: 'Manufacturing Tech', cat: 'Engineering', phone: '+81 3 5555 0143', email: 'yuto.t@idplatform.internal', blood: 'B-', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Freja Lindstrom', role: 'Field Operations Specialist', dept: 'Field Operations', cat: 'Operations', phone: '+46 8 123 4567', email: 'freja.l@idplatform.internal', blood: 'AB-', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Mateo Fernandez', role: 'Logistics Dispatcher', dept: 'Supply Chain', cat: 'Operations', phone: '+34 91 123 4567', email: 'mateo.f@idplatform.internal', blood: 'O+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Zara Al-Mansoor', role: 'Identity Verification Analyst', dept: 'Credential Issuance', cat: 'Security', phone: '+966 11 234 5678', email: 'zara.m@idplatform.internal', blood: 'A+', fulfillment: 'Processing', payment: 'Paid', status: 'Active' },
+  { name: 'Kwame Mensah', role: 'Hardware Test Engineer', dept: 'Hardware Engineering', cat: 'Engineering', phone: '+233 24 123 4567', email: 'kwame.m@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ananya Sharma', role: 'AI Perception Specialist', dept: 'Software Engineering', cat: 'Engineering', phone: '+91 22 2345 6789', email: 'ananya.s@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Oliver Bennett', role: 'Full-Stack Developer', dept: 'Software Engineering', cat: 'Engineering', phone: '+44 20 7946 0912', email: 'oliver.b@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Astrid Nielsen', role: 'Production Planner', dept: 'Manufacturing Tech', cat: 'Operations', phone: '+45 32 12 34 56', email: 'astrid.n@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Gabriel Santos', role: 'Field Intake Specialist', dept: 'Enrollment Unit', cat: 'Operations', phone: '+55 21 98765 1234', email: 'gabriel.s@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Fatoumata Diallo', role: 'Biometric Operations Lead', dept: 'Credential Issuance', cat: 'Security', phone: '+221 33 821 0000', email: 'fatou.d@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Kenji Sato', role: 'Firmware QA Engineer', dept: 'Quality Assurance', cat: 'Quality', phone: '+81 6 6234 5678', email: 'kenji.s@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Isabella Rossi', role: 'Visual Design Lead', dept: 'Product Design', cat: 'Design', phone: '+39 06 698 1234', email: 'isabella.r@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Nikolai Volkov', role: 'Security Enclave Specialist', dept: 'IT Infrastructure', cat: 'Security', phone: '+7 495 123 4567', email: 'nikolai.v@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Layla Haddad', role: 'Regional Registrar', dept: 'Enrollment Unit', cat: 'Operations', phone: '+961 1 234 567', email: 'layla.h@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Daniel Abebe', role: 'Staff Software Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+251 911 303 404', email: 'daniel.a@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Beth Assefa', role: 'Credential Verification Officer', dept: 'Credential Issuance', cat: 'Security', phone: '+251 911 404 505', email: 'beth.a@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Chen Wei', role: 'Optical Sensor Engineer', dept: 'Hardware Engineering', cat: 'Engineering', phone: '+86 21 5432 1000', email: 'chen.w@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Miriam Yohannes', role: 'Records Administrator', dept: 'Enrollment Unit', cat: 'Operations', phone: '+251 911 505 606', email: 'miriam.y@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Marcus Vance', role: 'Site Reliability Engineer', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+1 (555) 303-4455', email: 'marcus.v@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Priya Patel', role: 'Data Privacy Officer', dept: 'Regulatory Affairs', cat: 'Quality', phone: '+44 20 8946 1234', email: 'priya.p@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Henrik Larsson', role: 'Automation Specialist', dept: 'Manufacturing Tech', cat: 'Engineering', phone: '+46 8 234 5678', email: 'henrik.l@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Naomi Osaka', role: 'Design Systems Architect', dept: 'Product Design', cat: 'Design', phone: '+81 3 4567 8901', email: 'naomi.o@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Arthur Pendelton', role: 'Field Station Lead', dept: 'Field Operations', cat: 'Operations', phone: '+1 (555) 404-5566', email: 'arthur.p@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Grace Hopper', role: 'Principal Compiler Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 505-6677', email: 'grace.h@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Alan Turing', role: 'Cryptographic Lead', dept: 'Cybersecurity', cat: 'Security', phone: '+44 1625 123456', email: 'alan.t@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ada Lovelace', role: 'Algorithm Design Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+44 20 7123 4567', email: 'ada.l@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Linus Torvalds', role: 'Kernel Systems Lead', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+358 9 123 4567', email: 'linus.t@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Dennis Ritchie', role: 'Systems Architecture Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 606-7788', email: 'dennis.r@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ken Thompson', role: 'Enclave Security Engineer', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 707-8899', email: 'ken.t@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Margaret Hamilton', role: 'Safety Critical Software Lead', dept: 'Quality Assurance', cat: 'Quality', phone: '+1 (555) 808-9900', email: 'margaret.h@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Radia Perlman', role: 'Routing Protocol Specialist', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+1 (555) 909-0011', email: 'radia.p@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Barbara Liskov', role: 'Distributed Systems Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 010-1122', email: 'barbara.l@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Claude Shannon', role: 'Information Theory Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 121-2233', email: 'claude.s@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Tim Berners-Lee', role: 'Open Standards Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+44 20 7234 5678', email: 'tim.bl@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Vint Cerf', role: 'Interconnect Architect', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+1 (555) 232-3344', email: 'vint.c@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Donald Knuth', role: 'Typography & Layout Fellow', dept: 'Product Design', cat: 'Design', phone: '+1 (555) 343-4455', email: 'donald.k@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Leslie Lamport', role: 'Consensus Systems Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 454-5566', email: 'leslie.l@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'John von Neumann', role: 'Computational Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 565-6677', email: 'john.vn@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Hedy Lamarr', role: 'Spread Spectrum Specialist', dept: 'Hardware Engineering', cat: 'Engineering', phone: '+1 (555) 676-7788', email: 'hedy.l@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Katherine Johnson', role: 'Trajectory & Compute Lead', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 787-8899', email: 'katherine.j@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Dorothy Vaughan', role: 'Compute Operations Manager', dept: 'Field Operations', cat: 'Operations', phone: '+1 (555) 898-9900', email: 'dorothy.v@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Mary Jackson', role: 'Aerospace Engineering Lead', dept: 'Hardware Engineering', cat: 'Engineering', phone: '+1 (555) 909-0012', email: 'mary.j@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'George Boole', role: 'Logic Optimization Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+44 28 9012 3456', email: 'george.b@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'James Gosling', role: 'Runtime Architecture Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 012-3456', email: 'james.g@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Bjarne Stroustrup', role: 'High-Performance Engine Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 123-4567', email: 'bjarne.s@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Guido van Rossum', role: 'Language Ecosystem Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 234-5678', email: 'guido.vr@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Brendan Eich', role: 'Client Engine Architect', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 345-6789', email: 'brendan.e@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Anders Hejlsberg', role: 'Type Safety Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 456-7890', email: 'anders.h@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Rob Pike', role: 'Concurrency Systems Lead', dept: 'Software Engineering', cat: 'Engineering', phone: '+1 (555) 567-8901', email: 'rob.p@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Brian Kernighan', role: 'Technical Communications Lead', dept: 'Product Design', cat: 'Design', phone: '+1 (555) 678-9012', email: 'brian.k@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Butler Lampson', role: 'System Architecture Fellow', dept: 'IT Infrastructure', cat: 'Engineering', phone: '+1 (555) 789-0123', email: 'butler.l@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Fred Brooks', role: 'Software Engineering Fellow', dept: 'Product Strategy', cat: 'Leadership', phone: '+1 (555) 890-1235', email: 'fred.b@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Edsger Dijkstra', role: 'Graph & Verification Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+31 20 123 4567', email: 'edsger.d@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Tony Hoare', role: 'Formal Verification Fellow', dept: 'Quality Assurance', cat: 'Quality', phone: '+44 1865 123456', email: 'tony.h@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Shafi Goldwasser', role: 'Zero-Knowledge Security Lead', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 901-2345', email: 'shafi.g@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Silvio Micali', role: 'Verifiable Computation Lead', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 012-3457', email: 'silvio.m@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ron Rivest', role: 'Public Key Cryptography Lead', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 123-4568', email: 'ron.r@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Adi Shamir', role: 'Secret Sharing Specialist', dept: 'Cybersecurity', cat: 'Security', phone: '+972 8 934 1234', email: 'adi.s@idplatform.internal', blood: 'AB+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Leonard Adleman', role: 'DNA & Bio-Compute Specialist', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 234-5679', email: 'leonard.a@idplatform.internal', blood: 'O-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Whitfield Diffie', role: 'Key Exchange Architect', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 345-6780', email: 'whitfield.d@idplatform.internal', blood: 'A-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Martin Hellman', role: 'Information Security Fellow', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 456-7891', email: 'martin.h@idplatform.internal', blood: 'B-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Ralph Merkle', role: 'Cryptographic Tree Architect', dept: 'Cybersecurity', cat: 'Security', phone: '+1 (555) 567-8902', email: 'ralph.m@idplatform.internal', blood: 'AB-', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Leslie Valiant', role: 'Machine Learning Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 678-9013', email: 'leslie.v@idplatform.internal', blood: 'O+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Judea Pearl', role: 'Causal Inference Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (555) 789-0124', email: 'judea.p@idplatform.internal', blood: 'A+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+  { name: 'Geoffrey Hinton', role: 'Neural Architecture Fellow', dept: 'Research & Development', cat: 'Engineering', phone: '+1 (416) 978-0001', email: 'geoffrey.h@idplatform.internal', blood: 'B+', fulfillment: 'Unfulfilled', payment: 'Paid', status: 'Active' },
+];
+
+function buildFullPeopleRoster(): Omit<Person, 'id'>[] {
+  return BASE_PEOPLE_DATA.map((p, idx) => {
+    const idNum = `ID-2026-${String(idx + 1).padStart(3, '0')}`;
+    const folderId = (idx % 5) + 1;
+    const folderNames = [
+      'Grade 10 Engineering Batch A',
+      'Metropolitan Field Staff 2026',
+      'Security Operations Enclave',
+      'Archive Digitized Registry Book 04',
+      'Executive Leadership Credential Run',
+    ];
+
+    return {
+      fullName: p.name,
+      idNumber: idNum,
+      category: p.cat,
+      department: p.dept,
+      role: p.role,
+      phone: p.phone,
+      email: p.email,
+      bloodGroup: p.blood,
+      joinedDate: `2024-${String((idx % 12) + 1).padStart(2, '0')}-15`,
+      emergencyPhone: '+1 (555) 999-0000',
+      photoDataUrl: '',
+      status: p.status as any,
+      fulfillmentStatus: p.fulfillment as any,
+      paymentStatus: p.payment as any,
+      channel: 'Terminal Station',
+      totalAmount: `$${100 + (idx * 5) % 400}`,
+      workerId: (idx % 4) + 1,
+      collectedBy: ['Hanna Mengistu', 'Dawit Tadesse', 'Selamawit Bekele', 'Michael Chen'][idx % 4],
+      location: ['District Station #1', 'Commercial Center Station #4', 'HQ Security Operations', 'Mobile Van Unit #2'][idx % 4],
+      batchFolderId: folderId,
+      folderName: folderNames[folderId - 1],
+      createdAt: new Date(Date.now() - (81 - idx) * 3600 * 1000 * 4),
+    };
+  });
 }
 
 // ===== STARTER TEMPLATES =====
@@ -509,7 +473,109 @@ function createCorporateTemplate(): Omit<CardTemplate, 'id'> {
   };
 }
 
-// Seed the Dexie DB
+function createModernEmeraldTemplate(): Omit<CardTemplate, 'id'> {
+  const W = CARD.WIDTH_PX;
+  const H = CARD.HEIGHT_PX;
+
+  const frontElements: CanvasElement[] = [
+    {
+      id: 'em-banner', type: 'rect',
+      x: 0, y: 0, width: W, height: 100,
+      fill: '#064E3B', opacity: 1, visible: true, locked: false, name: 'Emerald Top Bar',
+    },
+    {
+      id: 'em-title', type: 'text',
+      x: 40, y: 28, width: 600,
+      text: 'SILICON LABS TECH PLC', fontSize: 22, fontFamily: 'Space Grotesk',
+      fontStyle: 'bold', fill: '#ECFDF5', align: 'left',
+      opacity: 1, visible: true, locked: false, name: 'Header Title',
+    },
+    {
+      id: 'em-sub', type: 'text',
+      x: 40, y: 60, width: 600,
+      text: 'ENTERPRISE IDENTITY PASS', fontSize: 12, fontFamily: 'IBM Plex Mono',
+      fontStyle: 'bold', fill: '#10B981', align: 'left',
+      opacity: 1, visible: true, locked: false, name: 'Sub Title',
+    },
+    {
+      id: 'em-photo', type: 'photo',
+      x: 50, y: 140, width: 220, height: 280,
+      dataField: '{{photo}}',
+      fill: '#D1FAE5', opacity: 1, visible: true, locked: false, name: 'Photo Frame',
+    },
+    {
+      id: 'em-name', type: 'dataField',
+      x: 310, y: 145, width: 660,
+      text: '{{full_name}}', fontSize: 34, fontFamily: 'Space Grotesk',
+      fontStyle: 'bold', fill: '#064E3B', align: 'left',
+      dataField: '{{full_name}}',
+      opacity: 1, visible: true, locked: false, name: 'Full Name',
+    },
+    {
+      id: 'em-role', type: 'dataField',
+      x: 310, y: 195, width: 660,
+      text: '{{role}}', fontSize: 20, fontFamily: 'Space Grotesk',
+      fontStyle: 'bold', fill: '#059669', align: 'left',
+      dataField: '{{role}}',
+      opacity: 1, visible: true, locked: false, name: 'Role Title',
+    },
+    {
+      id: 'em-dept', type: 'dataField',
+      x: 310, y: 240, width: 660,
+      text: '{{department}}', fontSize: 16, fontFamily: 'IBM Plex Sans',
+      fontStyle: 'normal', fill: '#4B5563', align: 'left',
+      dataField: '{{department}}',
+      opacity: 1, visible: true, locked: false, name: 'Department',
+    },
+    {
+      id: 'em-id', type: 'dataField',
+      x: 310, y: 290, width: 300,
+      text: 'ID: {{id_number}}', fontSize: 15, fontFamily: 'IBM Plex Mono',
+      fontStyle: 'bold', fill: '#064E3B', align: 'left',
+      dataField: '{{id_number}}',
+      opacity: 1, visible: true, locked: false, name: 'ID Number',
+    },
+    {
+      id: 'em-qr', type: 'qr',
+      x: 780, y: 280, width: 140, height: 140,
+      dataField: '{{qr_code}}',
+      opacity: 1, visible: true, locked: false, name: 'QR Matrix',
+    },
+    {
+      id: 'em-bot-bar', type: 'rect',
+      x: 0, y: H - 14, width: W, height: 14,
+      fill: '#10B981', opacity: 1, visible: true, locked: false, name: 'Bottom Accent Bar',
+    },
+  ];
+
+  const backElements: CanvasElement[] = [
+    {
+      id: 'em-back-hdr', type: 'rect',
+      x: 0, y: 0, width: W, height: 70,
+      fill: '#064E3B', opacity: 1, visible: true, locked: false, name: 'Back Header',
+    },
+    {
+      id: 'em-back-terms', type: 'text',
+      x: 60, y: 150, width: W - 120,
+      text: '1. Official Silicon Labs Credential. Surrender upon termination.\n2. Must be worn visibly in secure zones at all times.\n3. Report lost cards immediately to security.',
+      fontSize: 14, fontFamily: 'IBM Plex Sans', fontStyle: 'normal', fill: '#374151', align: 'left',
+      opacity: 1, visible: true, locked: false, name: 'Back Terms',
+    },
+  ];
+
+  return {
+    name: 'Modern Slate & Emerald Pass',
+    category: 'Corporate',
+    orientation: 'horizontal',
+    backgroundColor: '#FFFFFF',
+    backBackgroundColor: '#F9FAFB',
+    frontElements,
+    backElements,
+    isDefault: false,
+  };
+}
+
+// Seed the Dexie DB with full 81 records, 5 batches, and 2 templates
 export async function seedDatabase(): Promise<void> {
   const workerCount = await db.workers.count();
   if (workerCount === 0) {
@@ -521,17 +587,28 @@ export async function seedDatabase(): Promise<void> {
     await db.users.bulkAdd(INITIAL_USERS as UserAccount[]);
   }
 
+  const batchCount = await db.batchFolders.count();
+  if (batchCount === 0) {
+    await db.batchFolders.bulkAdd(INITIAL_BATCH_FOLDERS as BatchFolder[]);
+  }
+
   const peopleCount = await db.people.count();
-  if (peopleCount === 0) {
-    const peopleWithAvatars = INITIAL_PEOPLE.map((p, idx) => ({
+  if (peopleCount < 81) {
+    await db.people.clear();
+    const fullRoster = buildFullPeopleRoster();
+    const peopleWithAvatars = fullRoster.map((p, idx) => ({
       ...p,
-      photoDataUrl: generateAvatarDataUrl(p.fullName, p.role, idx),
+      photoDataUrl: generateAvatarDataUrl(p.fullName, idx),
     }));
     await db.people.bulkAdd(peopleWithAvatars as Person[]);
   }
 
   const templateCount = await db.templates.count();
-  if (templateCount === 0) {
-    await db.templates.add(createCorporateTemplate() as CardTemplate);
+  if (templateCount < 2) {
+    await db.templates.clear();
+    await db.templates.bulkAdd([
+      createCorporateTemplate() as CardTemplate,
+      createModernEmeraldTemplate() as CardTemplate,
+    ]);
   }
 }
