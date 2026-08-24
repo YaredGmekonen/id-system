@@ -1,9 +1,8 @@
-const CACHE_NAME = 'siliconlabs-id-v2';
+const CACHE_NAME = 'siliconlabs-id-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/siliconlabs-logo.png',
   '/favicon.ico',
 ];
 
@@ -34,8 +33,33 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through non-GET and API/browser requests
   if (event.request.method !== 'GET') return;
+
+  let url;
+  try {
+    url = new URL(event.request.url);
+  } catch {
+    return;
+  }
+
+  // 1. Ignore non-HTTP/HTTPS schemes (e.g. chrome-extension:, blob:, data:)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
+  // 2. Bypass Vite dev server internal scripts, HMR, hot updates, and dev assets
+  if (
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.search.includes('v=') ||
+    url.search.includes('t=') ||
+    url.pathname.endsWith('.ts') ||
+    url.pathname.endsWith('.tsx') ||
+    url.port === '5173'
+  ) {
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
@@ -43,17 +67,24 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
-        // Cache dynamic assets if valid
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type === 'basic' &&
+          (url.protocol === 'http:' || url.protocol === 'https:')
+        ) {
+          try {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache).catch(() => {});
+            });
+          } catch {
+            // Ignore caching errors
+          }
         }
         return networkResponse;
       }).catch(() => {
-        // Offline fallback
-        return caches.match('/');
+        return caches.match('/') || caches.match('/index.html');
       });
     })
   );

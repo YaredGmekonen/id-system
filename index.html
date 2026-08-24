@@ -21,12 +21,22 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
-            console.log('SW registration note:', err);
+      // In local development, unregister service workers to avoid stale bundle caching and React hook collisions
+      if ('serviceWorker' in navigator) {
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isDev) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (const registration of registrations) {
+              registration.unregister();
+            }
           });
-        });
+        } else if (window.location.protocol.startsWith('http')) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(err => {
+              console.log('SW registration note:', err);
+            });
+          });
+        }
       }
     </script>
   </body>
