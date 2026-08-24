@@ -6,6 +6,7 @@ import { usePeople, useTemplates, updatePerson } from '../db/hooks';
 import type { Person, CardTemplate } from '../db/database';
 import PaperStudioModal from '../components/studio/PaperStudioModal';
 import { renderStudioCard, type StudioCardOptions } from '../engine/renderStudioCard';
+import { CARD_SIZE_PRESETS, type CardSizePreset } from '../design-tokens';
 import { useTheme } from '../context/ThemeContext';
 import {
   IdCard,
@@ -34,6 +35,7 @@ import {
   PenTool,
   Plus,
   Palette,
+  Ruler,
 } from 'lucide-react';
 
 export interface CardTemplateStyle {
@@ -132,6 +134,23 @@ export default function IDCardStudio() {
   const [accentColor, setAccentColor] = useState('#84a92c');
   const [badgeColor, setBadgeColor] = useState('#0f766e');
   const [cornerRadius, setCornerRadius] = useState(16);
+
+  // Card Size Specifications & Preset (CR80 standard default: 85.6mm x 54.0mm)
+  const [cardSizePreset, setCardSizePreset] = useState<'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom'>('cr80');
+  const [cardWidthMm, setCardWidthMm] = useState<number>(85.6);
+  const [cardHeightMm, setCardHeightMm] = useState<number>(54.0);
+  const [cardSizeAccordionOpen, setCardSizeAccordionOpen] = useState(true);
+
+  const handleCardSizeChange = (presetId: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom') => {
+    setCardSizePreset(presetId);
+    if (presetId !== 'custom') {
+      const found = CARD_SIZE_PRESETS.find(p => p.id === presetId);
+      if (found) {
+        setCardWidthMm(found.widthMm);
+        setCardHeightMm(found.heightMm);
+      }
+    }
+  };
 
   // Features
   const [showBorders, setShowBorders] = useState(true);
@@ -955,6 +974,148 @@ export default function IDCardStudio() {
                       </div>
                     </div>
 
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ACCORDION 2.5: CARD SIZE & DIMENSIONS SPECIFICATIONS (CR80 Standard Default & Custom) */}
+            {(mobileActiveTab === 'settings' || mobileActiveTab === 'preview' || window.innerWidth >= 1024) && (
+              <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+                <button
+                  onClick={() => setCardSizeAccordionOpen(o => !o)}
+                  className="w-full p-3 flex items-center justify-between font-bold text-xs uppercase font-mono tracking-wider text-left cursor-pointer"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Ruler className="w-3.5 h-3.5 text-[#84a92c]" />
+                    <span>CARD SIZE & DIMENSIONS</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#84a92c]/20 text-[#84a92c] font-bold">
+                      {cardSizePreset.toUpperCase()}
+                    </span>
+                    <span className="text-slate-400 font-bold">{cardSizeAccordionOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</span>
+                  </div>
+                </button>
+
+                {cardSizeAccordionOpen && (
+                  <div className="p-3 pt-0 space-y-2.5 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+                    <div>
+                      <label className="text-[10px] font-bold font-mono uppercase text-slate-400 block mb-1">
+                        Card Standard Format
+                      </label>
+                      <select
+                        value={cardSizePreset}
+                        onChange={e => handleCardSizeChange(e.target.value as any)}
+                        className="w-full text-xs py-2 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                        style={{
+                          backgroundColor: 'var(--bg-surface)',
+                          borderColor: 'var(--border-primary)',
+                          color: 'var(--text-primary)',
+                        }}
+                      >
+                        {CARD_SIZE_PRESETS.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} {p.isDefault ? '— (Default)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Quick Preset Pills */}
+                    <div className="grid grid-cols-2 gap-1">
+                      {CARD_SIZE_PRESETS.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleCardSizeChange(p.id)}
+                          className={`py-1.5 px-2 rounded-xl text-[10px] font-bold transition-all border cursor-pointer text-center truncate ${
+                            cardSizePreset === p.id
+                              ? 'bg-[#84a92c] text-slate-950 border-[#84a92c] shadow-xs'
+                              : 'hover:border-[#84a92c]'
+                          }`}
+                          style={{
+                            backgroundColor: cardSizePreset === p.id ? '#84a92c' : 'var(--bg-surface)',
+                            borderColor: cardSizePreset === p.id ? '#84a92c' : 'var(--border-primary)',
+                            color: cardSizePreset === p.id ? '#020617' : 'var(--text-primary)',
+                          }}
+                        >
+                          {p.code} {p.id !== 'custom' ? `(${p.widthMm}×${p.heightMm})` : ''}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Precision Inputs */}
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                          Width (mm)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="30"
+                            max="200"
+                            value={cardWidthMm}
+                            onChange={e => {
+                              setCardWidthMm(parseFloat(e.target.value) || 0);
+                              setCardSizePreset('custom');
+                            }}
+                            className="w-full pl-2.5 pr-7 py-1 text-xs font-mono font-bold rounded-xl border focus:outline-none focus:border-[#84a92c]"
+                            style={{
+                              backgroundColor: 'var(--bg-surface)',
+                              borderColor: 'var(--border-primary)',
+                              color: 'var(--text-primary)',
+                            }}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 pointer-events-none">
+                            mm
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                          Height (mm)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="30"
+                            max="200"
+                            value={cardHeightMm}
+                            onChange={e => {
+                              setCardHeightMm(parseFloat(e.target.value) || 0);
+                              setCardSizePreset('custom');
+                            }}
+                            className="w-full pl-2.5 pr-7 py-1 text-xs font-mono font-bold rounded-xl border focus:outline-none focus:border-[#84a92c]"
+                            style={{
+                              backgroundColor: 'var(--bg-surface)',
+                              borderColor: 'var(--border-primary)',
+                              color: 'var(--text-primary)',
+                            }}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 pointer-events-none">
+                            mm
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dimensions calculation badge */}
+                    <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5 text-[9px] font-mono text-slate-300">
+                      <div className="flex justify-between">
+                        <span>Inches:</span>
+                        <span className="font-bold text-white">{(cardWidthMm / 25.4).toFixed(3)}" × {(cardHeightMm / 25.4).toFixed(3)}"</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>300 DPI Quality:</span>
+                        <span className="font-bold text-[#84a92c]">{Math.round((cardWidthMm / 25.4) * 300)} × {Math.round((cardHeightMm / 25.4) * 300)} px</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

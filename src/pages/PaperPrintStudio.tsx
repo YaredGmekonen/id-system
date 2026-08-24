@@ -5,6 +5,7 @@ import { usePeople, useTemplates } from '../db/hooks';
 import type { Person, CardTemplate } from '../db/database';
 import { generateCustomPaperPdf, downloadPdf, type PlacedPaperCard } from '../engine/exportPdf';
 import { renderStudioCard, type StudioCardOptions } from '../engine/renderStudioCard';
+import { CARD_SIZE_PRESETS, type CardSizePreset } from '../design-tokens';
 import { useTheme } from '../context/ThemeContext';
 import {
   Printer,
@@ -33,6 +34,7 @@ import {
   ShieldCheck,
   Zap,
   Menu,
+  Ruler,
 } from 'lucide-react';
 
 export interface CardSlot {
@@ -132,9 +134,21 @@ export default function PaperPrintStudio() {
   const [gridRows, setGridRows] = useState(4);
   const [gridCols, setGridCols] = useState(2);
 
-  // Standard CR80 card dimensions in mm
-  const cardW = 85.6;
-  const cardH = 54.0;
+  // Card dimensions & size preset state (CR80 standard default: 85.6mm x 54.0mm)
+  const [cardSizePreset, setCardSizePreset] = useState<'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom'>('cr80');
+  const [cardWidthMm, setCardWidthMm] = useState<number>(85.6);
+  const [cardHeightMm, setCardHeightMm] = useState<number>(54.0);
+
+  const handleCardSizeChange = (presetId: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom') => {
+    setCardSizePreset(presetId);
+    if (presetId !== 'custom') {
+      const found = CARD_SIZE_PRESETS.find(p => p.id === presetId);
+      if (found) {
+        setCardWidthMm(found.widthMm);
+        setCardHeightMm(found.heightMm);
+      }
+    }
+  };
 
   // Compute pxPerMm for canvas rendering (3.6px per mm at 100% zoom)
   const pxPerMm = 3.6 * zoomScale;
@@ -198,8 +212,8 @@ export default function PaperPrintStudio() {
 
     const gapX = 8;
     const gapY = 6;
-    const startX = Math.max(6, Math.round((paperWidthMm - (2 * cardW + gapX)) / 2));
-    const startY = Math.max(8, Math.round((paperHeightMm - (4 * cardH + 3 * gapY)) / 2));
+    const startX = Math.max(6, Math.round((paperWidthMm - (2 * cardWidthMm + gapX)) / 2));
+    const startY = Math.max(8, Math.round((paperHeightMm - (4 * cardHeightMm + 3 * gapY)) / 2));
 
     for (let pageIdx = 0; pageIdx < totalSheetsRequired; pageIdx++) {
       const pagePeople = peopleList.slice(pageIdx * capacityPerSheet, (pageIdx + 1) * capacityPerSheet);
@@ -212,7 +226,7 @@ export default function PaperPrintStudio() {
           if (!person && pageIdx > 0 && r >= pagePeople.length) break;
 
           const pId = person ? person.id : peopleList[r % peopleList.length]?.id;
-          const y = startY + r * (cardH + gapY);
+          const y = startY + r * (cardHeightMm + gapY);
 
           // Col 1 (Front Face)
           slots.push({
@@ -221,8 +235,8 @@ export default function PaperPrintStudio() {
             face: 'front',
             xMm: startX,
             yMm: y,
-            widthMm: cardW,
-            heightMm: cardH,
+            widthMm: cardWidthMm,
+            heightMm: cardHeightMm,
             rotationDeg: 0,
             personId: pId,
           });
@@ -232,10 +246,10 @@ export default function PaperPrintStudio() {
             id: `p${pageIdx}-slot-${r}-back`,
             cardIndex: pageIdx * 8 + r * 2 + 1,
             face: 'back',
-            xMm: startX + cardW + gapX,
+            xMm: startX + cardWidthMm + gapX,
             yMm: y,
-            widthMm: cardW,
-            heightMm: cardH,
+            widthMm: cardWidthMm,
+            heightMm: cardHeightMm,
             rotationDeg: 0,
             personId: pId,
           });
@@ -250,10 +264,10 @@ export default function PaperPrintStudio() {
               id: `p${pageIdx}-slot-front-${idx}`,
               cardIndex: pageIdx * 8 + idx,
               face: 'front',
-              xMm: startX + c * (cardW + gapX),
-              yMm: startY + r * (cardH + gapY),
-              widthMm: cardW,
-              heightMm: cardH,
+              xMm: startX + c * (cardWidthMm + gapX),
+              yMm: startY + r * (cardHeightMm + gapY),
+              widthMm: cardWidthMm,
+              heightMm: cardHeightMm,
               rotationDeg: 0,
               personId: p?.id,
             });
@@ -263,7 +277,7 @@ export default function PaperPrintStudio() {
       } else if (preset === '10-up-fronts') {
         let idx = 0;
         const gY = 4;
-        const sY = Math.max(6, Math.round((paperHeightMm - (5 * cardH + 4 * gY)) / 2));
+        const sY = Math.max(6, Math.round((paperHeightMm - (5 * cardHeightMm + 4 * gY)) / 2));
         for (let r = 0; r < 5; r++) {
           for (let c = 0; c < 2; c++) {
             if (idx >= pagePeople.length && pageIdx > 0) break;
@@ -272,10 +286,32 @@ export default function PaperPrintStudio() {
               id: `p${pageIdx}-slot-10up-${idx}`,
               cardIndex: pageIdx * 10 + idx,
               face: 'front',
-              xMm: startX + c * (cardW + gapX),
-              yMm: sY + r * (cardH + gY),
-              widthMm: cardW,
-              heightMm: cardH,
+              xMm: startX + c * (cardWidthMm + gapX),
+              yMm: sY + r * (cardHeightMm + gY),
+              widthMm: cardWidthMm,
+              heightMm: cardHeightMm,
+              rotationDeg: 0,
+              personId: p?.id,
+            });
+            idx++;
+          }
+        }
+      } else if (preset === 'custom') {
+        let idx = 0;
+        const sX = Math.max(6, Math.round((paperWidthMm - (gridCols * cardWidthMm + (gridCols - 1) * gapX)) / 2));
+        const sY = Math.max(8, Math.round((paperHeightMm - (gridRows * cardHeightMm + (gridRows - 1) * gapY)) / 2));
+        for (let r = 0; r < gridRows; r++) {
+          for (let c = 0; c < gridCols; c++) {
+            if (idx >= pagePeople.length && pageIdx > 0) break;
+            const p = pagePeople[idx] || peopleList[idx % peopleList.length];
+            slots.push({
+              id: `p${pageIdx}-slot-custom-${idx}`,
+              cardIndex: pageIdx * (gridRows * gridCols) + idx,
+              face: 'front',
+              xMm: sX + c * (cardWidthMm + gapX),
+              yMm: sY + r * (cardHeightMm + gapY),
+              widthMm: cardWidthMm,
+              heightMm: cardHeightMm,
               rotationDeg: 0,
               personId: p?.id,
             });
@@ -290,8 +326,8 @@ export default function PaperPrintStudio() {
     setPages(generatedPages);
     setCurrentPageIndex(0);
     setSelectedSlotIds(new Set());
-    showToast(`Imposed ${peopleList.length} cards across ${totalSheetsRequired} sheet${totalSheetsRequired > 1 ? 's' : ''}!`);
-  }, [selectedIds, dbPeople, filteredPeople, paperWidthMm, paperHeightMm, cardW, cardH, gridRows, gridCols, showToast]);
+    showToast(`Imposed ${peopleList.length} cards (${cardWidthMm}×${cardHeightMm} mm) across ${totalSheetsRequired} sheet${totalSheetsRequired > 1 ? 's' : ''}!`);
+  }, [selectedIds, dbPeople, filteredPeople, paperWidthMm, paperHeightMm, cardWidthMm, cardHeightMm, gridRows, gridCols, showToast]);
 
   // Initial imposition setup on load
   useEffect(() => {
@@ -658,6 +694,22 @@ export default function PaperPrintStudio() {
               </select>
             </div>
 
+            {/* Standard Card Size Selector */}
+            <div className="hidden lg:flex items-center gap-1.5">
+              <select
+                value={cardSizePreset}
+                onChange={e => handleCardSizeChange(e.target.value as any)}
+                className="text-xs py-1.5 px-2.5 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer font-mono"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+              >
+                {CARD_SIZE_PRESETS.map(p => (
+                  <option key={p.id} value={p.id}>
+                    Size: {p.code} ({p.widthMm}×{p.heightMm}mm) {p.isDefault ? '— Standard Default' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <button
               onClick={() => generateImpositionPages(impositionPreset)}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer hover:border-[#84a92c]"
@@ -665,6 +717,17 @@ export default function PaperPrintStudio() {
             >
               <Zap className="w-3.5 h-3.5 text-[#84a92c]" />
               <span>Impose to Paper</span>
+            </button>
+
+            <button
+              onClick={() => setControlsSidebarOpen(o => !o)}
+              className={`hidden lg:flex p-2 rounded-xl border transition-all cursor-pointer ${
+                controlsSidebarOpen ? 'border-[#84a92c] text-[#84a92c]' : 'text-slate-400'
+              }`}
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: controlsSidebarOpen ? '#84a92c' : 'var(--border-primary)' }}
+              title="Toggle Card Dimensions & Imposition Inspector"
+            >
+              <Sliders className="w-4 h-4" />
             </button>
 
             <button
@@ -684,14 +747,14 @@ export default function PaperPrintStudio() {
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-400">
-            <span>SESSION:</span>
-            <span className="text-[#84a92c]">ADMIN</span>
+            <span>SIZE:</span>
+            <span className="text-[#84a92c] uppercase">{cardSizePreset}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
             <button
               onClick={() => setMobileActiveTab('roster')}
-              className={`px-3 py-1 text-xs font-bold rounded-xl border cursor-pointer transition-all ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-xl border cursor-pointer transition-all ${
                 mobileActiveTab === 'roster' ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]' : 'text-slate-400 border-slate-700'
               }`}
             >
@@ -699,11 +762,19 @@ export default function PaperPrintStudio() {
             </button>
             <button
               onClick={() => setMobileActiveTab('artboard')}
-              className={`px-3 py-1 text-xs font-bold rounded-xl border cursor-pointer transition-all ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-xl border cursor-pointer transition-all ${
                 mobileActiveTab === 'artboard' ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]' : 'text-slate-400 border-slate-700'
               }`}
             >
-              Sheet Artboard ({cardSlots.length})
+              Artboard ({cardSlots.length})
+            </button>
+            <button
+              onClick={() => setMobileActiveTab('inspector')}
+              className={`px-2.5 py-1 text-xs font-bold rounded-xl border cursor-pointer transition-all ${
+                mobileActiveTab === 'inspector' ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]' : 'text-slate-400 border-slate-700'
+              }`}
+            >
+              Size & Specs
             </button>
           </div>
         </div>
@@ -1104,6 +1175,287 @@ export default function PaperPrintStudio() {
               </div>
             )}
           </main>
+
+          {/* ================= COLUMN 3: CARD SIZE SPECIFICATIONS & IMPOSITION INSPECTOR ================= */}
+          {(controlsSidebarOpen || mobileActiveTab === 'inspector') && (
+            <aside
+              className={`w-full lg:w-84 border-l flex flex-col p-4 space-y-4 flex-shrink-0 overflow-y-auto text-xs z-10 ${
+                mobileActiveTab === 'inspector' ? 'flex' : 'hidden lg:flex'
+              }`}
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+            >
+              {/* 1. CARD SIZE SPECIFICATIONS (CR80 Standard Default & Custom Dimensions) */}
+              <div className="p-3.5 rounded-2xl border space-y-3" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
+                    <Ruler className="w-4 h-4 text-[#84a92c]" />
+                    <span>Card Size Specifications</span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold bg-[#84a92c]/20 text-[#84a92c] px-2 py-0.5 rounded-md border border-[#84a92c]/30">
+                    {cardSizePreset.toUpperCase()}
+                  </span>
+                </div>
+
+                {/* Preset Selector Dropdown */}
+                <div>
+                  <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                    Standard Card Format / Preset
+                  </label>
+                  <select
+                    value={cardSizePreset}
+                    onChange={e => handleCardSizeChange(e.target.value as any)}
+                    className="w-full text-xs py-2 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {CARD_SIZE_PRESETS.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} {p.isDefault ? '— (Standard Default)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Preset Quick Buttons */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {CARD_SIZE_PRESETS.map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleCardSizeChange(p.id)}
+                      className={`py-1.5 px-2 rounded-xl text-[11px] font-bold transition-all border cursor-pointer text-center truncate ${
+                        cardSizePreset === p.id
+                          ? 'bg-[#84a92c] text-slate-950 border-[#84a92c] shadow-xs'
+                          : 'hover:border-[#84a92c]'
+                      }`}
+                      style={{
+                        backgroundColor: cardSizePreset === p.id ? '#84a92c' : 'var(--bg-surface)',
+                        borderColor: cardSizePreset === p.id ? '#84a92c' : 'var(--border-primary)',
+                        color: cardSizePreset === p.id ? '#020617' : 'var(--text-primary)',
+                      }}
+                    >
+                      {p.code} {p.id !== 'custom' ? `(${p.widthMm}×${p.heightMm})` : ''}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Precision Width & Height Inputs */}
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                      Card Width (mm)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="30"
+                        max="200"
+                        value={cardWidthMm}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setCardWidthMm(val);
+                          setCardSizePreset('custom');
+                        }}
+                        className="w-full pl-3 pr-8 py-1.5 text-xs font-mono font-bold rounded-xl border focus:outline-none focus:border-[#84a92c]"
+                        style={{
+                          backgroundColor: 'var(--bg-surface)',
+                          borderColor: 'var(--border-primary)',
+                          color: 'var(--text-primary)',
+                        }}
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 pointer-events-none">
+                        mm
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                      Card Height (mm)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="30"
+                        max="200"
+                        value={cardHeightMm}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setCardHeightMm(val);
+                          setCardSizePreset('custom');
+                        }}
+                        className="w-full pl-3 pr-8 py-1.5 text-xs font-mono font-bold rounded-xl border focus:outline-none focus:border-[#84a92c]"
+                        style={{
+                          backgroundColor: 'var(--bg-surface)',
+                          borderColor: 'var(--border-primary)',
+                          color: 'var(--text-primary)',
+                        }}
+                      />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 pointer-events-none">
+                        mm
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-time Dimensions Calculation Banner */}
+                <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-300">
+                    <span>Dimensions (Inches):</span>
+                    <span className="font-bold text-white">
+                      {(cardWidthMm / 25.4).toFixed(3)}" × {(cardHeightMm / 25.4).toFixed(3)}"
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-300">
+                    <span>300 DPI Resolution:</span>
+                    <span className="font-bold text-[#84a92c]">
+                      {Math.round((cardWidthMm / 25.4) * 300)} × {Math.round((cardHeightMm / 25.4) * 300)} px
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => generateImpositionPages(impositionPreset)}
+                  className="w-full py-2 bg-[#84a92c] hover:bg-[#9fe870] text-slate-950 font-bold rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Apply Size & Re-Impose ({cardWidthMm}×{cardHeightMm} mm)</span>
+                </button>
+              </div>
+
+              {/* 2. PAPER SHEET & IMPOSITION FORMAT */}
+              <div className="p-3.5 rounded-2xl border space-y-3" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+                <div className="flex items-center gap-1.5 font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
+                  <Sliders className="w-4 h-4 text-[#84a92c]" />
+                  <span>Paper & Imposition Layout</span>
+                </div>
+
+                {/* Paper Preset */}
+                <div>
+                  <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                    Physical Sheet Format
+                  </label>
+                  <select
+                    value={paperFormat}
+                    onChange={e => {
+                      const fmt = e.target.value as 'Custom' | 'A4' | 'A3' | 'Letter' | 'Legal' | 'Tabloid';
+                      setPaperFormat(fmt);
+                      if (fmt === 'A4') { setPaperWidthMm(210); setPaperHeightMm(297); }
+                      else if (fmt === 'A3') { setPaperWidthMm(297); setPaperHeightMm(420); }
+                      else if (fmt === 'Letter') { setPaperWidthMm(215.9); setPaperHeightMm(279.4); }
+                      else if (fmt === 'Legal') { setPaperWidthMm(215.9); setPaperHeightMm(355.6); }
+                    }}
+                    className="w-full text-xs py-2 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      borderColor: 'var(--border-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    <option value="A4">A4 Commercial (210 × 297 mm)</option>
+                    <option value="A3">A3 Production (297 × 420 mm)</option>
+                    <option value="Letter">US Letter (8.5" × 11")</option>
+                    <option value="Legal">US Legal (8.5" × 14")</option>
+                  </select>
+                </div>
+
+                {/* Imposition Layout Mode */}
+                <div>
+                  <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                    Imposition Mode
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => generateImpositionPages('8-up-duplex')}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                        impositionPreset === '8-up-duplex'
+                          ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]'
+                          : 'hover:border-[#84a92c]'
+                      }`}
+                      style={{
+                        backgroundColor: impositionPreset === '8-up-duplex' ? '#84a92c' : 'var(--bg-surface)',
+                        borderColor: impositionPreset === '8-up-duplex' ? '#84a92c' : 'var(--border-primary)',
+                        color: impositionPreset === '8-up-duplex' ? '#020617' : 'var(--text-primary)',
+                      }}
+                    >
+                      8-Up Duplex
+                    </button>
+                    <button
+                      onClick={() => generateImpositionPages('8-up-fronts')}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                        impositionPreset === '8-up-fronts'
+                          ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]'
+                          : 'hover:border-[#84a92c]'
+                      }`}
+                      style={{
+                        backgroundColor: impositionPreset === '8-up-fronts' ? '#84a92c' : 'var(--bg-surface)',
+                        borderColor: impositionPreset === '8-up-fronts' ? '#84a92c' : 'var(--border-primary)',
+                        color: impositionPreset === '8-up-fronts' ? '#020617' : 'var(--text-primary)',
+                      }}
+                    >
+                      8-Up Fronts
+                    </button>
+                    <button
+                      onClick={() => generateImpositionPages('10-up-fronts')}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                        impositionPreset === '10-up-fronts'
+                          ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]'
+                          : 'hover:border-[#84a92c]'
+                      }`}
+                      style={{
+                        backgroundColor: impositionPreset === '10-up-fronts' ? '#84a92c' : 'var(--bg-surface)',
+                        borderColor: impositionPreset === '10-up-fronts' ? '#84a92c' : 'var(--border-primary)',
+                        color: impositionPreset === '10-up-fronts' ? '#020617' : 'var(--text-primary)',
+                      }}
+                    >
+                      10-Up Fronts
+                    </button>
+                    <button
+                      onClick={() => generateImpositionPages('custom')}
+                      className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                        impositionPreset === 'custom'
+                          ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]'
+                          : 'hover:border-[#84a92c]'
+                      }`}
+                      style={{
+                        backgroundColor: impositionPreset === 'custom' ? '#84a92c' : 'var(--bg-surface)',
+                        borderColor: impositionPreset === 'custom' ? '#84a92c' : 'var(--border-primary)',
+                        color: impositionPreset === 'custom' ? '#020617' : 'var(--text-primary)',
+                      }}
+                    >
+                      Custom Grid
+                    </button>
+                  </div>
+                </div>
+
+                {/* Guide Toggles */}
+                <div className="space-y-2 pt-2 border-t" style={{ borderColor: 'var(--border-primary)' }}>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-slate-300">Show Crop / Trim Marks</span>
+                    <input
+                      type="checkbox"
+                      checked={showCropMarks}
+                      onChange={e => setShowCropMarks(e.target.checked)}
+                      className="w-4 h-4 rounded accent-[#84a92c]"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <span className="text-slate-300">Center Fold / Cut Axis</span>
+                    <input
+                      type="checkbox"
+                      checked={showFoldGuide}
+                      onChange={e => setShowFoldGuide(e.target.checked)}
+                      className="w-4 h-4 rounded accent-[#84a92c]"
+                    />
+                  </label>
+                </div>
+              </div>
+            </aside>
+          )}
         </div>
 
         {/* ================= MOBILE BOTTOM NAVIGATION BAR ================= */}

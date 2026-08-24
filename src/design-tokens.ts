@@ -26,6 +26,85 @@ export const TOKENS = {
   },
 } as const;
 
+// Standard ID Card Size Standards & Presets
+export interface CardSizePreset {
+  id: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom';
+  name: string;
+  code: string;
+  widthMm: number;
+  heightMm: number;
+  widthInches: number;
+  heightInches: number;
+  widthPx: number; // At 300 DPI
+  heightPx: number; // At 300 DPI
+  description: string;
+  isDefault?: boolean;
+}
+
+export const CARD_SIZE_PRESETS: CardSizePreset[] = [
+  {
+    id: 'cr80',
+    name: 'CR80 Standard ID (85.6 × 54.0 mm)',
+    code: 'CR80',
+    widthMm: 85.6,
+    heightMm: 54.0,
+    widthInches: 3.375,
+    heightInches: 2.128,
+    widthPx: 1012,
+    heightPx: 638,
+    description: 'Standard credit & national ID card format (85.6 × 54.0 mm / 86 × 54 mm) — Default',
+    isDefault: true,
+  },
+  {
+    id: 'cr79',
+    name: 'CR79 Proximity Overlay (84.0 × 52.0 mm)',
+    code: 'CR79',
+    widthMm: 84.0,
+    heightMm: 52.0,
+    widthInches: 3.303,
+    heightInches: 2.051,
+    widthPx: 992,
+    heightPx: 614,
+    description: 'Adhesive overlay card for sticking on proximity access cards (84 × 52 mm)',
+  },
+  {
+    id: 'cr90',
+    name: 'CR90 Oversized ID (92.0 × 60.0 mm)',
+    code: 'CR90',
+    widthMm: 92.0,
+    heightMm: 60.0,
+    widthInches: 3.622,
+    heightInches: 2.362,
+    widthPx: 1087,
+    heightPx: 709,
+    description: 'Government & driver license format (92 × 60 mm)',
+  },
+  {
+    id: 'cr100',
+    name: 'CR100 Event Badge (98.5 × 67.0 mm)',
+    code: 'CR100',
+    widthMm: 98.5,
+    heightMm: 67.0,
+    widthInches: 3.878,
+    heightInches: 2.638,
+    widthPx: 1163,
+    heightPx: 791,
+    description: 'Oversized convention, conference & VIP badge format (98.5 × 67.0 mm)',
+  },
+  {
+    id: 'custom',
+    name: 'Custom Dimensions (Width × Height mm)',
+    code: 'Custom',
+    widthMm: 85.6,
+    heightMm: 54.0,
+    widthInches: 3.375,
+    heightInches: 2.128,
+    widthPx: 1012,
+    heightPx: 638,
+    description: 'User-specified width and height in millimeters',
+  },
+];
+
 // Card dimensions — CR80 standard ratio 1.586:1 (85.6mm x 53.98mm)
 export const CARD = {
   WIDTH_INCHES: 3.375,

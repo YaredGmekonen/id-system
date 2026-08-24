@@ -238,6 +238,9 @@ export default function Designer() {
     } else if (preset === 'cr79') {
       setCardWidth(992);
       setCardHeight(614);
+    } else if (preset === 'cr90') {
+      setCardWidth(1087);
+      setCardHeight(709);
     } else if (preset === 'cr100') {
       setCardWidth(1163);
       setCardHeight(791);
@@ -538,12 +541,13 @@ export default function Designer() {
                 className="text-xs py-1 px-2 rounded-lg bg-transparent font-medium border-0 focus:outline-none cursor-pointer"
                 style={{ color: 'var(--text-primary)' }}
               >
-                <option value="cr80-landscape">CR80 Landscape (85.6×54mm)</option>
+                <option value="cr80-landscape">CR80 Standard (85.6×54mm) — Default</option>
                 <option value="cr80-portrait">CR80 Portrait (54×85.6mm)</option>
-                <option value="cr79">CR79 (84×52mm)</option>
-                <option value="cr100">CR100 Large (98.5×67mm)</option>
+                <option value="cr79">CR79 Proximity (84×52mm)</option>
+                <option value="cr90">CR90 Oversized (92×60mm)</option>
+                <option value="cr100">CR100 Large Badge (98.5×67mm)</option>
                 <option value="square">Square Badge (54×54mm)</option>
-                <option value="custom">Custom Size...</option>
+                <option value="custom">Custom Size (px / mm)...</option>
               </select>
 
               {dimensionPreset === 'custom' && (

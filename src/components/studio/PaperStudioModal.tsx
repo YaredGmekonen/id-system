@@ -10,6 +10,7 @@ import {
 } from '../../engine/exportPdf';
 import { createCardZip, downloadBlob } from '../../engine/exportZip';
 import { renderStudioCard, type StudioCardOptions } from '../../engine/renderStudioCard';
+import { CARD_SIZE_PRESETS, type CardSizePreset } from '../../design-tokens';
 
 interface PaperStudioModalProps {
   isOpen: boolean;
@@ -34,9 +35,6 @@ const PAPER_PRESETS: PaperPreset[] = [
   { id: 'custom', name: 'Custom Dimensions', widthMm: 210, heightMm: 297 },
 ];
 
-const CR80_W_MM = 85.6;
-const CR80_H_MM = 54;
-
 export default function PaperStudioModal({
   isOpen,
   onClose,
@@ -44,6 +42,22 @@ export default function PaperStudioModal({
   activePerson,
   cardOptions,
 }: PaperStudioModalProps) {
+  // Card Size Preset (CR80 standard default: 85.6mm x 54.0mm)
+  const [cardSizePreset, setCardSizePreset] = useState<'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom'>('cr80');
+  const [cardWidthMm, setCardWidthMm] = useState<number>(85.6);
+  const [cardHeightMm, setCardHeightMm] = useState<number>(54.0);
+
+  const handleCardSizeChange = (presetId: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom') => {
+    setCardSizePreset(presetId);
+    if (presetId !== 'custom') {
+      const found = CARD_SIZE_PRESETS.find(p => p.id === presetId);
+      if (found) {
+        setCardWidthMm(found.widthMm);
+        setCardHeightMm(found.heightMm);
+      }
+    }
+  };
+
   // Paper setup
   const [selectedPreset, setSelectedPreset] = useState<string>('a4');
   const [paperWidthMm, setPaperWidthMm] = useState(210);
@@ -88,9 +102,9 @@ export default function PaperStudioModal({
         side: 'front',
         png: frontPng,
         xMm: marginX,
-        yMm: marginY + row * (CR80_H_MM + gapY),
-        widthMm: CR80_W_MM,
-        heightMm: CR80_H_MM,
+        yMm: marginY + row * (cardHeightMm + gapY),
+        widthMm: cardWidthMm,
+        heightMm: cardHeightMm,
       });
 
       // Col 2 (Back)
@@ -100,10 +114,10 @@ export default function PaperStudioModal({
         name: `${p.fullName} (BACK)`,
         side: 'back',
         png: backPng,
-        xMm: marginX + CR80_W_MM + gapX,
-        yMm: marginY + row * (CR80_H_MM + gapY),
-        widthMm: CR80_W_MM,
-        heightMm: CR80_H_MM,
+        xMm: marginX + cardWidthMm + gapX,
+        yMm: marginY + row * (cardHeightMm + gapY),
+        widthMm: cardWidthMm,
+        heightMm: cardHeightMm,
       });
     }
 
@@ -132,10 +146,10 @@ export default function PaperStudioModal({
         name: `${p.fullName} (FRONT)`,
         side: 'front',
         png,
-        xMm: marginX + col * (CR80_W_MM + gapX),
-        yMm: marginY + row * (CR80_H_MM + gapY),
-        widthMm: CR80_W_MM,
-        heightMm: CR80_H_MM,
+        xMm: marginX + col * (cardWidthMm + gapX),
+        yMm: marginY + row * (cardHeightMm + gapY),
+        widthMm: cardWidthMm,
+        heightMm: cardHeightMm,
       });
     }
 
@@ -170,8 +184,8 @@ export default function PaperStudioModal({
       png,
       xMm: 20 + Math.random() * 20,
       yMm: 30 + Math.random() * 30,
-      widthMm: CR80_W_MM,
-      heightMm: CR80_H_MM,
+      widthMm: cardWidthMm,
+      heightMm: cardHeightMm,
     };
     setCards(prev => [...prev, newCard]);
     setSelectedCardId(newCard.id);
@@ -181,12 +195,14 @@ export default function PaperStudioModal({
   const handleFlipCard = async (cardId: string) => {
     const target = cards.find(c => c.id === cardId);
     if (!target) return;
-
-    const newSide = target.side === 'front' ? 'back' : 'front';
-    const newPng = await renderStudioCard(activePerson, newSide, cardOptions);
-
+    const nextSide = target.side === 'front' ? 'back' : 'front';
+    const newPng = await renderStudioCard(activePerson, nextSide, cardOptions);
     setCards(prev =>
-      prev.map(c => (c.id === cardId ? { ...c, side: newSide, png: newPng, name: `${activePerson.fullName} (${newSide.toUpperCase()})` } : c))
+      prev.map(c =>
+        c.id === cardId
+          ? { ...c, side: nextSide, name: `${activePerson.fullName} (${nextSide.toUpperCase()})`, png: newPng }
+          : c
+      )
     );
   };
 
@@ -258,8 +274,8 @@ export default function PaperStudioModal({
     const mouseXMm = (e.clientX - rect.left) / scaleFactor;
     const mouseYMm = (e.clientY - rect.top) / scaleFactor;
 
-    const newX = Math.max(0, Math.min(effectiveWidthMm - CR80_W_MM, mouseXMm - dragOffset.xMm));
-    const newY = Math.max(0, Math.min(effectiveHeightMm - CR80_H_MM, mouseYMm - dragOffset.yMm));
+    const newX = Math.max(0, Math.min(effectiveWidthMm - cardWidthMm, mouseXMm - dragOffset.xMm));
+    const newY = Math.max(0, Math.min(effectiveHeightMm - cardHeightMm, mouseYMm - dragOffset.yMm));
 
     // Optional subtle 2mm grid snapping
     const snapGrid = 2;
@@ -391,6 +407,54 @@ export default function PaperStudioModal({
             </div>
           </div>
 
+          {/* Card Size Selector (CR80 Standard Default & Custom) */}
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-500 uppercase tracking-wider font-mono text-[10px]">Card Size:</span>
+            <select
+              value={cardSizePreset}
+              onChange={e => handleCardSizeChange(e.target.value as any)}
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#198754] font-mono"
+            >
+              {CARD_SIZE_PRESETS.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.code} ({p.widthMm}×{p.heightMm}mm) {p.isDefault ? '— Default' : ''}
+                </option>
+              ))}
+            </select>
+
+            {/* Custom card dimensions if custom or to fine-tune */}
+            <div className="flex items-center gap-1 font-mono text-[11px]">
+              <input
+                type="number"
+                step="0.1"
+                min="30"
+                max="200"
+                value={cardWidthMm}
+                onChange={e => {
+                  setCardWidthMm(Number(e.target.value));
+                  setCardSizePreset('custom');
+                }}
+                className="w-13 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-center text-xs font-bold"
+                title="Card Width in mm"
+              />
+              <span>×</span>
+              <input
+                type="number"
+                step="0.1"
+                min="30"
+                max="200"
+                value={cardHeightMm}
+                onChange={e => {
+                  setCardHeightMm(Number(e.target.value));
+                  setCardSizePreset('custom');
+                }}
+                className="w-13 px-1.5 py-0.5 bg-white border border-slate-300 rounded text-center text-xs font-bold"
+                title="Card Height in mm"
+              />
+              <span>mm</span>
+            </div>
+          </div>
+
           {/* Quick Imposition Presets */}
           <div className="flex items-center gap-1.5">
             <span className="font-bold text-slate-500 uppercase tracking-wider font-mono text-[10px]">Presets:</span>
@@ -398,7 +462,7 @@ export default function PaperStudioModal({
               onClick={autoArrangeDuplex}
               className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 font-bold rounded-lg transition-colors cursor-pointer shadow-2xs"
             >
-              8-Up Duplex (Left=Front, Right=Back)
+              8-Up Duplex
             </button>
             <button
               onClick={autoArrangeFronts}

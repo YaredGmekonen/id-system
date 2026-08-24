@@ -2,6 +2,8 @@ import {
   CARD_THEMES,
   CARD_LAYOUTS,
   AVAILABLE_FIELDS,
+  CARD_SIZE_PRESETS,
+  type CardSizePreset,
 } from '../../design-tokens';
 
 interface CardSettingsPanelProps {
@@ -21,6 +23,12 @@ interface CardSettingsPanelProps {
   onToggleSeal: () => void;
   visibleFields: Set<string>;
   onToggleField: (fieldId: string) => void;
+  cardSizePreset?: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom';
+  onCardSizePresetChange?: (preset: 'cr80' | 'cr79' | 'cr90' | 'cr100' | 'custom') => void;
+  cardWidthMm?: number;
+  onCardWidthChange?: (w: number) => void;
+  cardHeightMm?: number;
+  onCardHeightChange?: (h: number) => void;
 }
 
 export default function CardSettingsPanel({
@@ -40,6 +48,12 @@ export default function CardSettingsPanel({
   onToggleSeal,
   visibleFields,
   onToggleField,
+  cardSizePreset = 'cr80',
+  onCardSizePresetChange,
+  cardWidthMm = 85.6,
+  onCardWidthChange,
+  cardHeightMm = 54.0,
+  onCardHeightChange,
 }: CardSettingsPanelProps) {
   return (
     <div className="flex flex-col h-full bg-paper-50 rounded-lg border border-paper-300 shadow-xs p-4 overflow-y-auto space-y-4 text-xs font-body text-ink">
@@ -47,8 +61,28 @@ export default function CardSettingsPanel({
       <div className="flex items-center justify-between border-b border-paper-300 pb-2.5">
         <h3 className="text-sm font-extrabold text-ink font-display tracking-tight">ID Specifications</h3>
         <span className="text-[10px] text-teal bg-teal-50 font-bold px-2 py-0.5 rounded border border-teal/30 font-mono">
-          CR80 Engine
+          {cardSizePreset.toUpperCase()} Engine
         </span>
+      </div>
+
+      {/* 0. Card Format / Preset */}
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-ink block">Standard Card Dimensions</label>
+        <select
+          value={cardSizePreset}
+          onChange={e => onCardSizePresetChange?.(e.target.value as any)}
+          className="w-full text-xs bg-paper-100 border border-paper-300 rounded py-2 px-3 text-ink focus:outline-none focus:border-teal font-medium"
+        >
+          {CARD_SIZE_PRESETS.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.name} {p.isDefault ? '— Default' : ''}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center justify-between text-[10px] font-mono text-ink-muted px-1">
+          <span>Dimensions: {cardWidthMm} × {cardHeightMm} mm</span>
+          <span>({(cardWidthMm / 25.4).toFixed(2)}" × {(cardHeightMm / 25.4).toFixed(2)}")</span>
+        </div>
       </div>
 
       {/* 1. Theme Selection */}
