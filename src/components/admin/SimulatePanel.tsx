@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import Modal from '../shared/Modal';
 import { executeRealBatchGeneration, type BatchProgress } from '../../engine/batchEngine';
 import { useTemplates, usePeople } from '../../db/hooks';
@@ -219,8 +220,8 @@ export default function SimulatePanel() {
           title="Batch Generation Execution Complete"
         >
           <div className="text-center space-y-4 p-2 font-body text-ink">
-            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal/30 text-teal text-xl font-bold mx-auto flex items-center justify-center">
-              ✓
+            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal/30 text-teal mx-auto flex items-center justify-center">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
 
             <div>

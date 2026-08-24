@@ -19,6 +19,7 @@ import {
   Layers,
   Sparkles,
   AlertCircle,
+  X,
 } from 'lucide-react';
 
 interface RegistrationFormProps {
@@ -230,9 +231,10 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
             <button
               type="button"
               onClick={() => setErrorMessage(null)}
-              className="text-xs text-slate-400 hover:text-white cursor-pointer"
+              className="text-xs text-slate-400 hover:text-white cursor-pointer p-0.5 rounded"
+              title="Dismiss"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

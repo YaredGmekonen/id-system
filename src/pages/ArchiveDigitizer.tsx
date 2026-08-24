@@ -246,7 +246,7 @@ export default function ArchiveDigitizer() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Top Header */}
         <header
-          className="px-4 sm:px-8 py-4 border-b flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          className="pl-14 pr-4 sm:px-8 py-3.5 border-b flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="min-w-0">
@@ -261,7 +261,7 @@ export default function ArchiveDigitizer() {
           </div>
 
           {/* Stepper Wizard Indicator */}
-          <div className="flex items-center gap-2 text-xs font-mono">
+          <div className="flex items-center gap-1.5 text-xs font-mono overflow-x-auto max-w-full pb-1 sm:pb-0">
             {[
               { id: 'mode', label: '1. Source' },
               { id: 'upload', label: '2. Face & Crop' },
@@ -270,16 +270,21 @@ export default function ArchiveDigitizer() {
             ].map(s => {
               const isActive = step === s.id;
               return (
-                <span
+                <button
+                  type="button"
                   key={s.id}
-                  className={`px-2.5 py-1 rounded-lg font-bold border transition-colors ${
+                  onClick={() => {
+                    if (s.id === 'mode') setStep('mode');
+                    else if (s.id === 'upload' && step !== 'mode') setStep('upload');
+                  }}
+                  className={`px-2.5 py-1 rounded-lg font-bold border transition-colors whitespace-nowrap cursor-pointer ${
                     isActive
                       ? 'bg-[#84a92c] text-slate-950 border-[#84a92c]'
-                      : 'border-slate-700 text-slate-400'
+                      : 'border-slate-700 text-slate-400 hover:text-white'
                   }`}
                 >
                   {s.label}
-                </span>
+                </button>
               );
             })}
           </div>

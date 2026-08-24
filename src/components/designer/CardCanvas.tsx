@@ -444,7 +444,7 @@ function CanvasStamp({ element, isSelected, onSelect, onChange }: {
       <Circle radius={rad} x={rad} y={rad} stroke={isSelected ? '#84a92c' : strokeColor} strokeWidth={2.5} />
       <Circle radius={rad - 5} x={rad} y={rad} stroke={isSelected ? '#84a92c' : strokeColor} strokeWidth={1} />
       <Text
-        text="★ VERIFIED ★"
+        text="OFFICIAL STAMP"
         x={0}
         y={rad - 12}
         width={rad * 2}

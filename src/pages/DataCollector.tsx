@@ -99,7 +99,7 @@ export default function DataCollector() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header
-          className="px-4 sm:px-8 pt-4 pb-3 border-b flex-shrink-0"
+          className="pl-14 pr-4 sm:px-8 pt-4 pb-3 border-b flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

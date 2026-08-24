@@ -5,7 +5,16 @@ import { useAuth } from '../context/AuthContext';
 import { usePeople, useTemplates } from '../db/hooks';
 import { db } from '../db/database';
 import { seedDatabase } from '../db/seed';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Building2,
+  Printer,
+  Camera,
+  PenTool,
+  Database,
+  UserCheck,
+} from 'lucide-react';
 
 export default function SystemSettings() {
   const { currentUser, currentRole, logout } = useAuth();
@@ -178,14 +187,17 @@ export default function SystemSettings() {
       isOpen: true,
       title: 'Reset Local Database',
       message: 'WARNING: Are you sure you want to reset all database records back to the default seed? All newly imported personnel records will be replaced with standard test records.',
-      confirmText: 'Reset to Factory Seed',
+      confirmText: 'Yes, Reset Database',
       onConfirm: async () => {
         setIsResetting(true);
         try {
-          await db.people.clear();
-          await db.templates.clear();
           await seedDatabase();
-          window.location.reload();
+          setSaveSuccessMsg('Database reset to standard seed state.');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch {
+          setSaveSuccessMsg('Failed to reset database.');
         } finally {
           setIsResetting(false);
         }
@@ -203,34 +215,34 @@ export default function SystemSettings() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header
-          className="h-16 px-8 border-b flex items-center justify-between z-20 flex-shrink-0"
+          className="h-14 sm:h-16 pl-14 pr-4 sm:px-8 border-b flex items-center justify-between z-20 flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase font-bold text-[#84a92c]">
+              <span className="text-[10px] font-mono uppercase font-bold text-[#84a92c] truncate">
                 SILICONLABS TECH PLC / {role.toUpperCase()} PREFERENCES
               </span>
             </div>
-            <h1 className="text-base font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-sm sm:text-base font-extrabold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
               System & Workspace Settings
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-500 flex-shrink-0">
             <span>PWA Enabled • Offline-First</span>
           </div>
         </header>
 
         {/* Content Body */}
-        <div className="px-8 py-6 max-w-5xl space-y-6">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 max-w-5xl space-y-6">
           
           {/* Sub-Tabs Tailored to Role */}
-          <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: 'var(--border-primary)' }}>
+          <div className="flex items-center gap-1.5 sm:gap-2 border-b pb-2 overflow-x-auto" style={{ borderColor: 'var(--border-primary)' }}>
             {(role === 'admin' || role === 'guest') && (
               <button
                 onClick={() => setActiveTab('organization')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'organization' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{
@@ -238,14 +250,16 @@ export default function SystemSettings() {
                   color: activeTab === 'organization' ? '#ffffff' : 'var(--text-secondary)',
                 }}
               >
-                Organization & Authority
+                <Building2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Organization & Authority</span>
+                <span className="sm:hidden">Authority</span>
               </button>
             )}
 
             {(role === 'admin' || role === 'designer') && (
               <button
                 onClick={() => setActiveTab('printer')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'printer' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{
@@ -253,14 +267,16 @@ export default function SystemSettings() {
                   color: activeTab === 'printer' ? '#ffffff' : 'var(--text-secondary)',
                 }}
               >
-                Printer & Imposition Config
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Printer & Imposition Config</span>
+                <span className="sm:hidden">Printer</span>
               </button>
             )}
 
             {role === 'collector' && (
               <button
                 onClick={() => setActiveTab('collector-config')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'collector-config' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{
@@ -268,14 +284,16 @@ export default function SystemSettings() {
                   color: activeTab === 'collector-config' ? '#ffffff' : 'var(--text-secondary)',
                 }}
               >
-                Intake & Camera Defaults
+                <Camera className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Intake & Camera Defaults</span>
+                <span className="sm:hidden">Intake</span>
               </button>
             )}
 
             {role === 'designer' && (
               <button
                 onClick={() => setActiveTab('designer-config')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'designer-config' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{
@@ -283,14 +301,16 @@ export default function SystemSettings() {
                   color: activeTab === 'designer-config' ? '#ffffff' : 'var(--text-secondary)',
                 }}
               >
-                Vector Studio Preferences
+                <PenTool className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Vector Studio Preferences</span>
+                <span className="sm:hidden">Designer</span>
               </button>
             )}
 
             {role === 'admin' && (
               <button
                 onClick={() => setActiveTab('database')}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   activeTab === 'database' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
                 style={{
@@ -298,13 +318,15 @@ export default function SystemSettings() {
                   color: activeTab === 'database' ? '#ffffff' : 'var(--text-secondary)',
                 }}
               >
-                Database Enclave & Backups
+                <Database className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Database Enclave & Backups</span>
+                <span className="sm:hidden">Database</span>
               </button>
             )}
 
             <button
               onClick={() => setActiveTab('profile')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'profile' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
               }`}
               style={{
@@ -312,14 +334,16 @@ export default function SystemSettings() {
                 color: activeTab === 'profile' ? '#ffffff' : 'var(--text-secondary)',
               }}
             >
-              User Profile & Session
+              <UserCheck className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">User Profile & Session</span>
+              <span className="sm:hidden">Profile</span>
             </button>
           </div>
 
           {/* Success Banner */}
           {saveSuccessMsg && (
             <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl flex items-center gap-2">
-              <span>✓</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>{saveSuccessMsg}</span>
             </div>
           )}

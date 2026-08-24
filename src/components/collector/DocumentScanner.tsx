@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import {
   parseDocumentImage,
   type ScannedDocumentResult,
@@ -236,11 +237,11 @@ export default function DocumentScanner({ onScanSuccess, activeFolderId, activeF
       {savedSuccess && (
         <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between text-emerald-600 dark:text-emerald-400 text-xs font-bold">
           <div className="flex items-center gap-2">
-            <span>✓</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
             <span>Personnel record verified & saved to {activeFolderName || 'database'}!</span>
           </div>
           <span className="text-[11px] underline cursor-pointer" onClick={() => onScanSuccess?.()}>
-            View in Directory →
+            View in Directory
           </span>
         </div>
       )}
@@ -255,14 +256,14 @@ export default function DocumentScanner({ onScanSuccess, activeFolderId, activeF
         >
           <div className="space-y-4 text-xs font-sans" style={{ color: 'var(--text-primary)' }}>
             <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-600 dark:text-emerald-400 flex items-center gap-2 font-bold">
-              <span>✓</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
               <span>OCR Complete ({scanResult?.confidence || 0}% Confidence) — Verify or correct values below before saving.</span>
             </div>
 
             {/* Warning if low confidence / empty fields */}
             {(!editName || scanResult?.confidence === 0) && (
               <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-600 dark:text-amber-400 flex items-center gap-2 text-xs font-bold">
-                <span>⚠</span>
+                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
                 <span>Low OCR confidence — some fields may be empty. Please fill them manually.</span>
               </div>
             )}

@@ -426,7 +426,7 @@ async function _renderStudioCardInner(
         ctx.fillStyle = stampColor;
         ctx.font = `bold ${Math.round(9 * scaleFactorX)}px Inter, sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('★ OFFICIAL ★', cx, cy - 8 * scaleFactorX);
+        ctx.fillText('OFFICIAL', cx, cy - 8 * scaleFactorX);
         ctx.fillText('VERIFIED', cx, cy + 3 * scaleFactorX);
         ctx.fillText('AUTHENTIC', cx, cy + 13 * scaleFactorX);
       } else if (el.type === 'guilloche') {
@@ -746,7 +746,7 @@ async function _renderStudioCardInner(
 
     ctx.fillStyle = opts.accentColor || '#10b981';
     ctx.font = `800 13px 'JetBrains Mono', monospace`;
-    ctx.fillText('✓ VERIFIED & ENCRYPTED BY CTO ENCLAVE', width - 380, footerY + 42);
+    ctx.fillText('VERIFIED & ENCRYPTED BY CTO ENCLAVE', width - 380, footerY + 42);
   }
 
   if (opts.showBorders !== false) {

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   type DetectedCropBox,
   cropRegionFromImage,
+  detectPhotoBoxesOnDocument,
 } from '../../engine/faceDetector';
 import {
   Move,
@@ -185,6 +186,22 @@ export default function VisualCropCanvas({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={async () => {
+                if (pageImageUrl) {
+                  const detected = await detectPhotoBoxesOnDocument(pageImageUrl, cropBoxes.length || 5);
+                  onCropBoxesChange(detected);
+                }
+              }}
+              className="px-2.5 py-1 text-xs font-bold rounded-lg border hover:border-[#84a92c] flex items-center gap-1 cursor-pointer transition-colors text-[#84a92c]"
+              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
+              title="Automatically detect faces and re-align crop frames"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Auto-Align</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleAddBox}
               className="px-2.5 py-1 text-xs font-bold rounded-lg border hover:border-[#84a92c] flex items-center gap-1 cursor-pointer transition-colors"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
@@ -208,65 +225,67 @@ export default function VisualCropCanvas({
           </div>
         </div>
 
-        {/* Document Image with Overlaid Crop Boxes */}
-        <div
-          ref={containerRef}
-          onMouseMove={handleContainerMouseMove}
-          onMouseUp={handleContainerMouseUp}
-          onMouseLeave={handleContainerMouseUp}
-          className="relative w-full rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center select-none shadow-xl cursor-crosshair min-h-[480px]"
-        >
-          <img
-            src={pageImageUrl}
-            alt="Scanned Document"
-            className="w-full h-auto object-contain max-h-[640px] pointer-events-none"
-          />
+        {/* Document Image Container with Overlaid Crop Boxes */}
+        <div className="w-full rounded-2xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center select-none shadow-xl min-h-[480px] p-2 md:p-4">
+          <div
+            ref={containerRef}
+            onMouseMove={handleContainerMouseMove}
+            onMouseUp={handleContainerMouseUp}
+            onMouseLeave={handleContainerMouseUp}
+            className="relative inline-block max-w-full max-h-[640px] cursor-crosshair"
+          >
+            <img
+              src={pageImageUrl}
+              alt="Scanned Document"
+              className="max-w-full h-auto object-contain max-h-[640px] block pointer-events-none rounded-lg shadow-md"
+            />
 
-          {/* Draggable Overlays */}
-          {cropBoxes.map(box => {
-            const isSelected = box.id === selectedBoxId;
+            {/* Draggable Overlays */}
+            {cropBoxes.map(box => {
+              const isSelected = box.id === selectedBoxId;
 
-            return (
-              <div
-                key={box.id}
-                onMouseDown={e => handleBoxMouseDown(e, box)}
-                className={`absolute transition-colors cursor-move flex flex-col justify-between p-1 border-2 rounded-lg ${
-                  isSelected
-                    ? 'border-[#84a92c] bg-[#84a92c]/20 shadow-lg shadow-[#84a92c]/30 z-20'
-                    : 'border-cyan-400/80 bg-cyan-500/10 hover:border-cyan-300 z-10'
-                }`}
-                style={{
-                  left: `${box.x * 100}%`,
-                  top: `${box.y * 100}%`,
-                  width: `${box.w * 100}%`,
-                  height: `${box.h * 100}%`,
-                }}
-              >
-                {/* Header Badge */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 ${
-                      isSelected ? 'bg-[#84a92c] text-slate-950' : 'bg-slate-900/90 text-cyan-300'
-                    }`}
-                  >
-                    <Move className="w-2.5 h-2.5" />
-                    <span>{box.label}</span>
-                  </span>
-                </div>
-
-                {/* Resize Handle (Bottom Right) */}
+              return (
                 <div
-                  onMouseDown={e => handleResizeMouseDown(e, box)}
-                  className={`self-end w-4 h-4 rounded-tl-md flex items-center justify-center cursor-nwse-resize ${
-                    isSelected ? 'bg-[#84a92c] text-slate-950' : 'bg-cyan-400 text-slate-950'
+                  key={box.id}
+                  onMouseDown={e => handleBoxMouseDown(e, box)}
+                  className={`absolute transition-colors cursor-move flex flex-col justify-between p-1 border-2 rounded-lg ${
+                    isSelected
+                      ? 'border-[#84a92c] bg-[#84a92c]/25 shadow-lg shadow-[#84a92c]/40 z-20 ring-2 ring-[#84a92c]/50'
+                      : 'border-cyan-400/90 bg-cyan-500/15 hover:border-cyan-300 z-10'
                   }`}
-                  title="Drag to resize crop area"
+                  style={{
+                    left: `${box.x * 100}%`,
+                    top: `${box.y * 100}%`,
+                    width: `${box.w * 100}%`,
+                    height: `${box.h * 100}%`,
+                  }}
                 >
-                  <Maximize2 className="w-2.5 h-2.5" />
+                  {/* Header Badge */}
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 ${
+                        isSelected ? 'bg-[#84a92c] text-slate-950 font-black' : 'bg-slate-900/90 text-cyan-300'
+                      }`}
+                    >
+                      <Move className="w-2.5 h-2.5" />
+                      <span>{box.label}</span>
+                    </span>
+                  </div>
+
+                  {/* Resize Handle (Bottom Right) */}
+                  <div
+                    onMouseDown={e => handleResizeMouseDown(e, box)}
+                    className={`self-end w-4 h-4 rounded-tl-md flex items-center justify-center cursor-nwse-resize shadow-xs ${
+                      isSelected ? 'bg-[#84a92c] text-slate-950' : 'bg-cyan-400 text-slate-950'
+                    }`}
+                    title="Drag to resize crop area"
+                  >
+                    <Maximize2 className="w-2.5 h-2.5" />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -316,8 +335,9 @@ export default function VisualCropCanvas({
                   <p className="text-[10px] font-mono text-slate-400">
                     Slot {box.slotIndex + 1}
                   </p>
-                  <p className="text-[9px] text-[#84a92c] font-mono mt-1">
-                    ✓ High-Res Cropped
+                  <p className="inline-flex items-center gap-1 text-[9px] text-[#84a92c] font-mono mt-1">
+                    <CheckCircle className="w-2.5 h-2.5" />
+                    <span>High-Res Cropped</span>
                   </p>
                 </div>
               </div>

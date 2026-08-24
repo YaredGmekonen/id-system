@@ -110,10 +110,10 @@ export default function OrderQueueTable({
               <span>Filtered by Field Station</span>
               <button
                 onClick={onClearWorkerFilter}
-                className="hover:text-teal font-bold ml-1"
+                className="hover:text-teal font-bold ml-1 cursor-pointer p-0.5 rounded"
                 title="Clear filter"
               >
-                ✕
+                <X className="w-3 h-3 inline" />
               </button>
             </div>
           )}

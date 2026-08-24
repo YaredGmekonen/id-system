@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { db, Person } from '../db/database';
 import SiliconLabsLogo from '../components/shared/SiliconLabsLogo';
 
@@ -158,8 +159,8 @@ export default function IDVerify() {
             {/* Status Pill Card */}
             <div className="bg-gradient-to-r from-emerald-950/40 via-[#0d1f14] to-emerald-950/40 border border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-emerald-950/20">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 text-lg font-bold">
-                  ✓
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-xs font-black tracking-wider uppercase text-emerald-400 font-mono">
@@ -277,7 +278,10 @@ export default function IDVerify() {
                     {/* Back Footer */}
                     <div className="border-t border-slate-800 pt-2 flex items-center justify-between text-[9px] font-mono text-slate-400 z-10">
                       <span>SERIAL: SL-ETH-{person.id || 101}</span>
-                      <span className="text-emerald-400 font-bold">✓ 256-BIT ENCRYPTED</span>
+                      <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span>256-BIT ENCRYPTED</span>
+                      </span>
                     </div>
                   </>
                 )}

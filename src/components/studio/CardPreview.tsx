@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Award } from 'lucide-react';
 import { BRAND, type CARD_THEMES } from '../../design-tokens';
 import type { Person } from '../../db/database';
 import BrandLogo from '../shared/BrandLogo';
@@ -122,8 +123,8 @@ export default function CardPreview({
                 </div>
 
                 {showSeal && (
-                  <div className="w-6 h-6 rounded-full bg-paper-50/20 border border-paper-50/40 flex items-center justify-center text-[9px] font-black">
-                    ★
+                  <div className="w-6 h-6 rounded-full bg-paper-50/20 border border-paper-50/40 flex items-center justify-center text-white">
+                    <Award className="w-3.5 h-3.5" />
                   </div>
                 )}
               </div>

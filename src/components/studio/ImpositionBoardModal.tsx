@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Scissors } from 'lucide-react';
 import Modal from '../shared/Modal';
 import type { Person } from '../../db/database';
 import { generatePrintSheet, generateSingleCardPdf, downloadPdf, type CardSlotItem } from '../../engine/exportPdf';
@@ -235,7 +236,10 @@ export default function ImpositionBoardModal({
             {/* Header guide */}
             <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 border-b border-dashed border-slate-200 pb-2">
               <span className="font-bold text-emerald-700">COLUMN 1 (LEFT ROW)</span>
-              <span className="text-slate-400 font-sans">✂ Center Fold & Cut Axis ✂</span>
+              <span className="inline-flex items-center gap-1 text-slate-400 font-sans">
+                <Scissors className="w-3 h-3 text-slate-400" />
+                <span>Center Fold & Cut Axis</span>
+              </span>
               <span className="font-bold text-blue-700">COLUMN 2 (RIGHT ROW)</span>
             </div>
 

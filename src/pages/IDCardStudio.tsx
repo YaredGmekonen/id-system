@@ -369,7 +369,7 @@ export default function IDCardStudio() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         {/* ================= TOP COMMAND HEADER ================= */}
         <header
-          className="h-14 md:h-16 px-4 md:px-6 border-b flex items-center justify-between z-20 flex-shrink-0 gap-2"
+          className="h-14 md:h-16 pl-14 pr-3 md:px-6 border-b flex items-center justify-between z-20 flex-shrink-0 gap-2"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           {/* Breadcrumb & Brand */}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import type { Worker } from '../../db/database';
 import { addWorker, updateWorker, deleteWorker } from '../../db/hooks';
 
@@ -188,10 +189,10 @@ export default function WorkerCommandPanel({
                 )}
                 <button
                   onClick={() => handleDeleteWorker(w)}
-                  className="p-1 rounded text-ink-muted hover:text-stamp"
+                  className="p-1 rounded text-ink-muted hover:text-stamp cursor-pointer"
                   title="Remove Worker"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -207,9 +208,10 @@ export default function WorkerCommandPanel({
               <h3 className="text-base font-bold text-ink font-display">Deploy New Field Registrar</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-ink-muted hover:text-ink p-1"
+                className="text-ink-muted hover:text-ink p-1 cursor-pointer"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

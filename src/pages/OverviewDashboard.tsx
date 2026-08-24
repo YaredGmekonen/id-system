@@ -257,7 +257,7 @@ export default function OverviewDashboard() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* ================= TOP HEADER ================= */}
         <header
-          className="px-4 sm:px-8 py-3.5 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 z-20 flex-shrink-0"
+          className="pl-14 pr-4 sm:px-8 py-3.5 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 z-20 flex-shrink-0"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div>

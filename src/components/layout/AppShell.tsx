@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import SimulatePanel from '../admin/SimulatePanel';
@@ -85,9 +86,10 @@ export default function AppShell({
             <div className="flex justify-end mb-2">
               <button
                 onClick={() => setShowSimModal(false)}
-                className="w-8 h-8 rounded-full bg-paper-50 text-ink hover:bg-paper-200 flex items-center justify-center text-sm font-bold shadow-md"
+                className="w-8 h-8 rounded-full bg-paper-50 text-ink hover:bg-paper-200 flex items-center justify-center text-sm font-bold shadow-md cursor-pointer"
+                title="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
             <SimulatePanel />

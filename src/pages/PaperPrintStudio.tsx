@@ -35,6 +35,7 @@ import {
   Zap,
   Menu,
   Ruler,
+  Layers,
 } from 'lucide-react';
 
 export interface CardSlot {
@@ -652,11 +653,11 @@ export default function PaperPrintStudio() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         {/* ================= TOP HEADER (Desktop & Tablet Matching Image 3) ================= */}
         <header
-          className="h-14 md:h-16 px-4 md:px-6 border-b flex items-center justify-between z-20 flex-shrink-0 gap-2"
+          className="h-14 md:h-16 pl-14 pr-3 md:px-6 border-b flex items-center justify-between z-20 flex-shrink-0 gap-2"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           {/* Breadcrumb & Brand */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             <div
               className="p-1.5 md:p-2 rounded-xl border flex items-center justify-center text-[#84a92c] flex-shrink-0"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
@@ -674,7 +675,7 @@ export default function PaperPrintStudio() {
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Card Template Selector */}
             <div className="hidden md:flex items-center gap-1.5">
               <select
@@ -733,10 +734,11 @@ export default function PaperPrintStudio() {
             <button
               onClick={handleExportPdf}
               disabled={isExporting}
-              className="btn-primary py-1.5 md:py-2 px-3 md:px-4 text-[11px] md:text-xs font-bold shadow-md flex items-center gap-1.5 cursor-pointer"
+              className="btn-primary py-1.5 md:py-2 px-2.5 md:px-4 text-[11px] md:text-xs font-bold shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Export {pages.length > 1 ? `${pages.length} Pages ` : ''}300 DPI PDF</span>
+              <span className="hidden sm:inline">Export {pages.length > 1 ? `${pages.length} Pages ` : ''}300 DPI PDF</span>
+              <span className="sm:hidden">PDF {pages.length > 1 ? `(${pages.length}P)` : ''}</span>
             </button>
           </div>
         </header>
@@ -932,27 +934,27 @@ export default function PaperPrintStudio() {
             {/* Sheet Pagination & Artboard Controls (Matching Image 2 & 3) */}
             <div className="w-full max-w-5xl flex items-center justify-between text-xs font-mono flex-wrap gap-2 mb-3 z-10">
               {/* Pagination */}
-              <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/10">
-                <span className="font-bold text-white">
+              <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md px-2.5 py-1.5 rounded-2xl border border-white/10 max-w-full overflow-x-auto">
+                <span className="font-bold text-white text-[11px] whitespace-nowrap">
                   Sheet {currentPageIndex + 1} of {pages.length}
                 </span>
 
                 <button
                   onClick={() => setCurrentPageIndex(i => Math.max(0, i - 1))}
                   disabled={currentPageIndex === 0}
-                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 cursor-pointer"
+                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 cursor-pointer flex-shrink-0"
                   title="Previous Sheet"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 max-w-[150px] sm:max-w-[280px] overflow-x-auto py-0.5">
                   {pages.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setCurrentPageIndex(idx)}
-                      className={`w-6 h-6 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        currentPageIndex === idx ? 'bg-[#84a92c] text-slate-950 font-black' : 'bg-white/10 text-white'
+                      className={`w-6 h-6 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
+                        currentPageIndex === idx ? 'bg-[#84a92c] text-slate-950 font-black' : 'bg-white/10 text-white hover:bg-white/20'
                       }`}
                     >
                       {idx + 1}
@@ -963,24 +965,24 @@ export default function PaperPrintStudio() {
                 <button
                   onClick={() => setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1))}
                   disabled={currentPageIndex === pages.length - 1}
-                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 cursor-pointer"
+                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 cursor-pointer flex-shrink-0"
                   title="Next Sheet"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
 
-                <div className="w-px h-3.5 bg-white/20 mx-0.5" />
+                <div className="w-px h-3.5 bg-white/20 mx-0.5 flex-shrink-0" />
 
                 <button
                   onClick={handleAddBlankSheet}
-                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   + Sheet
                 </button>
 
                 <button
                   onClick={handleDuplicateSheet}
-                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] cursor-pointer whitespace-nowrap flex-shrink-0"
                 >
                   Clone
                 </button>
@@ -988,7 +990,7 @@ export default function PaperPrintStudio() {
                 {pages.length > 1 && (
                   <button
                     onClick={() => handleDeleteSheet(currentPageIndex)}
-                    className="px-2 py-0.5 rounded-lg bg-red-500/20 text-red-400 text-[10px] cursor-pointer"
+                    className="px-2 py-0.5 rounded-lg bg-red-500/20 text-red-400 text-[10px] cursor-pointer whitespace-nowrap flex-shrink-0"
                   >
                     Delete
                   </button>
@@ -1179,7 +1181,7 @@ export default function PaperPrintStudio() {
           {/* ================= COLUMN 3: CARD SIZE SPECIFICATIONS & IMPOSITION INSPECTOR ================= */}
           {(controlsSidebarOpen || mobileActiveTab === 'inspector') && (
             <aside
-              className={`w-full lg:w-84 border-l flex flex-col p-4 space-y-4 flex-shrink-0 overflow-y-auto text-xs z-10 ${
+              className={`w-full lg:w-80 xl:w-88 border-l flex flex-col p-4 space-y-4 flex-shrink-0 overflow-y-auto text-xs z-10 ${
                 mobileActiveTab === 'inspector' ? 'flex' : 'hidden lg:flex'
               }`}
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
@@ -1458,50 +1460,68 @@ export default function PaperPrintStudio() {
           )}
         </div>
 
-        {/* ================= MOBILE BOTTOM NAVIGATION BAR ================= */}
+        {/* ================= MOBILE CONTEXTUAL BOTTOM TOOLBAR ================= */}
         <div
           className="flex lg:hidden fixed bottom-0 left-0 right-0 h-14 border-t z-50 items-center justify-around px-2 backdrop-blur-md"
-          style={{ backgroundColor: 'rgba(11, 19, 27, 0.95)', borderColor: 'var(--border-primary)' }}
+          style={{ backgroundColor: 'rgba(11, 19, 27, 0.96)', borderColor: 'var(--border-primary)' }}
         >
+          {/* 1. Roster Tool */}
           <button
-            onClick={() => navigate('/overview')}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 text-slate-400 hover:text-white"
-          >
-            <Grid className="w-4 h-4" />
-            <span className="text-[9px] font-bold font-mono">Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/studio')}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 text-slate-400 hover:text-white"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="text-[9px] font-bold font-mono">Templates</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/designer')}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 text-slate-400 hover:text-white"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="text-[9px] font-bold font-mono">Designer</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/digitizer')}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 text-slate-400 hover:text-white"
+            onClick={() => setMobileActiveTab('roster')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer relative ${
+              mobileActiveTab === 'roster' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
           >
             <FolderKanban className="w-4 h-4" />
-            <span className="text-[9px] font-bold font-mono">Archive</span>
+            <span className="text-[9px] font-bold font-mono">Roster</span>
+            <span className="absolute -top-1 right-0.5 px-1 py-0.2 bg-[#84a92c] text-slate-950 text-[8px] font-mono font-bold rounded-full">
+              {selectedIds.size > 0 ? selectedIds.size : filteredPeople.length}
+            </span>
           </button>
 
+          {/* 2. Artboard Tool */}
+          <button
+            onClick={() => setMobileActiveTab('artboard')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              mobileActiveTab === 'artboard' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span className="text-[9px] font-bold font-mono">Artboard</span>
+          </button>
+
+          {/* 3. Card Specs & Layout Tool */}
+          <button
+            onClick={() => setMobileActiveTab('inspector')}
+            className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              mobileActiveTab === 'inspector' ? 'text-[#84a92c]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            <span className="text-[9px] font-bold font-mono">Specs</span>
+          </button>
+
+          {/* 4. Quick Impose Action */}
+          <button
+            onClick={() => {
+              generateImpositionPages(impositionPreset);
+              setMobileActiveTab('artboard');
+              showToast('Imposed cards onto sheet layout!');
+            }}
+            className="flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer"
+          >
+            <Zap className="w-4 h-4" />
+            <span className="text-[9px] font-bold font-mono">Impose</span>
+          </button>
+
+          {/* 5. PDF Export Tool */}
           <button
             onClick={handleExportPdf}
             disabled={isExporting}
-            className="flex flex-col items-center justify-center gap-0.5 py-1 px-3 text-[#9fe870] font-bold"
+            className="flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 text-[#9fe870] font-bold transition-all cursor-pointer disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
-            <span className="text-[9px] font-bold font-mono">Export PDF</span>
+            <span className="text-[9px] font-bold font-mono">{isExporting ? 'Exporting…' : 'PDF'}</span>
           </button>
         </div>
       </div>

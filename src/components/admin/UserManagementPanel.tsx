@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import type { UserAccount } from '../../db/database';
 import { addUserAccount, updateUserAccount, deleteUserAccount } from '../../db/hooks';
 
@@ -150,8 +151,12 @@ export default function UserManagementPanel({ users }: UserManagementPanelProps)
           <div className="w-full max-w-md bg-paper-50 rounded-lg p-6 text-ink shadow-2xl border border-paper-300 space-y-4">
             <div className="flex items-center justify-between border-b border-paper-300 pb-3">
               <h3 className="text-base font-bold text-ink font-display">Invite New Platform User</h3>
-              <button onClick={() => setShowInviteModal(false)} className="text-ink-muted hover:text-ink p-1">
-                ✕
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="text-ink-muted hover:text-ink p-1 cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

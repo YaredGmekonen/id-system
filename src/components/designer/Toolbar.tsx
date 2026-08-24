@@ -13,6 +13,11 @@ import {
   PenTool,
   Award,
   Layers,
+  Star,
+  Hexagon,
+  Triangle,
+  ArrowRight,
+  Minus,
 } from 'lucide-react';
 
 interface ToolbarProps {
@@ -1009,7 +1014,7 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-amber-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">★</span>
+              <Star className="w-3.5 h-3.5 fill-current" />
               <span>5-Point Star</span>
             </button>
 
@@ -1018,7 +1023,7 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-blue-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-sm">⬡</span>
+              <Hexagon className="w-3.5 h-3.5" />
               <span>Hexagon</span>
             </button>
 
@@ -1036,7 +1041,7 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-red-400"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-xs">▲</span>
+              <Triangle className="w-3.5 h-3.5 fill-current" />
               <span>Triangle</span>
             </button>
 
@@ -1054,7 +1059,7 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-xs font-mono">---</span>
+              <Minus className="w-4 h-4 stroke-dasharray-2" />
               <span>Dashed Line</span>
             </button>
 
@@ -1063,7 +1068,7 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-xs font-mono font-bold">➔</span>
+              <ArrowRight className="w-3.5 h-3.5" />
               <span>Arrow</span>
             </button>
 
@@ -1072,8 +1077,8 @@ export default function Toolbar({
               className="py-2 px-2 rounded-xl border flex items-center gap-2 justify-center font-semibold transition-all cursor-pointer text-[#84a92c]"
               style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
-              <span className="text-xs font-mono font-bold">⌈ ⌉</span>
-              <span>L-Brackets</span>
+              <span className="text-xs font-mono font-bold">[ ]</span>
+              <span>Crop Marks</span>
             </button>
           </div>
         </div>

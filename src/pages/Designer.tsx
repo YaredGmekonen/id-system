@@ -519,7 +519,7 @@ export default function Designer() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Header */}
         <header
-          className="min-h-16 py-2 px-4 md:px-8 border-b flex items-center justify-between z-20 flex-shrink-0 flex-wrap gap-2"
+          className="min-h-16 py-2 pl-14 pr-4 md:px-8 border-b flex items-center justify-between z-20 flex-shrink-0 flex-wrap gap-2"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="truncate min-w-0">
