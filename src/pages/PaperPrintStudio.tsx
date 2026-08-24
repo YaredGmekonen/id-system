@@ -66,8 +66,13 @@ export default function PaperPrintStudio() {
   const [paperOrientation, setPaperOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [impositionPreset, setImpositionPreset] = useState<'8-up-duplex' | '8-up-fronts' | '10-up-fronts' | 'custom'>('8-up-duplex');
 
-  // Sheet zoom & artboard view
-  const [zoomScale, setZoomScale] = useState(0.85);
+  // Sheet zoom & artboard view (Auto-fit on mobile)
+  const [zoomScale, setZoomScale] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return Math.max(0.35, Math.min(0.55, Math.round(((window.innerWidth - 32) / (210 * 3.6)) * 100) / 100));
+    }
+    return 0.85;
+  });
   const [showCropMarks, setShowCropMarks] = useState(true);
   const [showFoldGuide, setShowFoldGuide] = useState(true);
   const [bleedMm, setBleedMm] = useState(2.0);
