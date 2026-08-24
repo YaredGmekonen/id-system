@@ -179,23 +179,42 @@ interface UserAccount {
 - **Quick Action Links:** 1-click launch into Paper Print Studio with current selection pre-loaded.
 
 ### 4.6. Paper Print & Imposition Studio (`/print`)
+- **Card Size Standardization & Customization:**
+  - **CR80 Standard ID (Default):** 85.6 × 54.0 mm (3.375" × 2.128", 1012 × 638 px @ 300 DPI)
+  - **CR79 Proximity Overlay:** 84.0 × 52.0 mm (3.303" × 2.051", 992 × 614 px @ 300 DPI)
+  - **CR90 Oversized ID:** 92.0 × 60.0 mm (3.622" × 2.362", 1087 × 709 px @ 300 DPI)
+  - **CR100 Event Badge:** 98.5 × 67.0 mm (3.878" × 2.638", 1163 × 791 px @ 300 DPI)
+  - **Custom Dimensions:** Precision millimeter width/height inputs with live inch and 300 DPI resolution calculations.
 - **Multi-Card Imposition Engine:** Lays out multiple ID cards onto physical production print sheets.
-- **Supported Paper Formats:** A4 (210×297mm), A3 (297×420mm), US Letter (8.5×11"), US Legal (8.5×14"), and Custom Dimensions.
+- **Supported Paper Formats:** A4 Commercial (210×297mm), A3 Production (297×420mm), US Letter (8.5×11"), US Legal (8.5×14"), and Custom Dimensions.
 - **Imposition Presets:**
   - `8-Up Duplex (4 Fronts + 4 Backs)`: Front cards in left column, corresponding back sides in right column for fold-and-laminate production.
   - `8-Up Fronts Only` & `10-Up Fronts Only`: Maximum density single-face sheets.
-- **Print Controls:** Live zoom/pan visual artboard, corner crop marks, center fold guidelines, 2mm bleed allowance margins, and sheet metadata headers.
+  - `Custom Grid`: User-defined row and column matrix.
+- **Mobile Responsive Design & Auto-Fit:**
+  - On phone/tablet viewports, the sheet canvas automatically scales to fit the screen width without horizontal overflow.
+  - Interactive zoom controls (`−`, `+`, `Fit`) allow zooming up to 180% with full pan/scroll on the artboard while navigation headers and bottom bar stay anchored.
+  - Contextual Mobile Bottom Toolbar provides one-touch access to `Roster`, `Artboard`, `Specs`, `Impose`, and `PDF Export`.
 - **Vector PDF Export:** Generates true 300 DPI production-ready vector PDF sheets via `pdf-lib` with automatic browser download (`SiliconLabs_A4_300DPI_Batch.pdf`).
 
 ### 4.7. System Settings & Administration (`/settings`)
-- **Organization Profile:** Company branding, official issuer name, regional location, contact coordinates, and department taxonomies.
+- **Organization Profile:** Company branding, official issuer name, licensing/enclave code, regional location, contact coordinates, and department taxonomies.
+- **Mobile Navigation Sub-Tabs:** Role-aware horizontal navigation tabs (`Authority`, `Printer`, `Database`, `Profile`).
 - **Printer & Hardware Configuration:** Target DPI calibration (300/600 DPI), printer driver selection (Direct-to-Card, Retransfer, Desktop Sheetfed), and bleed offsets.
-- **Database & Storage Management:** Live record count tally, full JSON database backup export, backup restore importer, and factory reset actions.
+- **Database & Storage Management:** Live record count tally (81 personnel across 5 batch folders), full JSON database backup export, backup restore importer, and factory reset actions.
 - **Role-Based Access Control (RBAC):** Interactive user permission management, role assigner (`admin`, `designer`, `collector`, `guest`), and session switching.
 
 ---
 
-## 5. Role-Based Access Control (RBAC) Matrix
+## 5. PWA & Service Worker Offline Caching Strategy
+
+- **Production Caching:** High-speed offline caching of core shell assets (`/`, `/index.html`, `/manifest.json`, `/favicon.ico`) with cache invalidation on new service worker activation (`siliconlabs-id-v3`).
+- **Scheme Isolation:** Explicitly ignores non-HTTP/HTTPS schemes (`chrome-extension:`, `blob:`, `data:`) to prevent runtime Cache API exceptions.
+- **Development Mode Bypass:** Vite development modules (`/@vite`, `/src/`, `/node_modules/`, `?v=`, `.ts`, `.tsx`, and port 5173) are excluded from service worker caching, with automatic unregistration on `localhost` to prevent duplicate React module collisions.
+
+---
+
+## 6. Role-Based Access Control (RBAC) Matrix
 
 | Workspace / Route | Admin | Designer | Data Collector | Guest (Viewer) |
 |---|:---:|:---:|:---:|:---:|
@@ -209,11 +228,11 @@ interface UserAccount {
 
 ---
 
-## 6. End-to-End Production Workflow
+## 7. End-to-End Production Workflow
 
 ```
 [Field / Archive Stage]
-  1. Field Collector creates a Batch Folder (e.g., "Grade 10 2026")
+  1. Field Collector creates a Batch Folder (e.g., "Software Engineering Unit")
   2. Data collected via Manual Form, Webcam Photo, Excel Roster, or Archive Digitizer
   3. Status set to -> "Ready for Design"
 
@@ -225,17 +244,18 @@ interface UserAccount {
 
 [Production & Printing Stage]
   8. Operator opens Paper Print Studio with Approved Batch
-  9. Selects paper size (A4/A3) and imposition layout (8-Up Duplex / 10-Up)
+  9. Selects card format (CR80 standard default / CR79 / CR90 / CR100 / Custom) and paper imposition layout (8-Up Duplex / 10-Up)
   10. System generates high-resolution 300 DPI print sheet PDF with crop marks & fold guides
   11. Cards printed, laminated, and status set to -> "Printed"
 ```
 
 ---
 
-## 7. Verification & Build Integrity
+## 8. Verification & Build Integrity
 
 The codebase is strictly validated with automated TypeScript builds:
-- Command: `npx vite build`
+- Command: `npm run build` (`tsc -b && vite build`)
 - Target: ES2020 / Production Bundle
 - Status: **Exit Code 0 (Zero Errors)**
 - Bundle Chunk: Clean distribution in `/dist` directory
+- Change Tracking: Maintained in `AI_TRACKER.md` on every feature update.
