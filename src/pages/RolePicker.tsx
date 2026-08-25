@@ -92,7 +92,7 @@ export default function RolePicker() {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row antialiased select-none font-sans">
       {/* ===== LEFT SIDE — LOGIN FORM ===== */}
-      <div className="w-full lg:w-[45%] bg-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between overflow-y-auto">
+      <main id="main-content" className="w-full lg:w-[45%] bg-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between overflow-y-auto">
         {/* Logo */}
         <div className="flex items-center">
           <img
@@ -116,9 +116,9 @@ export default function RolePicker() {
 
           {/* Role Selector */}
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block font-mono">
               Select Role
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               {ROLES.map(r => {
                 const isSelected = selectedRole === r.role;
@@ -137,7 +137,7 @@ export default function RolePicker() {
                       {r.renderIcon()}
                       <span className="text-xs font-bold text-slate-800">{r.title}</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 truncate pl-7">{r.desc}</p>
+                    <p className="text-[10px] text-slate-500 mt-1 truncate pl-7">{r.desc}</p>
                   </button>
                 );
               })}
@@ -147,8 +147,10 @@ export default function RolePicker() {
           {/* Email + Password */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Email Address</label>
+              <label htmlFor="login-email-input" className="text-xs font-semibold text-slate-700 block mb-1.5">Email Address</label>
               <input
+                id="login-email-input"
+                name="email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -159,9 +161,11 @@ export default function RolePicker() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Password</label>
+              <label htmlFor="login-password-input" className="text-xs font-semibold text-slate-700 block mb-1.5">Password</label>
               <div className="relative">
                 <input
+                  id="login-password-input"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -171,9 +175,9 @@ export default function RolePicker() {
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                 >
                   {showPassword ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,8 +195,10 @@ export default function RolePicker() {
 
             {/* Remember + Forgot */}
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium">
+              <label htmlFor="remember-me-checkbox" className="flex items-center gap-2 cursor-pointer text-slate-600 font-medium">
                 <input
+                  id="remember-me-checkbox"
+                  name="rememberMe"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
@@ -203,7 +209,7 @@ export default function RolePicker() {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(true)}
-                className="font-medium text-slate-400 hover:text-[#84a92c] transition-colors"
+                className="font-medium text-slate-500 hover:text-[#84a92c] transition-colors cursor-pointer"
               >
                 Forgot password?
               </button>
@@ -223,10 +229,10 @@ export default function RolePicker() {
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+        <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-500">
           <span>© 2026 SiliconLabs Technologies</span>
         </div>
-      </div>
+      </main>
 
       {/* ===== RIGHT SIDE — BRAND PANEL ===== */}
       <div className="hidden lg:flex lg:w-[55%] bg-[#080c10] p-12 xl:p-16 text-white relative overflow-hidden flex-col justify-between">

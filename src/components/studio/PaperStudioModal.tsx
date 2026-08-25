@@ -355,8 +355,10 @@ export default function PaperStudioModal({
         <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-2xl">
           {/* Paper Size Selector */}
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-500 uppercase tracking-wider font-mono text-[10px]">Paper:</span>
+            <label htmlFor="paper-preset-select" className="font-bold text-slate-700 uppercase tracking-wider font-mono text-[10px]">Paper:</label>
             <select
+              id="paper-preset-select"
+              name="selectedPreset"
               value={selectedPreset}
               onChange={e => handlePresetSelect(e.target.value)}
               className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#198754]"
@@ -370,6 +372,9 @@ export default function PaperStudioModal({
             {selectedPreset === 'custom' && (
               <div className="flex items-center gap-1 font-mono text-[11px]">
                 <input
+                  id="paper-width-input"
+                  name="paperWidthMm"
+                  aria-label="Paper width in millimeters"
                   type="number"
                   value={paperWidthMm}
                   onChange={e => setPaperWidthMm(Number(e.target.value))}
@@ -377,6 +382,9 @@ export default function PaperStudioModal({
                 />
                 <span>×</span>
                 <input
+                  id="paper-height-input"
+                  name="paperHeightMm"
+                  aria-label="Paper height in millimeters"
                   type="number"
                   value={paperHeightMm}
                   onChange={e => setPaperHeightMm(Number(e.target.value))}
@@ -391,7 +399,7 @@ export default function PaperStudioModal({
               <button
                 onClick={() => setOrientation('portrait')}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  orientation === 'portrait' ? 'bg-[#198754] text-white' : 'text-slate-500 hover:text-slate-900'
+                  orientation === 'portrait' ? 'bg-[#198754] text-white' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 Portrait
@@ -399,7 +407,7 @@ export default function PaperStudioModal({
               <button
                 onClick={() => setOrientation('landscape')}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  orientation === 'landscape' ? 'bg-[#198754] text-white' : 'text-slate-500 hover:text-slate-900'
+                  orientation === 'landscape' ? 'bg-[#198754] text-white' : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
                 Landscape
@@ -409,8 +417,10 @@ export default function PaperStudioModal({
 
           {/* Card Size Selector (CR80 Standard Default & Custom) */}
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-500 uppercase tracking-wider font-mono text-[10px]">Card Size:</span>
+            <label htmlFor="paper-card-size-select" className="font-bold text-slate-700 uppercase tracking-wider font-mono text-[10px]">Card Size:</label>
             <select
+              id="paper-card-size-select"
+              name="cardSizePreset"
               value={cardSizePreset}
               onChange={e => handleCardSizeChange(e.target.value as any)}
               className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 focus:outline-none focus:border-[#198754] font-mono"
@@ -425,6 +435,9 @@ export default function PaperStudioModal({
             {/* Custom card dimensions if custom or to fine-tune */}
             <div className="flex items-center gap-1 font-mono text-[11px]">
               <input
+                id="paper-custom-card-width"
+                name="cardWidthMm"
+                aria-label="Card width in millimeters"
                 type="number"
                 step="0.1"
                 min="30"
@@ -439,6 +452,9 @@ export default function PaperStudioModal({
               />
               <span>×</span>
               <input
+                id="paper-custom-card-height"
+                name="cardHeightMm"
+                aria-label="Card height in millimeters"
                 type="number"
                 step="0.1"
                 min="30"

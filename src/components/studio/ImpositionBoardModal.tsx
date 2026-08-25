@@ -209,8 +209,10 @@ export default function ImpositionBoardModal({
           </div>
 
           {/* Options: Crop marks toggle */}
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+          <label htmlFor="crop-marks-modal-toggle" className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
             <input
+              id="crop-marks-modal-toggle"
+              name="showCropMarks"
               type="checkbox"
               checked={showCropMarks}
               onChange={e => setShowCropMarks(e.target.checked)}
@@ -223,10 +225,10 @@ export default function ImpositionBoardModal({
         {/* Interactive A4 Sheet Visual Board */}
         <div className="p-6 bg-slate-100 border border-slate-300 rounded-2xl flex flex-col items-center">
           <div className="text-center mb-3">
-            <p className="text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
+            <p className="text-[11px] font-mono font-bold text-slate-700 uppercase tracking-wider">
               A4 Sheet Preview (2 Columns × 4 Rows = 8 Cards)
             </p>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-600">
               Click any slot to switch Front/Back or assign a different employee/student.
             </p>
           </div>
@@ -234,9 +236,9 @@ export default function ImpositionBoardModal({
           {/* Simulated A4 Paper (Aspect Ratio ~1:1.414) */}
           <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-300 p-6 space-y-4">
             {/* Header guide */}
-            <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 border-b border-dashed border-slate-200 pb-2">
+            <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 border-b border-dashed border-slate-200 pb-2">
               <span className="font-bold text-emerald-700">COLUMN 1 (LEFT ROW)</span>
-              <span className="inline-flex items-center gap-1 text-slate-400 font-sans">
+              <span className="inline-flex items-center gap-1 text-slate-500 font-sans">
                 <Scissors className="w-3 h-3 text-slate-400" />
                 <span>Center Fold & Cut Axis</span>
               </span>
@@ -289,7 +291,12 @@ export default function ImpositionBoardModal({
 
                     {/* Person Selector */}
                     <div className="space-y-1">
+                      <label htmlFor={`slot-person-select-${idx}`} className="sr-only">
+                        Select person for slot {idx + 1}
+                      </label>
                       <select
+                        id={`slot-person-select-${idx}`}
+                        name={`slotPerson_${idx}`}
                         value={slot.person.idNumber}
                         onChange={e => {
                           const p = people.find(item => item.idNumber === e.target.value);

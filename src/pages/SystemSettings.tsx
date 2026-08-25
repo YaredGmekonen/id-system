@@ -212,7 +212,7 @@ export default function SystemSettings() {
     >
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header
           className="h-14 sm:h-16 pl-14 pr-4 sm:px-8 border-b flex items-center justify-between z-20 flex-shrink-0"
@@ -229,7 +229,7 @@ export default function SystemSettings() {
             </h1>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-500 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-300 flex-shrink-0">
             <span>PWA Enabled • Offline-First</span>
           </div>
         </header>
@@ -355,16 +355,18 @@ export default function SystemSettings() {
                 className="p-6 rounded-2xl border space-y-4 shadow-xs"
                 style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
               >
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   Credential Issuance Authority
-                </h3>
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="org-name-input" className="text-xs font-semibold block mb-1 text-slate-300">
                       Organization Name
                     </label>
                     <input
+                      id="org-name-input"
+                      name="orgName"
                       type="text"
                       value={orgName}
                       onChange={e => setOrgName(e.target.value)}
@@ -378,10 +380,12 @@ export default function SystemSettings() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="license-code-input" className="text-xs font-semibold block mb-1 text-slate-300">
                       Licensing / Enclave Code
                     </label>
                     <input
+                      id="license-code-input"
+                      name="licenseCode"
                       type="text"
                       value={licenseCode}
                       onChange={e => setLicenseCode(e.target.value)}
@@ -396,10 +400,12 @@ export default function SystemSettings() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                  <label htmlFor="hq-address-input" className="text-xs font-semibold block mb-1 text-slate-300">
                     Headquarters / Official Address
                   </label>
                   <input
+                    id="hq-address-input"
+                    name="hqAddress"
                     type="text"
                     value={hqAddress}
                     onChange={e => setHqAddress(e.target.value)}
@@ -414,10 +420,12 @@ export default function SystemSettings() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="contact-phone-input" className="text-xs font-semibold block mb-1 text-slate-300">
                       Security Hotline Phone
                     </label>
                     <input
+                      id="contact-phone-input"
+                      name="contactPhone"
                       type="text"
                       value={contactPhone}
                       onChange={e => setContactPhone(e.target.value)}
@@ -431,10 +439,12 @@ export default function SystemSettings() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="security-email-input" className="text-xs font-semibold block mb-1 text-slate-300">
                       Security Operations Email
                     </label>
                     <input
+                      id="security-email-input"
+                      name="securityEmail"
                       type="email"
                       value={securityEmail}
                       onChange={e => setSecurityEmail(e.target.value)}
@@ -464,16 +474,18 @@ export default function SystemSettings() {
                 className="p-6 rounded-2xl border space-y-4 shadow-xs"
                 style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
               >
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   Default Print Sheet & Imposition Parameters
-                </h3>
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="default-paper-size-select" className="text-xs font-semibold block mb-1 text-slate-300">
                       Default Paper Format
                     </label>
                     <select
+                      id="default-paper-size-select"
+                      name="defaultPaperSize"
                       value={defaultPaperSize}
                       onChange={e => setDefaultPaperSize(e.target.value)}
                       className="w-full text-xs py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -491,10 +503,12 @@ export default function SystemSettings() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="print-dpi-select" className="text-xs font-semibold block mb-1 text-slate-300">
                       Vector Output DPI
                     </label>
                     <select
+                      id="print-dpi-select"
+                      name="printDpi"
                       value={printDpi}
                       onChange={e => setPrintDpi(e.target.value)}
                       className="w-full text-xs py-2 px-3 rounded-xl border font-mono focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -510,10 +524,12 @@ export default function SystemSettings() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="bleed-margin-input" className="text-xs font-semibold block mb-1 text-slate-300">
                       Bleed Safe Margin (mm)
                     </label>
                     <input
+                      id="bleed-margin-input"
+                      name="bleedMargin"
                       type="number"
                       step="0.5"
                       value={bleedMarginMm}
@@ -529,8 +545,10 @@ export default function SystemSettings() {
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer font-medium">
+                  <label htmlFor="crop-marks-toggle" className="flex items-center gap-2 cursor-pointer font-medium text-slate-200">
                     <input
+                      id="crop-marks-toggle"
+                      name="enableCropMarks"
                       type="checkbox"
                       checked={enableCropMarks}
                       onChange={e => setEnableCropMarks(e.target.checked)}
@@ -539,8 +557,10 @@ export default function SystemSettings() {
                     <span>Automatically draw corner crop marks and cut crosshairs on PDF sheets</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer font-medium">
+                  <label htmlFor="fold-line-toggle" className="flex items-center gap-2 cursor-pointer font-medium text-slate-200">
                     <input
+                      id="fold-line-toggle"
+                      name="enableFoldLine"
                       type="checkbox"
                       checked={enableFoldLine}
                       onChange={e => setEnableFoldLine(e.target.checked)}
@@ -566,16 +586,18 @@ export default function SystemSettings() {
                 className="p-6 rounded-2xl border space-y-4 shadow-xs"
                 style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
               >
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   Field Registrar & Intake Configurations
-                </h3>
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="default-category-select" className="text-xs font-semibold block mb-1 text-slate-300">
                       Default Registration Category
                     </label>
                     <select
+                      id="default-category-select"
+                      name="defaultCategory"
                       value={defaultCategory}
                       onChange={e => setDefaultCategory(e.target.value)}
                       className="w-full text-xs py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -589,10 +611,12 @@ export default function SystemSettings() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="camera-facing-select" className="text-xs font-semibold block mb-1 text-slate-300">
                       Webcam Camera Mode
                     </label>
                     <select
+                      id="camera-facing-select"
+                      name="cameraFacing"
                       value={cameraFacing}
                       onChange={e => setCameraFacing(e.target.value)}
                       className="w-full text-xs py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -604,8 +628,10 @@ export default function SystemSettings() {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-2 cursor-pointer font-medium pt-2">
+                <label htmlFor="auto-ocr-toggle" className="flex items-center gap-2 cursor-pointer font-medium pt-2 text-slate-200">
                   <input
+                    id="auto-ocr-toggle"
+                    name="autoOcrEnhance"
                     type="checkbox"
                     checked={autoOcrEnhance}
                     onChange={e => setAutoOcrEnhance(e.target.checked)}
@@ -630,16 +656,18 @@ export default function SystemSettings() {
                 className="p-6 rounded-2xl border space-y-4 shadow-xs"
                 style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
               >
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   Canvas Vector Studio Defaults
-                </h3>
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    <label htmlFor="default-font-select" className="text-xs font-semibold block mb-1 text-slate-300">
                       Default Typography
                     </label>
                     <select
+                      id="default-font-select"
+                      name="defaultFont"
                       value={defaultFontFamily}
                       onChange={e => setDefaultFontFamily(e.target.value)}
                       className="w-full text-xs py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -653,8 +681,10 @@ export default function SystemSettings() {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-2 cursor-pointer font-medium pt-2">
+                <label htmlFor="grid-snap-toggle" className="flex items-center gap-2 cursor-pointer font-medium pt-2 text-slate-200">
                   <input
+                    id="grid-snap-toggle"
+                    name="enableGridSnap"
                     type="checkbox"
                     checked={enableGridSnap}
                     onChange={e => setEnableGridSnap(e.target.checked)}
@@ -679,35 +709,35 @@ export default function SystemSettings() {
                 className="p-6 rounded-2xl border space-y-4 shadow-xs"
                 style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
               >
-                <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                   Offline Enclave Storage Metrics
-                </h3>
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
-                    <p className="text-[10px] uppercase font-mono text-slate-500 font-bold">Total Personnel</p>
+                    <p className="text-[10px] uppercase font-mono text-slate-400 font-bold">Total Personnel</p>
                     <p className="text-2xl font-black mt-1" style={{ color: 'var(--text-primary)' }}>{dbPeople.length}</p>
-                    <p className="text-[10px] text-emerald-500 font-mono mt-0.5">Stored Offline in Browser</p>
+                    <p className="text-[10px] text-emerald-400 font-mono mt-0.5">Stored Offline in Browser</p>
                   </div>
 
                   <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
-                    <p className="text-[10px] uppercase font-mono text-slate-500 font-bold">Custom Templates</p>
+                    <p className="text-[10px] uppercase font-mono text-slate-400 font-bold">Custom Templates</p>
                     <p className="text-2xl font-black mt-1" style={{ color: 'var(--text-primary)' }}>{dbTemplates.length}</p>
-                    <p className="text-[10px] text-blue-500 font-mono mt-0.5">Vector Canvas Designs</p>
+                    <p className="text-[10px] text-blue-400 font-mono mt-0.5">Vector Canvas Designs</p>
                   </div>
 
                   <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
-                    <p className="text-[10px] uppercase font-mono text-slate-500 font-bold">Database Engine</p>
+                    <p className="text-[10px] uppercase font-mono text-slate-400 font-bold">Database Engine</p>
                     <p className="text-sm font-black mt-1 text-[#84a92c]">Dexie IndexedDB</p>
-                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">Client Encrypted</p>
+                    <p className="text-[10px] text-slate-300 font-mono mt-0.5">Client Encrypted</p>
                   </div>
                 </div>
 
                 {/* Backup & Restore Buttons */}
                 <div className="pt-4 border-t space-y-3" style={{ borderColor: 'var(--border-primary)' }}>
-                  <h4 className="font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
+                  <h3 className="font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
                     Data Portability & Backup
-                  </h4>
+                  </h3>
 
                   <div className="flex flex-wrap items-center gap-3">
                     <button
@@ -720,30 +750,30 @@ export default function SystemSettings() {
                       <span>Download Enclave Backup (.json)</span>
                     </button>
 
-                    <label className="px-5 py-2.5 border font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2"
+                    <label htmlFor="restore-file-input" className="px-5 py-2.5 border font-bold rounded-xl text-xs transition-all cursor-pointer flex items-center gap-2 text-slate-200"
                       style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                     >
                       <svg className="w-4 h-4 text-[#84a92c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                       </svg>
                       <span>Restore Backup File</span>
-                      <input type="file" accept=".json" onChange={handleRestoreBackup} className="hidden" />
+                      <input id="restore-file-input" name="restoreBackupFile" type="file" accept=".json" onChange={handleRestoreBackup} className="sr-only" aria-label="Upload JSON backup file to restore database" />
                     </label>
                   </div>
                 </div>
 
                 {/* Danger Zone */}
                 <div className="pt-4 border-t space-y-2" style={{ borderColor: 'var(--border-primary)' }}>
-                  <h4 className="font-bold text-xs text-red-500">
+                  <h3 className="font-bold text-xs text-red-500">
                     Danger Zone
-                  </h4>
-                  <p className="text-xs text-slate-500">
+                  </h3>
+                  <p className="text-xs text-slate-400">
                     Resetting will clear all data and restore the database to factory defaults.
                   </p>
                   <button
                     onClick={handleResetDatabase}
                     disabled={isResetting}
-                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                   >
                     {isResetting ? 'Resetting...' : 'Reset Database to Default Clean State'}
                   </button>
@@ -758,17 +788,17 @@ export default function SystemSettings() {
               className="p-6 rounded-2xl border space-y-4 shadow-xs"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
-              <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+              <h2 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                 Active Session & Identity
-              </h3>
+              </h2>
 
               <div className="flex items-center gap-4 p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
                 <div className="w-12 h-12 rounded-full bg-[#84a92c]/20 text-[#84a92c] font-black flex items-center justify-center text-base border border-[#84a92c]">
                   {currentUser?.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AK'}
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{currentUser?.name || 'Abenezer Kaleab'}</h4>
-                  <p className="text-xs text-slate-500">{currentUser?.email || 'admin@siliconlabs.internal'}</p>
+                  <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{currentUser?.name || 'Abenezer Kaleab'}</h3>
+                  <p className="text-xs text-slate-400">{currentUser?.email || 'admin@siliconlabs.internal'}</p>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#84a92c]/15 text-[#84a92c] border border-[#84a92c]/30 uppercase">
                     Role: {role}
                   </span>
@@ -781,7 +811,7 @@ export default function SystemSettings() {
                     logout();
                     window.location.href = '/';
                   }}
-                  className="px-5 py-2 rounded-xl bg-red-500 text-white font-bold text-xs shadow-xs hover:bg-red-600 transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-red-600 text-white font-bold text-xs shadow-xs hover:bg-red-700 transition-all cursor-pointer"
                 >
                   Sign Out of Session
                 </button>
@@ -789,7 +819,7 @@ export default function SystemSettings() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Confirmation Modal */}
       {confirmModal.isOpen && (

@@ -797,10 +797,12 @@ export default function PaperPrintStudio() {
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
             >
               <div>
-                <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                <label htmlFor="folder-batch-select" className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-300">
                   SOURCE FOLDER BATCH
                 </label>
                 <select
+                  id="folder-batch-select"
+                  name="selectedFolder"
                   value={selectedFolder}
                   onChange={e => {
                     setSelectedFolder(e.target.value);
@@ -830,7 +832,7 @@ export default function PaperPrintStudio() {
                     {selectedIds.size > 0 ? `${selectedIds.size} in View` : `${filteredPeople.length} in View`}
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-slate-300">
                   Automatically spreads selected personnel across multiple sheets (4 duplex pairs/sheet).
                 </p>
                 <button
@@ -847,7 +849,7 @@ export default function PaperPrintStudio() {
 
               {/* Header with count & Select All */}
               <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'var(--border-primary)' }}>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-300">
                   {selectedIds.size > 0 ? `${selectedIds.size} selected` : `${filteredPeople.length} personnel`}
                 </span>
                 <button
@@ -860,8 +862,11 @@ export default function PaperPrintStudio() {
 
               {/* Search Bar */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
+                <label htmlFor="roster-search-input" className="sr-only">Search personnel by name or ID</label>
                 <input
+                  id="roster-search-input"
+                  name="searchQuery"
                   type="text"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
@@ -1205,10 +1210,12 @@ export default function PaperPrintStudio() {
 
                 {/* Preset Selector Dropdown */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                  <label htmlFor="card-preset-select" className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-300">
                     Standard Card Format / Preset
                   </label>
                   <select
+                    id="card-preset-select"
+                    name="cardSizePreset"
                     value={cardSizePreset}
                     onChange={e => handleCardSizeChange(e.target.value as any)}
                     className="w-full text-xs py-2 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -1251,11 +1258,13 @@ export default function PaperPrintStudio() {
                 {/* Precision Width & Height Inputs */}
                 <div className="grid grid-cols-2 gap-2 pt-1 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                   <div>
-                    <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                    <label htmlFor="card-width-input" className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-300">
                       Card Width (mm)
                     </label>
                     <div className="relative">
                       <input
+                        id="card-width-input"
+                        name="cardWidthMm"
                         type="number"
                         step="0.1"
                         min="30"
@@ -1273,18 +1282,20 @@ export default function PaperPrintStudio() {
                           color: 'var(--text-primary)',
                         }}
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 pointer-events-none">
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-300 pointer-events-none">
                         mm
                       </span>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                    <label htmlFor="card-height-input" className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-300">
                       Card Height (mm)
                     </label>
                     <div className="relative">
                       <input
+                        id="card-height-input"
+                        name="cardHeightMm"
                         type="number"
                         step="0.1"
                         min="30"
@@ -1302,7 +1313,7 @@ export default function PaperPrintStudio() {
                           color: 'var(--text-primary)',
                         }}
                       />
-                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 pointer-events-none">
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-300 pointer-events-none">
                         mm
                       </span>
                     </div>
@@ -1311,13 +1322,13 @@ export default function PaperPrintStudio() {
 
                 {/* Real-time Dimensions Calculation Banner */}
                 <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-300">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-200">
                     <span>Dimensions (Inches):</span>
                     <span className="font-bold text-white">
                       {(cardWidthMm / 25.4).toFixed(3)}" × {(cardHeightMm / 25.4).toFixed(3)}"
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-300">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-200">
                     <span>300 DPI Resolution:</span>
                     <span className="font-bold text-[#84a92c]">
                       {Math.round((cardWidthMm / 25.4) * 300)} × {Math.round((cardHeightMm / 25.4) * 300)} px
@@ -1343,10 +1354,12 @@ export default function PaperPrintStudio() {
 
                 {/* Paper Preset */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-400">
+                  <label htmlFor="sheet-format-select" className="text-[10px] font-bold uppercase font-mono tracking-wider block mb-1 text-slate-300">
                     Physical Sheet Format
                   </label>
                   <select
+                    id="sheet-format-select"
+                    name="paperFormat"
                     value={paperFormat}
                     onChange={e => {
                       const fmt = e.target.value as 'Custom' | 'A4' | 'A3' | 'Letter' | 'Legal' | 'Tabloid';

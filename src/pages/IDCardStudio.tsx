@@ -749,8 +749,10 @@ export default function IDCardStudio() {
                 {dataEditorOpen && (
                   <form onSubmit={handleSaveDataChanges} className="p-3 pt-0 space-y-2.5 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Full Name</label>
+                      <label htmlFor="studio-edit-fullname" className="text-[10px] font-bold text-slate-400 block mb-0.5">Full Name</label>
                       <input
+                        id="studio-edit-fullname"
+                        name="editFullName"
                         type="text"
                         value={editFullName}
                         onChange={e => setEditFullName(e.target.value)}
@@ -761,8 +763,10 @@ export default function IDCardStudio() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">ID Number</label>
+                        <label htmlFor="studio-edit-idnum" className="text-[10px] font-bold text-slate-400 block mb-0.5">ID Number</label>
                         <input
+                          id="studio-edit-idnum"
+                          name="editIdNumber"
                           type="text"
                           value={editIdNumber}
                           onChange={e => setEditIdNumber(e.target.value)}
@@ -771,8 +775,10 @@ export default function IDCardStudio() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Gender</label>
+                        <label htmlFor="studio-edit-gender" className="text-[10px] font-bold text-slate-400 block mb-0.5">Gender</label>
                         <select
+                          id="studio-edit-gender"
+                          name="editGender"
                           value={editGender}
                           onChange={e => setEditGender(e.target.value)}
                           className="w-full py-1.5 px-2 rounded-xl border text-xs focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -785,8 +791,10 @@ export default function IDCardStudio() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-slate-400 block mb-0.5">School / Institution</label>
+                      <label htmlFor="studio-edit-school" className="text-[10px] font-bold text-slate-400 block mb-0.5">School / Institution</label>
                       <input
+                        id="studio-edit-school"
+                        name="editSchoolName"
                         type="text"
                         value={editSchoolName}
                         onChange={e => setEditSchoolName(e.target.value)}
@@ -797,8 +805,10 @@ export default function IDCardStudio() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Grade / Dept</label>
+                        <label htmlFor="studio-edit-grade" className="text-[10px] font-bold text-slate-400 block mb-0.5">Grade / Dept</label>
                         <input
+                          id="studio-edit-grade"
+                          name="editGrade"
                           type="text"
                           value={editGrade}
                           onChange={e => setEditGrade(e.target.value)}
@@ -807,8 +817,10 @@ export default function IDCardStudio() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Contact No</label>
+                        <label htmlFor="studio-edit-phone" className="text-[10px] font-bold text-slate-400 block mb-0.5">Contact No</label>
                         <input
+                          id="studio-edit-phone"
+                          name="editPhone"
                           type="text"
                           value={editPhone}
                           onChange={e => setEditPhone(e.target.value)}

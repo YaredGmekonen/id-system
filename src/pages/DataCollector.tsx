@@ -6,7 +6,7 @@ import PeopleList from '../components/collector/PeopleList';
 import Modal from '../components/shared/Modal';
 import { useBatchFolders, addBatchFolder, updateBatchFolder, deleteBatchFolder } from '../db/hooks';
 import type { BatchFolder } from '../db/database';
-import { FolderKanban, AlertTriangle } from 'lucide-react';
+import { FolderKanban, AlertTriangle, UserPlus } from 'lucide-react';
 
 export default function DataCollector() {
   const [collectorMode, setCollectorMode] = useState<'scanner' | 'manual'>('manual');
@@ -96,7 +96,7 @@ export default function DataCollector() {
     >
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Header */}
         <header
           className="pl-14 pr-4 sm:px-8 pt-4 pb-3 border-b flex-shrink-0"
@@ -119,23 +119,27 @@ export default function DataCollector() {
             >
               <button
                 onClick={() => setCollectorMode('manual')}
-                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   collectorMode === 'manual' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
-                style={{ color: collectorMode === 'manual' ? '#ffffff' : 'var(--text-secondary)' }}
+                style={{
+                  backgroundColor: collectorMode === 'manual' ? '#198754' : 'transparent',
+                  color: collectorMode === 'manual' ? '#ffffff' : 'var(--text-secondary)',
+                }}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                </svg>
-                <span>Manual Form & Camera</span>
+                <UserPlus className="w-4 h-4" />
+                <span>Single Intake</span>
               </button>
 
               <button
                 onClick={() => setCollectorMode('scanner')}
-                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   collectorMode === 'scanner' ? 'bg-[#198754] text-white shadow-xs' : 'hover:opacity-80'
                 }`}
-                style={{ color: collectorMode === 'scanner' ? '#ffffff' : 'var(--text-secondary)' }}
+                style={{
+                  backgroundColor: collectorMode === 'scanner' ? '#198754' : 'transparent',
+                  color: collectorMode === 'scanner' ? '#ffffff' : 'var(--text-secondary)',
+                }}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5z" />
@@ -152,12 +156,14 @@ export default function DataCollector() {
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-[10px] font-bold uppercase font-mono tracking-wider flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+            <label htmlFor="active-collector-batch-folder" className="text-[10px] font-bold uppercase font-mono tracking-wider flex-shrink-0 text-slate-300">
               Active Batch Folder:
             </label>
 
             {/* Folder Selector */}
             <select
+              id="active-collector-batch-folder"
+              name="activeBatchFolder"
               value={activeFolderId ?? ''}
               onChange={e => setActiveFolderId(e.target.value ? Number(e.target.value) : undefined)}
               className="text-xs py-1.5 px-3 rounded-xl border font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer min-w-[200px]"
@@ -196,6 +202,9 @@ export default function DataCollector() {
 
                 {/* Status Dropdown */}
                 <select
+                  id="collector-folder-status-select"
+                  name="folderStatus"
+                  aria-label="Batch folder status"
                   value={activeFolder.status}
                   onChange={e => handleSetFolderStatus(activeFolder.id!, e.target.value as BatchFolder['status'])}
                   className="text-[10px] py-1 px-2 rounded-lg border font-bold focus:outline-none cursor-pointer"
@@ -225,8 +234,10 @@ export default function DataCollector() {
           {showCreateFolder && (
             <form onSubmit={handleCreateFolder} className="mt-3 flex items-end gap-3 p-3 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
               <div className="flex-1">
-                <label className="text-[10px] font-bold block mb-1" style={{ color: 'var(--text-muted)' }}>Folder Name *</label>
+                <label htmlFor="collector-inline-folder-name" className="text-[10px] font-bold block mb-1 text-slate-300">Folder Name *</label>
                 <input
+                  id="collector-inline-folder-name"
+                  name="newFolderName"
                   type="text"
                   required
                   autoFocus
@@ -238,8 +249,10 @@ export default function DataCollector() {
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold block mb-1" style={{ color: 'var(--text-muted)' }}>Source Type</label>
+                <label htmlFor="collector-inline-source-type" className="text-[10px] font-bold block mb-1 text-slate-300">Source Type</label>
                 <select
+                  id="collector-inline-source-type"
+                  name="newFolderSource"
                   value={newFolderSource}
                   onChange={e => setNewFolderSource(e.target.value as any)}
                   className="text-xs py-1.5 px-3 rounded-xl border focus:outline-none cursor-pointer"
@@ -330,7 +343,7 @@ export default function DataCollector() {
             <PeopleList key={refreshTrigger} />
           </div>
         </div>
-      </div>
+      </main>
 
       {/* In-App Confirmation Modal */}
       {confirmModal.isOpen && (

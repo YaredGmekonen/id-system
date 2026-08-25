@@ -9,7 +9,34 @@
 
 ## 📋 Change Log & Milestones
 
-### [2026-08-25] — PWA Service Worker Hardening & Development Collision Fix
+### [2026-08-25] — Accessibility (A11y / axe / WCAG 2.1 AA) Full Compliance Overhaul
+- **Commit:** `pending`
+- **Type:** Accessibility & Compliance (Axe / WCAG 2.1 AA)
+- **Affected Files:**
+  - `index.html`
+  - `src/pages/SystemSettings.tsx`
+  - `src/pages/OverviewDashboard.tsx`
+  - `src/pages/PaperPrintStudio.tsx`
+  - `src/pages/DataCollector.tsx`
+  - `src/pages/ArchiveDigitizer.tsx`
+  - `src/pages/Designer.tsx`
+  - `src/pages/IDVerify.tsx`
+  - `src/pages/RolePicker.tsx`
+  - `src/components/collector/RegistrationForm.tsx`
+  - `src/components/admin/OrderQueueTable.tsx`
+  - `src/components/studio/ImpositionBoardModal.tsx`
+  - `src/components/studio/PaperStudioModal.tsx`
+- **Audit Findings & Resolving Actions:**
+  1. **Zooming & Scaling Enabled (`index.html`):** Removed `maximum-scale=1.0, user-scalable=no` from `<meta name="viewport">` allowing assistive scaling and pinch-to-zoom (WCAG 1.4.4).
+  2. **Semantic Main Landmark:** Added `<main id="main-content">` landmark across all page roots (`SystemSettings`, `OverviewDashboard`, `PaperPrintStudio`, `DataCollector`, `ArchiveDigitizer`, `Designer`, `IDVerify`, `RolePicker`) resolving document landmark hierarchy requirements.
+  3. **Explicit Form Labels & IDs (`id` + `htmlFor`):**
+     - Linked all form inputs with their respective labels across `SystemSettings` (Authority, Licensing, Address, Hotline, Email, Paper Format, DPI, Bleed), `RegistrationForm` (First Name, Last Name, School, Grade, Section, Student ID, Phone, DOB, Blood Group), `PaperPrintStudio` (Batch selector, Search, Card preset, Width, Height, Sheet format), `RolePicker` (Email, Password, Remember me), and interactive modals.
+     - Added descriptive `aria-label` tags for icon-only action buttons and search bars.
+  4. **Heading Level Progression:** Corrected heading tags (`h1` -> `h2` -> `h3`) across all tabbed views and modal containers, eliminating skipped heading levels.
+  5. **WCAG 2.1 AA Color Contrast Ratios:** Upgraded muted low-contrast text classes (`text-slate-500` / `#64748b`) on dark theme backgrounds to high-contrast tokens (`text-slate-400`, `text-slate-300`, `text-slate-200`, and `#84a92c`) ensuring minimum contrast ratios exceed 4.5:1 for normal text and 3.0:1 for large/bold text.
+- **Verification:** Built with `tsc -b && vite build`, zero bundle errors, axe accessibility rules satisfied.
+
+---
 - **Commit:** `26c06c3`
 - **Type:** Bug Fix & Stability
 - **Affected Files:**

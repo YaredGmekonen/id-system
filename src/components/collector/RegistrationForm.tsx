@@ -256,10 +256,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
           {/* First Name */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-first-name" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               First Name *
             </label>
             <input
+              id="reg-first-name"
+              name="firstName"
               type="text"
               required
               value={firstName}
@@ -272,10 +274,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Last Name */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-last-name" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Last Name / Grandfather *
             </label>
             <input
+              id="reg-last-name"
+              name="lastName"
               type="text"
               required
               value={lastName}
@@ -288,9 +292,9 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Gender */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <span className="text-[11px] font-bold block" style={{ color: 'var(--text-secondary)' }}>
               Gender
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -325,10 +329,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* School Name */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-school-name" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               School Name
             </label>
             <input
+              id="reg-school-name"
+              name="schoolName"
               type="text"
               value={schoolName}
               onChange={e => setSchoolName(e.target.value)}
@@ -340,10 +346,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Grade / Class */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-grade-select" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Grade / Class
             </label>
             <select
+              id="reg-grade-select"
+              name="grade"
               value={grade}
               onChange={e => setGrade(e.target.value)}
               className="w-full py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -362,10 +370,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Section / Stream */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-section" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Section / Room
             </label>
             <input
+              id="reg-section"
+              name="section"
               type="text"
               value={section}
               onChange={e => setSection(e.target.value)}
@@ -378,7 +388,7 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
           {/* Student ID / Roll Number */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="reg-id-number" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
                 Student ID / Badge Number
               </label>
               <button
@@ -390,6 +400,8 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
               </button>
             </div>
             <input
+              id="reg-id-number"
+              name="idNumber"
               type="text"
               value={idNumber}
               onChange={e => setIdNumber(e.target.value)}
@@ -400,10 +412,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Contact / Phone */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-phone" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Contact Number / Guardian Phone
             </label>
             <input
+              id="reg-phone"
+              name="phone"
               type="text"
               value={phone}
               onChange={e => setPhone(e.target.value)}
@@ -415,10 +429,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Date of Birth / Admission */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-dob" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Date of Birth / Admission Date
             </label>
             <input
+              id="reg-dob"
+              name="dob"
               type="text"
               value={dob}
               onChange={e => setDob(e.target.value)}
@@ -430,10 +446,12 @@ export default function RegistrationForm({ onSuccess, activeFolderId, activeFold
 
           {/* Blood Group */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+            <label htmlFor="reg-blood-group" className="text-[11px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               Blood Group
             </label>
             <select
+              id="reg-blood-group"
+              name="bloodGroup"
               value={bloodGroup}
               onChange={e => setBloodGroup(e.target.value)}
               className="w-full py-2 px-3 rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"

@@ -534,8 +534,10 @@ export default function Designer() {
           <div className="flex items-center gap-2 flex-wrap">
             {/* Card Dimension Presets & Custom Dimensions */}
             <div className="flex items-center gap-1.5 border p-1 rounded-xl" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
-              <span className="text-[10px] font-mono font-bold px-1.5 text-slate-500 uppercase">Card Size:</span>
+              <label htmlFor="designer-card-size-select" className="text-[10px] font-mono font-bold px-1.5 text-slate-300 uppercase">Card Size:</label>
               <select
+                id="designer-card-size-select"
+                name="cardDimensionPreset"
                 value={dimensionPreset}
                 onChange={e => handleDimensionChange(e.target.value)}
                 className="text-xs py-1 px-2 rounded-lg bg-transparent font-medium border-0 focus:outline-none cursor-pointer"
@@ -553,6 +555,9 @@ export default function Designer() {
               {dimensionPreset === 'custom' && (
                 <div className="flex items-center gap-1 pl-1 border-l" style={{ borderColor: 'var(--border-primary)' }}>
                   <input
+                    id="designer-custom-width-px"
+                    name="cardWidthPx"
+                    aria-label="Card width in pixels"
                     type="number"
                     value={cardWidth}
                     onChange={e => setCardWidth(Math.max(200, Number(e.target.value)))}
@@ -560,8 +565,11 @@ export default function Designer() {
                     style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
                     title="Width in pixels (at 300 DPI)"
                   />
-                  <span className="text-[10px] text-slate-500">×</span>
+                  <span className="text-[10px] text-slate-400">×</span>
                   <input
+                    id="designer-custom-height-px"
+                    name="cardHeightPx"
+                    aria-label="Card height in pixels"
                     type="number"
                     value={cardHeight}
                     onChange={e => setCardHeight(Math.max(200, Number(e.target.value)))}
@@ -569,7 +577,7 @@ export default function Designer() {
                     style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
                     title="Height in pixels (at 300 DPI)"
                   />
-                  <span className="text-[10px] text-slate-500 font-mono">px</span>
+                  <span className="text-[10px] text-slate-400 font-mono">px</span>
                 </div>
               )}
             </div>
@@ -757,6 +765,7 @@ export default function Designer() {
 
           {/* Canvas Center */}
           <main
+            id="main-content"
             className={`flex-1 flex-col items-center justify-center overflow-auto p-4 sm:p-6 relative ${
               mobileActiveTab === 'canvas' ? 'flex' : 'hidden lg:flex'
             }`}

@@ -243,7 +243,7 @@ export default function ArchiveDigitizer() {
     >
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Top Header */}
         <header
           className="pl-14 pr-4 sm:px-8 py-3.5 border-b flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
@@ -419,11 +419,13 @@ export default function ArchiveDigitizer() {
                     style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
                   >
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 text-[#84a92c]">
+                      <label htmlFor="scanned-page-upload-input" className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 text-[#84a92c]">
                         <Scan className="w-4 h-4" />
                         <span>Scanned Register Page</span>
                       </label>
                       <input
+                        id="scanned-page-upload-input"
+                        name="scannedPageFile"
                         ref={pageInputRef}
                         type="file"
                         accept="image/*"
@@ -447,7 +449,7 @@ export default function ArchiveDigitizer() {
                       >
                         <Upload className="w-8 h-8 text-slate-500" />
                         <p className="text-xs font-bold text-slate-300">Click or Drag & Drop Document Scan</p>
-                        <p className="text-[10px] text-slate-500">JPG, PNG, WebP up to 25MB</p>
+                        <p className="text-[10px] text-slate-400">JPG, PNG, WebP up to 25MB</p>
                       </div>
                     )}
                   </div>
@@ -460,11 +462,13 @@ export default function ArchiveDigitizer() {
                     style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
                   >
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 text-emerald-500">
+                      <label htmlFor="student-excel-upload-input" className="text-xs font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 text-emerald-500">
                         <FileSpreadsheet className="w-4 h-4" />
                         <span>Student Excel / CSV Roster</span>
                       </label>
                       <input
+                        id="student-excel-upload-input"
+                        name="studentExcelFile"
                         ref={excelInputRef}
                         type="file"
                         accept=".xlsx,.xls,.csv"
@@ -488,7 +492,7 @@ export default function ArchiveDigitizer() {
                       >
                         <FileSpreadsheet className="w-8 h-8 text-slate-500" />
                         <p className="text-xs font-bold text-slate-300">Upload Student Spreadsheet (.xlsx, .csv)</p>
-                        <p className="text-[10px] text-slate-500">Columns: Name, ID, Phone, Sex, Grade, School</p>
+                        <p className="text-[10px] text-slate-400">Columns: Name, ID, Phone, Sex, Grade, School</p>
                       </div>
                     ) : (
                       <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
@@ -607,8 +611,10 @@ export default function ArchiveDigitizer() {
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 w-full text-xs">
                       {/* Name */}
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Full Name</label>
+                        <label htmlFor={`student-name-input-${idx}`} className="text-[10px] font-bold text-slate-300 block mb-0.5">Full Name</label>
                         <input
+                          id={`student-name-input-${idx}`}
+                          name={`studentName_${idx}`}
                           type="text"
                           value={m.student.name}
                           onChange={e => updateStudent(idx, 'name', e.target.value)}
@@ -619,8 +625,10 @@ export default function ArchiveDigitizer() {
 
                       {/* ID Number */}
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Student ID</label>
+                        <label htmlFor={`student-id-input-${idx}`} className="text-[10px] font-bold text-slate-300 block mb-0.5">Student ID</label>
                         <input
+                          id={`student-id-input-${idx}`}
+                          name={`studentId_${idx}`}
                           type="text"
                           value={m.student.studentId}
                           onChange={e => updateStudent(idx, 'studentId', e.target.value)}
@@ -631,8 +639,10 @@ export default function ArchiveDigitizer() {
 
                       {/* Gender */}
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Gender</label>
+                        <label htmlFor={`student-gender-select-${idx}`} className="text-[10px] font-bold text-slate-300 block mb-0.5">Gender</label>
                         <select
+                          id={`student-gender-select-${idx}`}
+                          name={`studentGender_${idx}`}
                           value={m.student.sex}
                           onChange={e => updateStudent(idx, 'sex', e.target.value)}
                           className="w-full py-1.5 px-2.5 rounded-lg border text-xs focus:outline-none focus:border-[#84a92c] cursor-pointer"
@@ -645,8 +655,10 @@ export default function ArchiveDigitizer() {
 
                       {/* School Name / Grade */}
                       <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">School / Grade</label>
+                        <label htmlFor={`student-school-input-${idx}`} className="text-[10px] font-bold text-slate-300 block mb-0.5">School / Grade</label>
                         <input
+                          id={`student-school-input-${idx}`}
+                          name={`studentSchool_${idx}`}
                           type="text"
                           value={m.student.schoolName || m.student.grade}
                           onChange={e => updateStudent(idx, 'schoolName', e.target.value)}
@@ -742,7 +754,7 @@ export default function ArchiveDigitizer() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Floating Toast Notification */}
       {toastMessage && (

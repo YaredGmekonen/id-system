@@ -254,7 +254,7 @@ export default function OverviewDashboard() {
     >
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <main id="main-content" className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* ================= TOP HEADER ================= */}
         <header
           className="pl-14 pr-4 sm:px-8 py-3.5 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 z-20 flex-shrink-0"
@@ -931,7 +931,7 @@ export default function OverviewDashboard() {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Inspect Modal */}
       {inspectModalOpen && selectedPerson && (
@@ -979,32 +979,34 @@ export default function OverviewDashboard() {
             {/* Live Rendered Card Image */}
             <div className="flex items-center justify-center p-4 rounded-2xl bg-black/40 border border-white/10 shadow-inner">
               {inspectCardUrl ? (
-                <div className="relative group max-w-md w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
-                  <img src={inspectCardUrl} alt={`${selectedPerson.fullName} ${inspectFace}`} className="w-full h-auto object-contain rounded-2xl" />
-                </div>
+                <img
+                  src={inspectCardUrl}
+                  alt={`${selectedPerson.fullName} ${inspectFace} face card render`}
+                  className="max-h-[300px] w-auto rounded-xl shadow-2xl border border-white/10"
+                />
               ) : (
-                <div className="w-full h-48 flex items-center justify-center text-slate-400">
-                  <span>Rendering live 300 DPI credential…</span>
+                <div className="h-48 flex items-center justify-center text-slate-500 font-mono text-xs">
+                  Rendering 300 DPI high-definition card asset...
                 </div>
               )}
             </div>
 
-            {/* Person Detail Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-2xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
+            {/* Personnel Metadata Info Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl border" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}>
               <div>
-                <span className="text-[10px] text-slate-500 font-mono block">Full Name</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Full Name</span>
                 <span className="font-bold text-xs truncate block">{selectedPerson.fullName}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 font-mono block">Department</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Department / Class</span>
                 <span className="font-bold text-xs truncate block">{selectedPerson.department || 'N/A'}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 font-mono block">Role / Title</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Role / Title</span>
                 <span className="font-bold text-xs truncate block">{selectedPerson.role || 'N/A'}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 font-mono block">Batch Folder</span>
+                <span className="text-[10px] text-slate-400 font-mono block">Batch Folder</span>
                 <span className="font-bold text-xs truncate block">{selectedPerson.folderName || 'Default Batch'}</span>
               </div>
             </div>
@@ -1060,10 +1062,12 @@ export default function OverviewDashboard() {
         >
           <form onSubmit={handleCreateFolder} className="space-y-3 text-xs">
             <div>
-              <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="new-batch-folder-name" className="font-semibold block mb-1 text-slate-300">
                 Batch Folder Name *
               </label>
               <input
+                id="new-batch-folder-name"
+                name="newFolderName"
                 type="text"
                 required
                 value={newFolderName}
@@ -1079,10 +1083,12 @@ export default function OverviewDashboard() {
             </div>
 
             <div>
-              <label className="font-semibold block mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <label htmlFor="new-batch-source-type" className="font-semibold block mb-1 text-slate-300">
                 Source Intake Type
               </label>
               <select
+                id="new-batch-source-type"
+                name="newFolderSource"
                 value={newFolderSource}
                 onChange={e => setNewFolderSource(e.target.value as any)}
                 className="w-full px-3 py-2 text-xs rounded-xl border focus:outline-none focus:border-[#84a92c] cursor-pointer"

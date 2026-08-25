@@ -146,7 +146,7 @@ export default function IDVerify() {
       </header>
 
       {/* Main Verification Body */}
-      <main className="max-w-md w-full mx-auto my-auto py-6 space-y-5">
+      <main id="main-content" className="max-w-md w-full mx-auto my-auto py-6 space-y-5">
         
         {loading ? (
           <div className="bg-[#0f1318] border border-slate-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
