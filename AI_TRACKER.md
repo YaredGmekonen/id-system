@@ -10,7 +10,7 @@
 ## 📋 Change Log & Milestones
 
 ### [2026-08-25] — Accessibility (A11y / axe / WCAG 2.1 AA) Full Compliance Overhaul
-- **Commit:** `pending`
+- **Commit:** `6ddcb33`
 - **Type:** Accessibility & Compliance (Axe / WCAG 2.1 AA)
 - **Affected Files:**
   - `index.html`
