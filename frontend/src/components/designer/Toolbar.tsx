@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, startTransition } from 'react';
 import { DATA_FIELDS, CARD } from '../../design-tokens';
 import type { CanvasElement, CardTemplate } from '../../db/database';
 import {
@@ -1201,7 +1201,7 @@ export default function Toolbar({
   };
 
   // 6. Dynamic Data Bindings
-  const addDataField = (fieldKey: string, label: string) => {
+  const addDataField = useCallback((fieldKey: string, label: string) => {
     if (fieldKey === '{{photo}}') {
       addPhotoBox();
       return;
@@ -1215,25 +1215,27 @@ export default function Toolbar({
       return;
     }
 
-    onAddElement({
-      id: nextId('df'),
-      type: 'dataField',
-      x: 240,
-      y: 140,
-      text: fieldKey,
-      dataField: fieldKey,
-      fontSize: 20,
-      fontFamily: 'Inter',
-      fontStyle: 'bold',
-      fill: '#0f172a',
-      align: 'left',
-      width: 320,
-      opacity: 1,
-      visible: true,
-      locked: false,
-      name: `Field: ${label}`,
+    startTransition(() => {
+      onAddElement({
+        id: nextId('df'),
+        type: 'dataField',
+        x: 240,
+        y: 140,
+        text: fieldKey,
+        dataField: fieldKey,
+        fontSize: 20,
+        fontFamily: 'Inter',
+        fontStyle: 'bold',
+        fill: '#0f172a',
+        align: 'left',
+        width: 320,
+        opacity: 1,
+        visible: true,
+        locked: false,
+        name: `Field: ${label}`,
+      });
     });
-  };
+  }, [onAddElement, addPhotoBox, addCustomQr, addCustomBarcode]);
 
   // 7. Assets & Logos (Official Brand Variants)
   const addSiliconLabsHorizontalLogo = (variant: 'color' | 'white' = 'color') => {

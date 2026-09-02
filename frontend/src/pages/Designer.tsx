@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo, startTransition } from 'react';
 import Sidebar from '../components/layout/Sidebar';
 import CardCanvas from '../components/designer/CardCanvas';
 import Toolbar from '../components/designer/Toolbar';
@@ -727,12 +727,14 @@ export default function Designer() {
     return () => window.removeEventListener('paste', handleWindowPaste);
   }, [pushUndo, setCurrentElements, showToast]);
 
-  // Add element (with undo snapshot)
+  // Add element (with undo snapshot and non-blocking concurrent transition)
   const handleAddElement = useCallback((element: CanvasElement) => {
     pushUndo();
-    setCurrentElements(prev => [...prev, element]);
-    setSelectedId(element.id);
-    setSelectedIds([element.id]);
+    startTransition(() => {
+      setCurrentElements(prev => [...prev, element]);
+      setSelectedId(element.id);
+      setSelectedIds([element.id]);
+    });
   }, [setCurrentElements, pushUndo]);
 
   // Update element
