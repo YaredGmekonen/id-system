@@ -113,13 +113,14 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
         <input
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Filter registered directory..."
-          className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-700 bg-[#18191b] text-white focus:outline-none focus:border-[#84a92c] transition-colors placeholder:text-slate-500"
+          className="w-full pl-9 pr-3 py-2.5 text-sm font-bold rounded-xl border focus:outline-none focus:border-[#10b981] transition-colors"
+          style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
         />
       </div>
 
@@ -128,16 +129,18 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
         {filteredPeople.map(person => (
           <div
             key={person.id}
-            className="flex items-center gap-3.5 p-3 rounded-2xl border border-slate-800 bg-[#18191b] hover:border-slate-700 transition-all shadow-xs"
+            className="flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all shadow-xs"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
           >
             {/* Avatar */}
             <div
-              className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border border-slate-700 flex items-center justify-center font-bold text-xs bg-slate-900"
+              className="w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 border flex items-center justify-center font-bold text-xs"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
             >
               {person.photoDataUrl ? (
                 <img src={person.photoDataUrl} alt={person.fullName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-slate-300 font-bold text-sm">
+                <span className="font-black text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {person.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                 </span>
               )}
@@ -146,12 +149,12 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-bold text-sm truncate text-white">{person.fullName}</p>
-                <span className="text-[10px] font-mono font-bold text-[#84a92c] bg-[#84a92c]/10 px-1.5 py-0.5 rounded border border-[#84a92c]/30">
+                <p className="font-extrabold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{person.fullName}</p>
+                <span className="text-[10px] font-mono font-bold text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 rounded border border-[#10b981]/30">
                   {person.idNumber}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 truncate mt-0.5">
+              <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {person.role || 'Member'} • {person.schoolName || person.department || 'General'}
               </p>
             </div>
@@ -160,7 +163,8 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
                 onClick={() => navigate(`/studio?personId=${person.id}`)}
-                className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 hover:border-[#84a92c] text-slate-200 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 text-xs font-bold rounded-lg border hover:border-[#10b981] transition-colors cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
                 title="Open in ID Studio"
               >
                 Inspect
@@ -168,7 +172,8 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
 
               <button
                 onClick={() => handleOpenEdit(person)}
-                className="p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:text-[#84a92c] text-slate-400 transition-colors cursor-pointer"
+                className="p-2 rounded-lg border hover:text-[#10b981] transition-colors cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
                 title="Edit Record"
               >
                 <Edit3 className="w-4 h-4" />
@@ -176,7 +181,8 @@ export default function PeopleList({ activeFolderId, activeFolderName }: PeopleL
 
               <button
                 onClick={() => handleDelete(person)}
-                className="p-2 rounded-lg border border-slate-700 bg-slate-800/80 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-colors cursor-pointer"
+                className="p-2 rounded-lg border text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-colors cursor-pointer"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)' }}
                 title="Delete Record"
               >
                 <Trash2 className="w-4 h-4" />

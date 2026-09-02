@@ -135,7 +135,7 @@ export default function DataCollector() {
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
         >
           <div className="flex items-center gap-3 flex-wrap">
-            <label htmlFor="active-collector-batch-folder" className="text-xs font-bold uppercase font-mono tracking-wider flex-shrink-0 text-slate-300">
+            <label htmlFor="active-collector-batch-folder" className="text-xs font-black uppercase font-mono tracking-wider flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>
               Active Folder:
             </label>
 
@@ -145,7 +145,8 @@ export default function DataCollector() {
               name="activeBatchFolder"
               value={activeFolderId ?? ''}
               onChange={e => setActiveFolderId(e.target.value ? Number(e.target.value) : undefined)}
-              className="text-xs py-2 px-3 rounded-xl border border-slate-700 bg-[#18191b] text-white font-bold focus:outline-none focus:border-[#84a92c] cursor-pointer min-w-[220px]"
+              className="text-xs py-2 px-3.5 rounded-xl border font-bold focus:outline-none focus:border-[#10b981] cursor-pointer min-w-[220px]"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
             >
               <option value="">No Folder (Unclassified)</option>
               {dbFolders.map(f => (
@@ -158,7 +159,7 @@ export default function DataCollector() {
             {/* Create New Folder */}
             <button
               onClick={() => setShowCreateFolder(true)}
-              className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-[#84a92c] hover:bg-[#9fe870] text-slate-950 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-4 py-2 text-xs font-black rounded-xl bg-[#10b981] hover:bg-[#9fe870] text-slate-950 transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <span>+ New Folder</span>
             </button>

@@ -104,7 +104,6 @@ export default function Sidebar({ onCloseMobile }: SidebarProps = {}) {
         { label: 'Card Design Studio', path: '/designer', icon: PenTool },
         { label: 'Studio ID Generation', path: '/studio', icon: IdCard },
         { label: 'Paper Print Studio', path: '/print', icon: Printer },
-        { label: 'ID Scanner & Verify', path: '/verify', icon: ShieldCheck },
       ],
     },
     {

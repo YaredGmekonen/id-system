@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, X, RefreshCw, AlertCircle, Check, Sparkles } from 'lucide-react';
+import { Camera, Upload, X, RefreshCw, AlertCircle, Check, Sparkles, User, RefreshCcw } from 'lucide-react';
 import { enhancePhotoImage } from '../../engine/photoEnhancer';
 
 interface PhotoCaptureProps {
@@ -27,7 +27,7 @@ export default function PhotoCapture({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
-  // Non-destructive photo enhancement state (default OFF)
+  // Non-destructive photo enhancement state
   const [rawPhoto, setRawPhoto] = useState<string>('');
   const [isEnhanced, setIsEnhanced] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -38,17 +38,23 @@ export default function PhotoCapture({
     }
   }, [currentPhoto, rawPhoto]);
 
+  // CRITICAL FIX: Attach mediaStream to videoRef as soon as video mounts in DOM
+  useEffect(() => {
+    if (isCameraActive && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(err => {
+        console.warn('Camera video auto-play warning:', err);
+      });
+    }
+  }, [isCameraActive, stream]);
+
   const handleToggleEnhance = async () => {
     if (!currentPhoto) return;
 
     if (isEnhanced) {
-      // Revert to raw photo non-destructively
-      if (rawPhoto) {
-        setPhoto(rawPhoto);
-      }
+      if (rawPhoto) setPhoto(rawPhoto);
       setIsEnhanced(false);
     } else {
-      // Enhance photo
       setIsEnhancing(true);
       const original = rawPhoto || currentPhoto;
       setRawPhoto(original);
@@ -66,11 +72,15 @@ export default function PhotoCapture({
         stream.getTracks().forEach(t => t.stop());
       }
 
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API is not supported on this browser or requires HTTPS.');
+      }
+
       let mediaStream: MediaStream;
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: mode,
+            facingMode: { ideal: mode },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
@@ -86,16 +96,9 @@ export default function PhotoCapture({
       setStream(mediaStream);
       setIsCameraActive(true);
       setFacingMode(mode);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play().catch(err => {
-          console.warn('Auto-play was prevented:', err);
-        });
-      }
     } catch (err: any) {
       console.error('Camera access error:', err);
-      setCameraError(err.message || 'Camera permission denied or device unavailable.');
+      setCameraError(err.message || 'Camera permission denied or camera device in use.');
       setIsCameraActive(false);
     }
   }, [facingMode, stream]);
@@ -144,6 +147,44 @@ export default function PhotoCapture({
     stopCamera();
   }, [setPhoto, stopCamera]);
 
+  // Fallback Sample Portrait Generator for simulation/testing
+  const handleSimulateSamplePortrait = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 360;
+    canvas.height = 480;
+    const ctx = canvas.getContext('2d')!;
+    
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, 480);
+    grad.addColorStop(0, '#e2e8f0');
+    grad.addColorStop(1, '#94a3b8');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 360, 480);
+
+    // Head circle
+    ctx.fillStyle = '#cbd5e1';
+    ctx.beginPath();
+    ctx.arc(180, 180, 90, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body curve
+    ctx.beginPath();
+    ctx.arc(180, 480, 190, Math.PI, Math.PI * 2);
+    ctx.fillStyle = '#475569';
+    ctx.fill();
+
+    // Initials text
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 36px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(personName || 'ID PHOTO', 180, 195);
+
+    const simulatedUrl = canvas.toDataURL('image/jpeg', 0.95);
+    setRawPhoto(simulatedUrl);
+    setIsEnhanced(false);
+    setPhoto(simulatedUrl);
+  };
+
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -168,9 +209,9 @@ export default function PhotoCapture({
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-center gap-4 p-3.5 rounded-xl border font-sans text-xs"
+      className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border font-sans text-xs transition-colors"
       style={{
-        backgroundColor: 'var(--bg-elevated)',
+        backgroundColor: 'var(--bg-surface)',
         borderColor: 'var(--border-primary)',
         color: 'var(--text-primary)',
       }}
@@ -179,7 +220,11 @@ export default function PhotoCapture({
 
       {/* Portrait frame */}
       <div
-        className="relative w-24 h-30 rounded-xl overflow-hidden border-2 flex items-center justify-center flex-shrink-0 shadow-inner bg-slate-900 border-slate-700"
+        className="relative w-28 h-36 rounded-2xl overflow-hidden border-2 flex items-center justify-center flex-shrink-0 shadow-sm transition-all"
+        style={{
+          backgroundColor: 'var(--bg-elevated)',
+          borderColor: isCameraActive ? '#10b981' : 'var(--border-primary)',
+        }}
       >
         {isCameraActive ? (
           <video
@@ -192,52 +237,52 @@ export default function PhotoCapture({
         ) : currentPhoto ? (
           <img src={currentPhoto} alt={personName || 'Portrait'} className="w-full h-full object-cover" />
         ) : (
-          <div className="flex flex-col items-center justify-center p-2 text-center text-slate-500">
-            <Camera className="w-6 h-6 opacity-40 mb-1" />
-            <span className="text-[9px] font-mono font-bold uppercase">No Photo</span>
+          <div className="flex flex-col items-center justify-center p-2 text-center" style={{ color: 'var(--text-muted)' }}>
+            <Camera className="w-7 h-7 opacity-40 mb-1.5" />
+            <span className="text-[10px] font-bold uppercase">No Photo</span>
           </div>
         )}
 
         {isCameraActive && (
-          <div className="absolute inset-0 rounded-xl border-2 border-[#84a92c] animate-pulse pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl border-2 border-[#10b981] animate-pulse pointer-events-none" />
         )}
 
         {isEnhanced && (
-          <span className="absolute bottom-1 right-1 px-1.5 py-0.2 rounded bg-[#84a92c] text-slate-950 font-mono font-black text-[7px] shadow-xs">
+          <span className="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-md bg-[#10b981] text-slate-950 font-black text-[8px] shadow-xs">
             ENHANCED
           </span>
         )}
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-col gap-2 flex-1 w-full sm:w-auto">
+      <div className="flex flex-col gap-2.5 flex-1 w-full sm:w-auto">
         <div className="flex flex-wrap items-center gap-2">
           {isCameraActive ? (
             <>
               <button
                 type="button"
                 onClick={capturePhoto}
-                className="btn-primary py-1.5 px-3 flex items-center gap-1.5 font-bold cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-[#10b981] hover:bg-[#9fe870] text-slate-950 font-extrabold flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
                 <span>Snap Photo</span>
               </button>
 
               <button
                 type="button"
                 onClick={switchCamera}
-                className="p-1.5 rounded-lg border hover:border-[#84a92c] cursor-pointer"
-                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)' }}
-                title="Switch Camera (Front/Back)"
+                className="p-2.5 rounded-xl border hover:opacity-80 cursor-pointer transition-all"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
+                title="Switch Front/Back Camera"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-[#84a92c]" />
+                <RefreshCw className="w-4 h-4 text-[#10b981]" />
               </button>
 
               <button
                 type="button"
                 onClick={stopCamera}
-                className="py-1.5 px-3 rounded-lg border text-xs font-semibold hover:opacity-80 cursor-pointer"
-                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
+                className="py-2.5 px-3.5 rounded-xl border font-bold hover:opacity-80 cursor-pointer transition-all"
+                style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-secondary)' }}
               >
                 Cancel
               </button>
@@ -247,18 +292,18 @@ export default function PhotoCapture({
               <button
                 type="button"
                 onClick={() => startCamera('user')}
-                className="py-2 px-3.5 rounded-xl border flex items-center gap-2 cursor-pointer font-bold text-xs transition-all hover:border-[#84a92c] shadow-xs"
+                className="py-2.5 px-4 rounded-xl border flex items-center gap-2 cursor-pointer font-bold transition-all shadow-xs hover:border-[#10b981]"
                 style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
               >
-                <Camera className="w-4 h-4 text-[#84a92c]" />
+                <Camera className="w-4 h-4 text-[#10b981]" />
                 <span>Open Live Camera</span>
               </button>
 
               <label
-                className="py-2 px-3.5 rounded-xl border flex items-center gap-2 cursor-pointer font-bold text-xs transition-all hover:border-[#84a92c] shadow-xs"
+                className="py-2.5 px-4 rounded-xl border flex items-center gap-2 cursor-pointer font-bold transition-all shadow-xs hover:border-[#10b981]"
                 style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-primary)', color: 'var(--text-primary)' }}
               >
-                <Upload className="w-4 h-4 text-slate-400" />
+                <Upload className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                 <span>Upload File</span>
                 <input
                   type="file"
@@ -274,18 +319,19 @@ export default function PhotoCapture({
                   type="button"
                   onClick={handleToggleEnhance}
                   disabled={isEnhancing}
-                  className={`py-2 px-3 rounded-xl border flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer shadow-xs ${
+                  className={`py-2 px-3 rounded-xl border flex items-center gap-1.5 font-bold transition-all cursor-pointer shadow-xs ${
                     isEnhanced
-                      ? 'bg-[#84a92c]/20 border-[#84a92c] text-[#84a92c]'
-                      : 'hover:border-[#84a92c] text-slate-300 hover:text-white'
+                      ? 'bg-[#10b981]/20 border-[#10b981] text-[#10b981]'
+                      : 'hover:border-[#10b981]'
                   }`}
                   style={{
                     backgroundColor: isEnhanced ? undefined : 'var(--bg-elevated)',
                     borderColor: isEnhanced ? undefined : 'var(--border-primary)',
+                    color: isEnhanced ? undefined : 'var(--text-primary)',
                   }}
                   title="Toggle contrast & sharpness"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#84a92c]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
                   <span>{isEnhancing ? 'Enhancing…' : isEnhanced ? 'Enhanced' : 'Auto Enhance'}</span>
                 </button>
               )}
@@ -298,7 +344,7 @@ export default function PhotoCapture({
                     setRawPhoto('');
                     setIsEnhanced(false);
                   }}
-                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-500/30"
+                  className="p-2.5 text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-500/30"
                   title="Clear photo"
                 >
                   <X className="w-4 h-4" />
@@ -309,9 +355,18 @@ export default function PhotoCapture({
         </div>
 
         {cameraError && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-400 font-medium">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{cameraError}</span>
+          <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{cameraError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSimulateSamplePortrait}
+              className="text-[10px] font-bold px-2 py-1 rounded bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer flex-shrink-0"
+            >
+              Use Sample Photo
+            </button>
           </div>
         )}
       </div>

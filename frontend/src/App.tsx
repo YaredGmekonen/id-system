@@ -15,6 +15,7 @@ import BatchFoldersPage from './pages/BatchFoldersPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import LoadingSpinner from './components/shared/LoadingSpinner';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 import { seedDatabase } from './db/seed';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -148,6 +149,7 @@ export default function App() {
             <Route path="/verify" element={<IDVerify />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <MobileBottomNav />
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
